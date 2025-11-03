@@ -16,9 +16,7 @@ from io import BytesIO
 from collections import defaultdict
 import base64
 #from flask_mail import Mail, Message
-from apscheduler.schedulers.background import BackgroundScheduler
 from flask import Flask, render_template
-
 # =================================================================
 # 2. APP CONFIG & DATABASE
 # =================================================================
@@ -187,11 +185,7 @@ def inject_global_data():
             #print(f"ERROR al enviar correo {periodo}: {e}")
 
 # Inyecta la función generar_barcode_base64 en el contexto (la moví de antes)
-#//def generar_barcode_base64(codigo):
-    # ... (cuerpo de tu función de código de barras) ...
-   # pass
 
-# =================================================================
 #  FUNCIONES DE UTILIDAD (NO TIENE QUE VER CON EL CONTEXT_PROCESSOR)
 # =================================================================
 def generar_barcode_base64(codigo):
