@@ -37,15 +37,15 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', os.urandom(24))
 # ----------------------------------------
 # CONFIGURACIÓN DE CORREO (AJUSTA ESTOS VALORES)
 # ----------------------------------------
-app.config['MAIL_SERVER'] = 'smtp.gmail.com' # Corregido: Eliminado el espacio oculto U+00A0
-app.config['MAIL_PORT'] = 587
-app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = 'lacomestiqueradegabi@outlook.com' # Correo del que se envía
-app.config['MAIL_PASSWORD'] = 'Gabi52830265' # Contraseña o clave de app
-app.config['ADMIN_EMAIL'] = 'johanna.chacon@outlook.es' # Correo de la administradora (DESTINATARIO)
+#app.config['MAIL_SERVER'] = 'smtp.gmail.com' # Corregido: Eliminado el espacio oculto U+00A0
+#app.config['MAIL_PORT'] = 587
+#app.config['MAIL_USE_TLS'] = True
+#app.config['MAIL_USERNAME'] = 'lacomestiqueradegabi@outlook.com' # Correo del que se envía
+#app.config['MAIL_PASSWORD'] = 'Gabi52830265' # Contraseña o clave de app
+#app.config['ADMIN_EMAIL'] = 'johanna.chacon@outlook.es' # Correo de la administradora (DESTINATARIO)
 # ----------------------------------------
 
-mail = Mail(app)
+#mail = Mail(app)
 # =================================================================
 # AÑADIDO: CONFIGURACIÓN DE LOCALE Y FILTRO DE JINJA (para 'format_number')
 # =================================================================
@@ -132,8 +132,8 @@ def inject_global_data():
     from datetime import timedelta
     return dict(timedelta=timedelta)
 
-def enviar_informe_ventas(periodo):
-    with app.app_context():
+#//def enviar_informe_ventas(periodo):
+ #   with app.app_context():
 #        # 1. Obtener el rango de fechas y datos
  #       hoy = date.today()
         
@@ -207,7 +207,6 @@ def generar_barcode_base64(codigo):
     except Exception as e:
         print(f"Error al generar barcode: {e}")
         return None
-
 # =================================================================
 # 5. RUTAS DE AUTENTICACIÓN Y DASHBOARD
 # =================================================================
