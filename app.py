@@ -852,46 +852,15 @@ def eliminar_venta(venta_id):
     return redirect(url_for('gestion_ventas')) # CORRECCIÓN: Redirige a la nueva ruta
 
 # =================================================================
+# =================================================================
+# =================================================================
 # 11. INICIALIZACIÓN DE LA APLICACIÓN
 # =================================================================
+
+# IMPORTANTE: Toda la lógica de creación de la base de datos y tareas programadas
+# ha sido movida al archivo 'init_db.py' para el correcto despliegue con Gunicorn.
+
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-        
-        # ----------------------------------------
-        # INICIALIZACIÓN DE TAREAS PROGRAMADAS
-        # ----------------------------------------
-        try:
-            from apscheduler.schedulers.background import BackgroundScheduler
-            
-            scheduler = BackgroundScheduler()
-            
-            # Tarea Semanal: Se ejecuta cada Lunes a las 00:05
-            scheduler.add_job(func=enviar_informe_ventas, args=['semanal'], trigger='cron', day_of_week='mon', hour=0, minute=5)
-            
-            # Tarea Mensual: Se ejecuta el día 1 de cada mes a la 00:10
-            scheduler.add_job(func=enviar_informe_ventas, args=['mensual'], trigger='cron', day='1', hour=0, minute=10)
-            
-            # Iniciar el scheduler
-            scheduler.start()
-            print("Tareas de informes programadas (Semanal y Mensual) iniciadas. Revisar LOG para errores de envío.")
-        except ImportError:
-            print("ADVERTENCIA: APScheduler no está instalado. Los informes automáticos no se enviarán.")
-        except Exception as e:
-            print(f"ERROR al iniciar el scheduler: {e}")
-        # ----------------------------------------
-        
-        # Lógica de creación de usuarios iniciales (va después de db.create_all())
-        if Usuario.query.filter_by(username='admin').first() is None:
-            admin = Usuario(nombre='Administrador Principal', username='admin', rol='Administrador')
-            admin.set_password('1234')
-            db.session.add(admin)
-            
-            if Cliente.query.filter_by(nombre='Contado / Genérico').first() is None:
-                cliente_generico = Cliente(nombre='Contado / Genérico', telefono='N/A', direccion='N/A', email='contacto@local.com')
-                db.session.add(cliente_generico)
-            
-            db.session.commit()
-            print("Base de datos y usuario admin inicial creados. Usuario: admin, Contraseña: 1234")
-            
+    # Esta línea SÓLO se ejecuta cuando corres 'python app.py' localmente.
+    # Gunicorn la ignora, resolviendo el conflicto del servidor.
     app.run(debug=True)
