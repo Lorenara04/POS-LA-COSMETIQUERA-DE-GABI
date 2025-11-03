@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Comprobante Venta #{{ venta.id }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        /* --- Definición de Variables (ACTUALIZADO CON #c71585) --- */
+        :root {
+            --magenta: #c71585; /* <-- Tu nuevo color */
+            --magenta-dark: #a6126f; /* <-- Tono oscuro */
+            --negro: #000000;
+            --blanco: #FFFFFF;
+            --fondo-recibo: #f9e8f1; /* <-- Nuevo fondo rosa pálido */
+            --fondo-info: #fdf2f9;   /* <-- Nuevo fondo claro */
+        }
+        
+        body {
+            margin: 0; 
+            padding: 0;
+            font-family: 'Arial', sans-serif; 
+            font-size: 15px; 
+            background-color: var(--fondo-recibo); 
+        }
+
+        .main-wrapper {
+            max-width: 500px; 
+            margin: 30px auto; 
+            padding: 30px; 
+            background-color: var(--blanco);
+            border: 2px solid var(--magenta); 
+            border-radius: 12px;
+            box-shadow: 0 0 10px rgba(199, 21, 133, 0.6), 0 0 20px rgba(199, 21, 133, 0.3);
+            position: relative;
+        }
+
+        .container {
+            width: 100%; 
+            margin: 0 auto; 
+            padding: 0;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        .header h3 {
+            color: var(--magenta); 
+            font-size: 2.2em;
+            margin-bottom: 5px;
+            font-weight: 800;
+        }
+
+        /* Líneas decorativas neón */
+        .divider {
+            height: 2px;
+            background: linear-gradient(90deg, rgba(199, 21, 133, 0) 0%, var(--magenta) 50%, rgba(199, 21, 133, 0) 100%);
+            box-shadow: 0 0 6px var(--magenta), 0 0 12px rgba(199, 21, 133, 0.5);
+            border-radius: 50px;
+            margin: 15px 0;
+        }
+
+        .info-details {
+            border-top: 2px solid var(--magenta); 
+            border-bottom: 1px solid #ccc;
+            padding: 10px 0;
+            margin-bottom: 15px;
+            line-height: 1.6;
+            background-color: var(--fondo-info);
+            border-radius: 10px;
+            text-align: center;
+        }
+        .info-details p {
+            margin: 5px 0;
+            color: var(--negro); 
+        }
+
+        .item-list thead th {
+            border-bottom: 2px solid var(--magenta); 
+            padding-bottom: 10px;
+            color: var(--negro);
+            font-weight: 600;
+        }
+
+        .summary {
+            margin-top: 20px;
+            text-align: right;
+        }
+        .summary p {
+            font-size: 24px !important; 
+            color: var(--magenta-dark); 
+            font-weight: 800;
+            padding-top: 10px;
+        }
+        
+        /* --- SECCIÓN DE PAGO (ACTUALIZADA) --- */
+        .payment-details {
+            margin-top: 25px;
+            padding: 15px;
+            background-color: var(--fondo-recibo); 
+            border-radius: 8px;
+            border: 1px solid var(--magenta);
+        }
+        .payment-details p.title {
+            color: var(--magenta-dark);
+            font-weight: 700;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+        .payment-details .pago-item {
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+        .payment-details .pago-ref {
+            font-size: 0.85rem;
+            color: #333;
+            padding-left: 10px;
+            margin-bottom: 8px;
+        }
+        /* --- FIN SECCIÓN DE PAGO --- */
+
+
+        .footer p:first-child {
+            color: var(--magenta); 
+            font-size: 20px; 
+            font-weight: 800;
+        }
+
+        .no-print {
+            display: flex; 
+            justify-content: center;
+            gap: 15px; 
+            margin-top: 25px; 
+            padding: 10px 0;
+            flex-wrap: wrap; 
+        }
+        .action-btn {
+            display: inline-block; 
+            width: auto; 
+            min-width: 150px; 
+            padding: 12px 25px;
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            text-align: center;
+            text-transform: uppercase;
+        }
+        .btn-new-sale {
+            /* Botón principal: Magenta */
+            background-color: var(--magenta); 
+            color: white;
+            border: 2px solid var(--magenta);
+        }
+        .btn-new-sale:hover {
+            background-color: var(--magenta-dark);
+        }
+        .btn-print {
+            /* Botón secundario: Negro */
+            background-color: var(--negro); 
+            color: white;
+            border: 2px solid var(--negro);
+        }
+        .btn-print:hover {
+            background-color: #333333;
+        }
+
+        /* ESTILOS DE IMPRESIÓN */
+        @media print {
+            body {
+                background-color: white;
+                color: var(--negro);
+            }
+            .main-wrapper {
+                margin: 0;
+                width: 100%;
+                border: 2px solid var(--magenta);
+                box-shadow: none;
+            }
+            .divider {
+                box-shadow: none;
+                height: 1px;
+                background: var(--magenta);
+            }
+            .no-print {
+                display: none !important;
+            }
+            .summary p { 
+                color: var(--negro); 
+                border-top: 1px dashed var(--magenta); 
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-wrapper"> 
+        <div class="container">
+            <div class="header">
+                <h3>LA COSMETIQUERA DE GABI</h3>
+                <p>
+                    NIT: 1007135662-2<br>
+                    Tel: 3208245828<br>
+                    Dirección: Calle 145 128 40 local 19 
+                </p>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="info-details">
+                <p style="font-weight: bold; font-size: 18px; color: var(--magenta-dark);">💖COMPROBANTE DE VENTA💖</p>
+                <p><strong>N°:</strong> {{ venta.id }}</p>
+                <p><strong>FECHA:</strong> {{ fecha_local.strftime('%d/%m/%Y %I:%M %p') }} </p>
+                <p><strong>CAJERO:</strong> {{ venta.vendedor.username }}</p>
+                <p><strong>CLIENTE:</strong> 
+                    {% if venta.comprador and venta.comprador.nombre != 'Contado / Genérico' %}
+                        {{ venta.comprador.nombre }}
+                    {% else %}
+                        Contado / Genérico
+                    {% endif %}
+                </p>
+            </div>
+
+            <div class="divider"></div>
+
+            <table class="item-list" style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr>
+                        <th style="width: 40%; text-align: left;">PRODUCTO</th>
+                        <th style="width: 20%; text-align: center;">CANT</th>
+                        <th style="width: 20%; text-align: right;">PRECIO U.</th>
+                        <th style="width: 20%; text-align: right;">TOTAL</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for detalle in detalles %}
+                    <tr>
+                        <td style="text-align: left;">{{ detalle.producto.nombre }}</td>
+                        <td style="text-align: center;">{{ detalle.cantidad }}</td>
+                        <td style="text-align: right;">{{ "{:,.0f}".format(detalle.precio_unitario) }}</td>
+                        <td style="text-align: right;">{{ "{:,.0f}".format(detalle.subtotal) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <div class="divider"></div>
+
+            <div class="summary">
+                <p>TOTAL: ${{ "{:,.0f}".format(venta.total) }}</p>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="payment-details">
+                <p class="title">DETALLE DE PAGO:</p>
+                
+                {% for metodo, detalle in pagos.items() %}
+                    {% if detalle.monto > 0 %}
+                        <div class="pago-item">
+                            <span>{{ metodo }}:</span>
+                            <span>${{ "{:,.0f}".format(detalle.monto) }}</span>
+                        </div>
+                        {% if detalle.cod %}
+                            <p class="pago-ref">Ref: {{ detalle.cod }}</p>
+                        {% else %}
+                            <div style="height: 8px;"></div> {% endif %}
+                    {% endif %}
+                {% else %}
+                    <p>No se registraron detalles de pago.</p>
+                {% endfor %}
+
+            </div>
+            <div class="divider"></div>
+
+            <div class="footer" style="margin-top: 30px; text-align:center;">
+                <p style="color: var(--magenta); font-size: 20px; font-weight: 800;">¡GRACIAS POR SU COMPRA!</p>
+                <p style="font-size: 13px; color: #000;">Software POS - Lorena Rodriguez
+                    Tel 3222823687
+                </p>
+            </div>
+        </div>
+
+        <div class="no-print">
+            <a href="{{ url_for('nueva_venta') }}" class="action-btn btn-new-sale"><i class="bi bi-bag-plus"></i> NUEVA VENTA</a>
+            <a onclick="window.print()" class="action-btn btn-print"><i class="bi bi-printer"></i> IMPRIMIR</a>
+        </div>
+    </div>
+
+    </body>
+</html>

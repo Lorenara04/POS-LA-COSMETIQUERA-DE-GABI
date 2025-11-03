@@ -1,0 +1,254 @@
+{% extends "base.html" %}
+
+{% block title %}Gestión de Clientes{% endblock %}
+
+{% block content %}
+<style>
+    body {
+        background: linear-gradient(135deg, #fff, #fff);
+        font-family: "Poppins", sans-serif;
+        color: #333;
+    }
+
+    h2 {
+        text-align: center;
+        color: #c71585;
+        font-weight: 700;
+        margin-bottom: 25px;
+    }
+
+    .btn-rosado {
+        background-color: #c71585;
+        border: none;
+        color: white;
+        border-radius: 10px;
+        padding: 8px 14px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-rosado:hover {
+        background-color: #a01368;
+        transform: scale(1.05);
+    }
+
+    .btn-danger {
+        border-radius: 10px;
+    }
+
+    .form-control {
+        border-radius: 10px;
+        border: 2px solid #c71585;
+    }
+
+    .form-control:focus {
+        border-color: #a01368;
+        box-shadow: 0 0 8px rgba(199, 21, 133, 0.4);
+    }
+
+    .modal-header {
+        background-color: #aa0066;
+        color: white;
+    }
+
+    .table {
+        background-color: white;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 0 12px rgba(255, 105, 180, 0.3);
+    }
+
+    .table th {
+        background-color: #aa0066;
+        color: white;
+        text-align: center;
+    }
+
+    .table td {
+        text-align: center;
+        vertical-align: middle;
+    }
+
+    .container-clientes {
+        background-color: #ffe9f0;
+        width: 85%;
+        margin: 40px auto;
+        border-radius: 20px;
+        padding: 30px;
+        box-shadow: 0 0 20px rgba(255, 182, 193, 0.4);
+    }
+    .fade-in {
+      animation: fadeIn 0.8s ease-in;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  
+</style>
+
+<div class="container-clientes">
+    <h2>Gestión de Clientes</h2>
+
+    <!-- Botón agregar -->
+    <div class="text-center mb-3">
+        <button type="button" class="btn btn-rosado" data-bs-toggle="modal" data-bs-target="#agregarClienteModal">
+            <i class="fas fa-user-plus me-2"></i>Agregar Cliente
+        </button>
+    </div>
+
+    <!-- Filtro instantáneo -->
+    <div class="mb-4 text-center">
+        <input type="text" id="buscarCliente" class="form-control w-75 mx-auto" placeholder="Buscar cliente por nombre o teléfono...">
+    </div>
+
+    <!-- Mensajes flash -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Tabla -->
+    <div class="table-responsive">
+        <table class="table table-hover align-middle" id="tablaClientes">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Teléfono</th>
+                    <th>Dirección</th>
+                    <th>Email</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cliente in clientes %}
+                <tr>
+                    <td>{{ cliente.id }}</td>
+                    <td>{{ cliente.nombre }}</td>
+                    <td>{{ cliente.telefono }}</td>
+                    <td>{{ cliente.direccion }}</td>
+                    <td>{{ cliente.email }}</td>
+                    <td>
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-sm btn-rosado" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#editarClienteModal{{ cliente.id }}">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <a href="{{ url_for('eliminar_cliente', cliente_id=cliente.id) }}" 
+                                class="btn btn-sm btn-danger"
+                                onclick="return confirm('¿Seguro que deseas eliminar a {{ cliente.nombre }}? Esta acción es permanente.')">
+                                <i class="fas fa-trash-alt"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="text-muted">No hay clientes registrados</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Agregar Cliente -->
+<div class="modal fade" id="agregarClienteModal" tabindex="-1" aria-labelledby="agregarClienteLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 rounded-4 shadow-lg">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-user-plus me-2"></i>Agregar Nuevo Cliente</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ url_for('agregar_cliente') }}" method="POST">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Nombre</label>
+                            <input type="text" name="nombre" class="form-control" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Teléfono</label>
+                            <input type="text" name="telefono" class="form-control">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Dirección</label>
+                        <input type="text" name="direccion" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" name="email" class="form-control">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="submit" class="btn btn-rosado">Guardar Cliente</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Editar Cliente -->
+{% for cliente in clientes %}
+<div class="modal fade" id="editarClienteModal{{ cliente.id }}" tabindex="-1" aria-labelledby="editarClienteLabel{{ cliente.id }}" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 rounded-4 shadow-lg">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Editar Cliente: {{ cliente.nombre }}</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ url_for('editar_cliente', cliente_id=cliente.id) }}" method="POST">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Nombre</label>
+                        <input type="text" name="nombre" class="form-control" value="{{ cliente.nombre }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Teléfono</label>
+                        <input type="text" name="telefono" class="form-control" value="{{ cliente.telefono }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Dirección</label>
+                        <input type="text" name="direccion" class="form-control" value="{{ cliente.direccion }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" name="email" class="form-control" value="{{ cliente.email }}">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="submit" class="btn btn-rosado">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<script>
+document.getElementById('buscarCliente').addEventListener('input', function() {
+    let filtro = this.value.toLowerCase();
+    let filas = document.querySelectorAll('#tablaClientes tbody tr');
+    filas.forEach(fila => {
+        let nombre = fila.cells[1].textContent.toLowerCase();
+        let telefono = fila.cells[2].textContent.toLowerCase();
+        if (nombre.includes(filtro) || telefono.includes(filtro)) {
+            fila.style.display = '';
+        } else {
+            fila.style.display = 'none';
+        }
+    });
+});
+</script>
+
+{% endblock %}

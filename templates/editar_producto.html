@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}Editar {{ producto.nombre }}{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Editar Producto: {{ producto.nombre }}</h2>
+
+<div class="row">
+    <div class="col-md-7">
+        <div class="card p-4">
+            <h3 class="mt-0">Detalles del Producto</h3>
+            <form action="{{ url_for('editar_producto', producto_id=producto.id) }}" method="POST">
+                
+                {% set es_admin = (current_user.rol.lower() == 'administrador') %}
+                {% set readonly = 'readonly' if not es_admin else '' %}
+                
+                <div class="mb-3">
+                    <label class="form-label">Código (SKU)</label>
+                    <input type="text" name="codigo" class="form-control" value="{{ producto.codigo }}" required {{ readonly }}>
+                </div>
+                <div class="mb-3"><label class="form-label">Marca</label><input type="text" name="nombre" class="form-control" value="{{ producto.nombre }}" required {{ readonly }}></div>
+                <div class="mb-3"><label class="form-label">Descripción</label><textarea name="descripcion" class="form-control" {{ readonly }}>{{ producto.descripcion }}</textarea></div>
+                <div class="mb-3"><label class="form-label">Cantidad</label><input type="number" name="cantidad" class="form-control" value="{{ producto.cantidad }}" required min="0" {{ readonly }}></div>
+                <div class="row">
+                    <div class="col-md-6 mb-3"><label class="form-label">Valor Interno ($)</label><input type="number" name="valor_interno" class="form-control" value="{{ producto.valor_interno }}" required step="0.01" {{ readonly }}></div>
+                    <div class="col-md-6 mb-3"><label class="form-label">Valor Venta ($)</label><input type="number" name="valor_venta" class="form-control" value="{{ producto.valor_venta }}" required step="0.01" {{ readonly }}></div>
+                </div>
+                
+                {% if es_admin %}
+                <button type="submit" class="btn btn-primary mt-3">Guardar Cambios</button>
+                {% else %}
+                <p class="text-danger mt-3">Solo los administradores pueden guardar cambios en el inventario.</p>
+                {% endif %}
+                <a href="{{ url_for('inventario') }}" class="btn btn-secondary mt-3">Cancelar</a>
+            </form>
+        </div>
+    </div>
+    
+    <div class="col-md-5">
+        <div class="card p-4 text-center">
+            <h3>Imprimir Etiqueta</h3>
+            {% if barcode_img %}
+                <div id="printArea">
+                    <img src="{{ barcode_img }}" alt="Código de Barras: {{ producto.codigo }}" class="w-100 mb-2">
+                    <p class="fs-4">{{ producto.codigo }}</p>
+                </div>
+                
+                <button type="button" class="btn btn-primary w-100" onclick="imprimirEtiqueta()">Imprimir</button>
+                
+                <script>
+                    function imprimirEtiqueta() {
+                        // Formateamos el precio con comas y sin decimales desde Jinja
+                        const formattedPrice = "{{ '{:,.0f}'.format(producto.valor_venta) }}"; 
+                        
+                        const printContent = `
+                            <div style="font-family: sans-serif; padding: 10px; width: 300px; text-align: center;">
+                                <h4 style="margin: 0; color: #FF00FF;">POS Cosmetiquería</h4>
+                                <img src="{{ barcode_img }}" style="width: 100%; max-width: 250px; margin: 5px 0;">
+                                <p style="margin: 0;">{{ producto.nombre }}</p>
+                                <p style="margin: 0; font-weight: bold; font-size: 1.2em;">$ ${formattedPrice}</p>
+                            </div>
+                        `;
+                        
+                        const printWindow = window.open('', '', 'width=350,height=300');
+                        printWindow.document.write('<html><head><title>Etiqueta</title>');
+                        printWindow.document.write('<style>@page { size: 8cm 5cm; margin: 0; }</style>');
+                        printWindow.document.write('</head><body>');
+                        printWindow.document.write(printContent);
+                        printWindow.document.write('</body></html>');
+                        
+                        printWindow.document.close();
+                        printWindow.focus();
+                        setTimeout(() => {
+                            printWindow.print();
+                            printWindow.close();
+                        }, 500); 
+                    }
+                </script>
+            {% else %}
+                <p class="text-danger">Código de barras no válido o no generado.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

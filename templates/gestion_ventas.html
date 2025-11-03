@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block title %}Gestión de Ventas{% endblock %}
+
+{% block content %}
+<h2 class="mb-4 text-center titulo-ventas">⚠️ Gestión de Ventas: Anular/Reversar ⚠️</h2>
+<p class="text-center text-muted subtitulo-ventas">
+    Esta tabla muestra las últimas 30 ventas y permite anularlas, devolviendo el stock al inventario.<br>
+    <strong>Esta acción es solo para Administradores.</strong>
+</p>
+
+<style>
+    /* Fondo y tipografía general */
+    body {
+        background: linear-gradient(135deg, #fff 0%, #ffe6f3 100%);
+        font-family: 'Poppins', sans-serif;
+    }
+
+    .titulo-ventas {
+        background: linear-gradient(90deg, #9c0277, #aa0066);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-weight: 700;
+        letter-spacing: 1px;
+        text-shadow: 0 0 8px rgba(156, 2, 119, 0.3);
+    }
+
+    .subtitulo-ventas {
+        font-size: 0.95rem;
+        color: #6c757d;
+    }
+
+    /* Tabla de ventas */
+    .tabla-ventas {
+        border: 2px solid #aa0066;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 0 20px rgba(156, 2, 119, 0.15);
+    }
+
+    .tabla-ventas thead th {
+        background: linear-gradient(90deg, #9c0277, #aa0066);
+        color: white;
+        border: none;
+        text-align: center;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+
+    .tabla-ventas tbody tr {
+        transition: all 0.3s ease;
+    }
+
+    .tabla-ventas tbody tr:hover {
+        background-color: rgba(170, 0, 102, 0.08);
+        transform: scale(1.01);
+    }
+
+    .tabla-ventas td {
+        vertical-align: middle;
+        text-align: center;
+        color: #333;
+        font-weight: 500;
+    }
+
+    /* Botón anular */
+    .btn-eliminar {
+        background: linear-gradient(90deg, #9c0277, #aa0066);
+        color: #fff !important;
+        border: none;
+        border-radius: 20px;
+        padding: 7px 15px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 0 10px rgba(156, 2, 119, 0.4);
+        text-decoration: none;
+    }
+
+    .btn-eliminar:hover {
+        background: linear-gradient(90deg, #aa0066, #9c0277);
+        color: #fff;
+        box-shadow: 0 0 20px rgba(156, 2, 119, 0.6);
+        transform: translateY(-2px) scale(1.05);
+    }
+
+    /* Contenedor tabla */
+    .table-responsive {
+        margin-top: 30px;
+        animation: fadeIn 0.8s ease-in-out;
+    }
+
+    /* Animación suave */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Mensaje de acceso restringido */
+    .alert-danger {
+        background: linear-gradient(90deg, #aa0066, #9c0277);
+        border: none;
+        color: white;
+        font-weight: 600;
+        border-radius: 15px;
+        box-shadow: 0 0 15px rgba(156, 2, 119, 0.3);
+    }
+</style>
+
+{% if current_user.rol.lower() == 'administrador' %}
+<div class="table-responsive">
+    <table class="table table-striped table-hover text-center tabla-ventas">
+        <thead>
+            <tr>
+                <th>N° Venta</th>
+                <th>Fecha</th>
+                <th>Total</th>
+                <th>Vendedora</th>
+                <th>Cliente</th>
+                <th>Acción</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for venta in VentasRecientes %}
+            <tr>
+                <td>{{ venta.id }}</td>
+                <td>{{ (venta.fecha - timedelta(hours=5)).strftime('%d/%m/%Y %I:%M %p') }}</td>
+                <td>${{ "{:,.0f}".format(venta.total) }}</td>
+                <td>{{ venta.vendedor.username if venta.vendedor else 'N/A' }}</td>
+                <td>{{ venta.comprador.nombre if venta.comprador else 'Contado / Genérico' }}</td>
+                <td>
+                    <a href="{{ url_for('eliminar_venta', venta_id=venta.id) }}" 
+                       onclick="return confirm('¿Estás segura de que quieres ANULAR la Venta N° {{ venta.id }}? Esta acción es irreversible y devolverá el stock.');" 
+                       class="btn-eliminar">✨ Anular</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="alert alert-danger text-center">Solo los administradores pueden acceder a la gestión de ventas.</div>
+{% endif %}
+{% endblock %}

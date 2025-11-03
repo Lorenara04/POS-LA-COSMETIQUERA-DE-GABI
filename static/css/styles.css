@@ -1,0 +1,235 @@
+/* static/css/styles.css */
+
+/* --------------------------------------------------------- */
+/* COLORES DE MARCA (Actualizados) */
+/* --------------------------------------------------------- */
+:root {
+    --color-principal: #9c0277; /* Magenta oscuro principal */
+    --color-principal-light: #aa0066; /* Magenta más claro para degradados */
+    --color-principal-dark: #800050;  /* Magenta más oscuro para hover/sombra */
+    --color-secundario: #000000; /* Negro */
+    --color-texto-claro: #FFFFFF; /* Blanco */
+    --color-fondo-suave: #F8F8F8; /* Gris muy claro */
+}
+
+/* --------------------------------------------------------- */
+/* A. FONDOS Y NAVEGACIÓN */
+/* --------------------------------------------------------- */
+body {
+    background-color: var(--color-texto-claro);
+    color: var(--color-secundario);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    position: relative;
+}
+
+.navbar-custom {
+    background-color: var(--color-secundario);
+    border-bottom: 3px solid var(--color-principal);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+}
+
+.navbar-custom .nav-link, 
+.navbar-custom .navbar-brand {
+    color: var(--color-texto-claro) !important;
+    font-weight: 500;
+}
+
+h1, h2, h3 {
+    color: var(--color-principal);
+    font-weight: 600;
+}
+
+/* --------------------------------------------------------- */
+/* B. BOTONES (MAGENTA OSCURO NEOMORFO) */
+/* --------------------------------------------------------- */
+.btn {
+    border: none;
+    border-radius: 25px;
+    padding: 10px 25px;
+    font-weight: bold;
+    transition: all 0.3s ease-in-out;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 5px 5px 10px rgba(0,0,0,0.1),
+                -5px -5px 10px rgba(255,255,255,0.7);
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 7px 7px 15px rgba(0,0,0,0.2),
+                -7px -7px 15px rgba(255,255,255,0.8);
+}
+
+.btn:active {
+    transform: translateY(1px);
+    box-shadow: inset 2px 2px 5px rgba(0,0,0,0.2),
+                inset -2px -2px 5px rgba(255,255,255,0.5);
+}
+
+/* Botón principal (magenta oscuro) */
+.btn-primary, 
+.btn-pink-custom {
+    background: linear-gradient(135deg, var(--color-principal-light) 0%, var(--color-principal) 100%);
+    color: var(--color-texto-claro) !important;
+}
+
+.btn-primary:hover,
+.btn-pink-custom:hover {
+    background: linear-gradient(135deg, var(--color-principal) 0%, var(--color-principal-dark) 100%);
+}
+
+/* Botones secundarios */
+.btn-success {
+    background: linear-gradient(135deg, #aa0066 0%, #9c0277 100%);
+    color: var(--color-texto-claro) !important;
+}
+.btn-success:hover {
+    background: linear-gradient(135deg, #9c0277 0%, #800050 100%);
+}
+
+.btn-info {
+    background: linear-gradient(135deg, #cc66aa 0%, #aa0066 100%);
+    color: var(--color-secundario) !important;
+}
+.btn-info:hover {
+    background: linear-gradient(135deg, #aa0066 0%, #9c0277 100%);
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #e91e63 0%, #9c0277 100%);
+    color: var(--color-texto-claro) !important;
+}
+.btn-danger:hover {
+    background: linear-gradient(135deg, #9c0277 0%, #800050 100%);
+}
+
+/* --------------------------------------------------------- */
+/* C. OTROS ELEMENTOS */
+/* --------------------------------------------------------- */
+.alert-success {
+    background-color: #f8e6f2;
+    border-color: var(--color-principal);
+    color: var(--color-secundario);
+}
+
+.table th {
+    background-color: var(--color-secundario);
+    color: var(--color-texto-claro);
+}
+
+/* Tarjetas y fondos */
+.bg-primary { background-color: var(--color-principal) !important; }
+.bg-secondary { background-color: var(--color-secundario) !important; }
+.bg-info { 
+    background-color: var(--color-principal-light) !important; 
+    color: var(--color-texto-claro) !important;
+}
+
+/* --------------------------------------------------------- */
+/* D. FONDO DE ICONOS DE MAQUILLAJE ANIMADO */
+/* --------------------------------------------------------- */
+.fondo-iconos {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    background-image: url('../img/fondo.png'); /* relativo a static/css/ */
+    background-repeat: repeat;
+    background-size: 120px 120px; /* iconos más grandes */
+    opacity: 0.15; /* más visibles */
+    z-index: 0;
+    pointer-events: none; /* no interfiere con botones */
+    animation: moverFondo 60s linear infinite;
+}
+
+@keyframes moverFondo {
+    0% { background-position: 0 0; }
+    100% { background-position: 1000px 1000px; }
+}
+
+/* --------------------------------------------------------- */
+/* E. DASHBOARD / WELCOME CARD */
+/* --------------------------------------------------------- */
+.welcome-card {
+    background: linear-gradient(135deg, #ffb6e1, #ff69b4, #ff1493);
+    color: #fff;
+    border-radius: 25px;
+    padding: 50px 35px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+    text-align: center;
+    max-width: 600px;
+    width: 100%;
+    font-family: 'Playfair Display', serif;
+    background-size: 400% 400%;
+    animation: gradientMove 10s ease infinite;
+}
+
+.welcome-card h2 {
+    font-size: 2.2rem;
+    font-weight: 900;
+    margin-bottom: 12px;
+}
+
+.welcome-card p span {
+    font-weight: 700;
+}
+
+@keyframes gradientMove {
+    0%{background-position:0% 50%;}
+    50%{background-position:100% 50%;}
+    100%{background-position:0% 50%;}
+}
+
+/* --------------------------------------------------------- */
+/* F. BOTONES KIUT EN DASHBOARD */
+/* --------------------------------------------------------- */
+.dashboard-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 25px;
+    max-width: 700px;
+    width: 100%;
+}
+
+.btn-dashboard {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 20px 35px;
+    font-size: 1.25rem;
+    font-weight: 700;
+    border-radius: 25px;
+    text-decoration: none;
+    color: #fff;
+    transition: all 0.3s ease;
+    box-shadow: 8px 8px 20px rgba(0,0,0,0.15),
+                -8px -8px 20px rgba(255,255,255,0.5);
+    background: linear-gradient(135deg, #ff9ce1, #c71585);
+}
+
+.btn-dashboard i {
+    font-size: 1.3rem;
+}
+
+.btn-dashboard:hover {
+    transform: translateY(-5px) scale(1.08);
+    box-shadow: 12px 12px 25px rgba(0,0,0,0.25),
+                -12px -12px 25px rgba(255,255,255,0.6);
+}
+
+/* --------------------------------------------------------- */
+/* G. RESPONSIVE */
+/* --------------------------------------------------------- */
+@media (max-width: 576px) {
+    .dashboard-buttons {
+        flex-direction: column;
+        gap: 15px;
+    }
+    .btn-dashboard {
+        width: 100%;
+    }
+}

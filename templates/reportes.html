@@ -1,0 +1,258 @@
+{% extends "base.html" %}
+
+{% block title %}Cierre e Informes{% endblock %}
+
+{% block content %}
+<style>
+    body {
+        background: linear-gradient(135deg, #fff0f7 0%, #ffe6f4 100%);
+        font-family: 'Poppins', sans-serif;
+    }
+
+    h2, h3 {
+        font-weight: 700;
+        letter-spacing: 0.5px;
+    }
+
+    /* Tarjetas de resumen */
+    .card {
+        border: none;
+        border-radius: 18px;
+        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
+        box-shadow: 0 5px 15px rgba(225, 0, 137, 0.25);
+    }
+
+    .card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 8px 22px rgba(217, 0, 123, 0.4);
+    }
+
+    .card h5 {
+        font-weight: 600;
+        color: #fff;
+    }
+
+    .card .card-text {
+        color: #fff;
+    }
+
+    /* Tabla */
+    .table {
+        border-collapse: separate;
+        border-spacing: 0;
+        border-radius: 15px;
+        overflow: hidden;
+    }
+
+    .table thead th {
+        background: linear-gradient(250deg, #9c0277, #e10089);
+        color: white;
+        font-weight: 600;
+    }
+
+    .table tbody tr {
+        background-color: #fff;
+        transition: all 0.2s ease;
+    }
+
+    .table tbody tr:hover {
+        background-color: #ffe6f4;
+    }
+
+    .table td {
+        vertical-align: middle;
+        color: #5a004a;
+    }
+
+    hr {
+        border-top: 2px solid #9c0277;
+        opacity: 0.8;
+    }
+
+    /* Tarjetas de gráficos */
+    .chart-card {
+        border: 2px solid rgba(225, 0, 137, 0.3);
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.85);
+        box-shadow: 0 4px 18px rgba(225, 0, 137, 0.25);
+        backdrop-filter: blur(6px);
+        transition: transform 0.3s ease;
+    }
+
+    .chart-card:hover {
+        transform: translateY(-4px);
+    }
+
+    /* Scroll elegante */
+    .table-responsive::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    .table-responsive::-webkit-scrollbar-thumb {
+        background: linear-gradient(300deg, #9c0277, #e10089);
+        border-radius: 10px;
+    }
+
+    .table-responsive::-webkit-scrollbar-track {
+        background-color: #ffe6f4;
+    }
+</style>
+
+<h2 class="mb-4 text-center" style="color:#9c0277;">
+    💖 Cierre e Informes de Ventas 💖
+</h2>
+
+<div class="row mb-4 text-center">
+    <div class="col-md-4 mb-3">
+        <div class="card text-white" style="background:linear-gradient(300deg,#9c0277,#d9007b);">
+            <div class="card-body">
+                <h5 class="card-title">TOTAL DÍA ({{ hoy.strftime('%d/%m/%Y') }})</h5>
+                <p class="card-text fs-3 fw-bold">${{ "{:,.0f}".format(total_diario) }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card text-white" style="background:linear-gradient(300deg,#9c0277,#e10089);">
+            <div class="card-body">
+                <h5 class="card-title">TOTAL SEMANA</h5>
+                <p class="card-text fs-3 fw-bold">${{ "{:,.0f}".format(total_semanal) }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card text-white" style="background:linear-gradient(300deg,#9c0277,#d9007b);">
+            <div class="card-body">
+                <h5 class="card-title">TOTAL MES</h5>
+                <p class="card-text fs-3 fw-bold">${{ "{:,.0f}".format(total_mensual) }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<hr>
+
+<h3 class="mt-4 text-center" style="color:#9c0277;">Informe Diario: Desglose de Pagos 💰</h3>
+<p class="text-center text-muted mb-4">
+    Total vendido hoy: <strong style="color:#9c0277;">${{ "{:,.0f}".format(total_diario) }}</strong>
+</p>
+
+<div class="table-responsive shadow-sm" 
+     style="max-height: 420px; overflow-y: auto; border: 2px solid #9c0277; border-radius: 15px;">
+    <table class="table text-center align-middle mb-0">
+        <thead style="position: sticky; top: 0; z-index: 1;">
+            <tr>
+                <th>Vendedora</th>
+                <th>Método de Pago</th>
+                <th>Total Recibido</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for vendedora, tipo, total in informe_diario %}
+            <tr>
+                <td>{{ vendedora }}</td>
+                <td>{{ tipo }}</td>
+                <td style="color:#d9007b; font-weight:600;">${{ "{:,.0f}".format(total) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<hr>
+
+<h3 class="mt-4 text-center" style="color:#9c0277;">ACUMULADO SEMANAL Y MES 🌸</h3>
+
+<div class="row mt-4">
+    <div class="col-md-6 mb-4">
+        <div class="chart-card p-3">
+            <div class="text-center mb-2" style="color:#9c0277; font-weight:600;">
+                Ventas por Vendedor (Mensual)
+            </div>
+            <canvas id="ventasVendedorChart"></canvas>
+        </div>
+    </div>
+    <div class="col-md-6 mb-4">
+        <div class="chart-card p-3">
+            <div class="text-center mb-2" style="color:#9c0277; font-weight:600;">
+                Tendencia de Ventas (Acumulado Semanal)
+            </div>
+            <canvas id="tendenciaMensualChart"></canvas>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    try {
+        const datosVendedores = JSON.parse('{{ datos_vendedores | safe }}');
+        const datosTendencia = JSON.parse('{{ datos_tendencia | safe }}');
+
+        const ctxVendedor = document.getElementById('ventasVendedorChart');
+        if (ctxVendedor) {
+            new Chart(ctxVendedor.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: datosVendedores.labels,
+                    datasets: [{
+                        label: 'Venta Total ($)',
+                        data: datosVendedores.data,
+                        backgroundColor: 'rgba(225, 0, 137, 0.7)',
+                        borderColor: '#9c0277',
+                        borderWidth: 2,
+                        borderRadius: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { callback: v => '$' + v.toLocaleString() }
+                        }
+                    }
+                }
+            });
+        }
+
+        const ctxTendencia = document.getElementById('tendenciaMensualChart');
+        if (ctxTendencia) {
+            new Chart(ctxTendencia.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: datosTendencia.labels,
+                    datasets: [{
+                        label: 'Venta Semanal Acumulada ($)',
+                        data: datosTendencia.data,
+                        backgroundColor: 'rgba(225, 0, 137, 0.15)',
+                        borderColor: '##9c0277',
+                        borderWidth: 3,
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: '#9c0277'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { callback: v => '$' + v.toLocaleString() }
+                        }
+                    }
+                }
+            });
+        }
+    } catch (e) {
+        console.error("Error al inicializar los gráficos:", e);
+    }
+});
+</script>
+{% endblock %}

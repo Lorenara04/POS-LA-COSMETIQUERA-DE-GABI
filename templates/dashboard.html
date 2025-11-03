@@ -1,0 +1,270 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - POS Cosmetiquería{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+
+    <div class="fondo-particulas"></div>
+
+    <div class="welcome-card">
+        <h2>¡Bienvenido/a, {{ current_user.username }}!</h2>
+        <p>Rol: <span>{{ current_user.rol | capitalize }}</span></p>
+    </div>
+
+    <div class="dashboard-buttons">
+        
+        {% if current_user.rol.lower() in ['administradora', 'administrador'] %}
+        <a href="{{ url_for('reportes') }}" class="btn-dashboard reports">
+            <i class="bi bi-bar-chart-fill"></i> **Ver Informes**
+        </a>
+        <a href="{{ url_for('gestion_ventas') }}" class="btn-dashboard manage-sales">
+            <i class="bi bi-collection-fill"></i> **Gestión Ventas**
+        </a>
+        {% endif %}
+
+        <a href="{{ url_for('nueva_venta') }}" class="btn-dashboard new-sale">
+            <i class="bi bi-cart-check-fill"></i> Nueva Venta
+        </a>
+    </div>
+
+    <div class="stats-section">
+        
+        <div class="stat-card sales-today">
+            <h3>Ventas de Hoy</h3>
+            <p class="stat-value">${{ ventas_hoy | default(0.00) | format_number }}</p> 
+        </div>
+
+        <div class="stat-card low-stock">
+            <h3>Stock Bajo</h3>
+            <p class="stat-value">{{ productos_stock_bajo | default(0) }} Productos</p>
+        </div>
+
+        <div class="stat-card new-clients">
+            <h3>Clientes Nuevos</h3>
+            <p class="stat-value">{{ clientes_nuevos_mes | default(0) }} Este Mes</p>
+        </div>
+    </div>
+    </div>
+
+<style>
+/* ---------------- FONDO DE PARTICULAS ---------------- */
+.fondo-particulas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    z-index: 0;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.fondo-particulas span {
+    position: absolute;
+    animation: flotar 20s linear infinite;
+    user-select: none;
+}
+
+@keyframes flotar {
+    0%   { transform: translateY(0) rotate(0deg); }
+    50%  { transform: translateY(-100px) rotate(180deg); }
+    100% { transform: translateY(0) rotate(360deg); }
+}
+
+/* ---------------- DASHBOARD CONTAINER ---------------- */
+.dashboard-container {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 40px;
+    padding: 50px 20px;
+    background-color: #fff0f5;
+}
+
+/* ---------------- WELCOME CARD (Altura ajustada) ---------------- */
+.welcome-card {
+    background: linear-gradient(135deg, #ffb6e1, #ff69b4, #ff1493);
+    color: #fff;
+    border-radius: 25px;
+    padding: 25px 35px; /* Altura reducida */
+    box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+    text-align: center;
+    max-width: 600px;
+    width: 100%;
+    font-family: 'Playfair Display', serif;
+    background-size: 400% 400%;
+    animation: gradientMove 10s ease infinite;
+    z-index: 2;
+}
+
+.welcome-card h2 {
+    font-size: 2.2rem;
+    font-weight: 900;
+    margin-bottom: 12px;
+}
+
+.welcome-card p span {
+    font-weight: 700;
+}
+
+@keyframes gradientMove {
+    0%{background-position:0% 50%;}
+    50%{background-position:100% 50%;}
+    100%{background-position:0% 50%;}
+}
+
+/* ---------------- BOTONES KIUT ---------------- */
+.dashboard-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 25px;
+    max-width: 750px;
+    width: 100%;
+    position: relative;
+    z-index: 2;
+}
+
+.btn-dashboard {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 20px 35px;
+    font-size: 1.25rem;
+    font-weight: 700;
+    border-radius: 25px;
+    text-decoration: none;
+    color: #fff;
+    transition: all 0.4s ease;
+    background: linear-gradient(135deg, #d63384, #e754a3); 
+    box-shadow: 8px 8px 25px rgba(0,0,0,0.2),
+                -8px -8px 25px rgba(255,255,255,0.6);
+    position: relative;
+    flex-grow: 1;
+    min-width: 250px;
+}
+
+.btn-dashboard i {
+    font-size: 1.5rem;
+    transition: transform 0.3s ease;
+}
+
+.btn-dashboard:hover {
+    transform: translateY(-5px) scale(1.05);
+    box-shadow: 12px 12px 30px rgba(0,0,0,0.3),
+                -12px -12px 30px rgba(255,255,255,0.7);
+}
+
+.btn-dashboard:hover i {
+    transform: rotate(-15deg) scale(1.1);
+}
+
+/* Colores de botones principales */
+.btn-dashboard.reports { 
+    background: linear-gradient(135deg, #FF4081, #FF8A80);
+}
+.btn-dashboard.manage-sales { 
+    background: linear-gradient(135deg, #9C27B0, #E040FB);
+}
+.btn-dashboard.new-sale { 
+    background: linear-gradient(135deg, #4CAF50, #8BC34A); 
+}
+
+/* ---------------- ESTADÍSTICAS RÁPIDAS (NUEVAS) ---------------- */
+.stats-section {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 25px;
+    /* MARGEN AJUSTADO PARA SEPARAR DE LOS BOTONES */
+    margin-top: 70px; 
+    max-width: 900px;
+    width: 100%;
+    z-index: 2;
+}
+
+.stat-card {
+    background: #fff;
+    border-radius: 20px;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+    min-width: 200px;
+    flex: 1;
+    transition: transform 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.stat-card h3 {
+    font-size: 1.1rem;
+    color: #d63384; /* Magenta */
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 900;
+}
+
+/* Colores para diferenciar las tarjetas */
+.stat-card.sales-today {
+    border-bottom: 5px solid #ff1493; /* Rosa fuerte */
+}
+.stat-card.low-stock {
+    border-bottom: 5px solid #ffcc33; /* Amarillo/Dorado para alerta */
+}
+.stat-card.new-clients {
+    border-bottom: 5px solid #00BCD4; /* Turquesa */
+}
+
+
+/* ---------------- RESPONSIVE ---------------- */
+@media (max-width: 768px) {
+    .stats-section {
+        flex-direction: column;
+    }
+    .stat-card {
+        min-width: unset;
+        width: 100%;
+    }
+}
+@media (max-width: 600px) {
+    .dashboard-buttons {
+        flex-direction: column;
+        gap: 15px;
+    }
+    .btn-dashboard {
+        width: 100%;
+        min-width: unset;
+    }
+}
+</style>
+
+<script>
+/* ---------------- GENERAR PARTICULAS FLOTANTES ---------------- */
+const fondo = document.querySelector('.fondo-particulas');
+const emojis = ['💄','💅','✨','💖','👁️','🪞'];
+const cantidad = 30; // número de iconos
+
+for (let i = 0; i < cantidad; i++) {
+    const span = document.createElement('span');
+    span.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+    span.style.top = Math.random() * 100 + 'vh';
+    span.style.left = Math.random() * 100 + 'vw';
+    span.style.animationDuration = 15 + Math.random() * 20 + 's';
+    span.style.fontSize = 30 + Math.random() * 40 + 'px';
+    span.style.opacity = 0.1 + Math.random() * 0.2;
+    fondo.appendChild(span);
+}
+</script>
+
+{% endblock %}
