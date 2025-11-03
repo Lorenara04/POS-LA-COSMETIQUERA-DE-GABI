@@ -15,7 +15,7 @@ from barcode.writer import ImageWriter
 from io import BytesIO
 from collections import defaultdict
 import base64
-from flask_mail import Mail, Message
+#from flask_mail import Mail, Message
 from apscheduler.schedulers.background import BackgroundScheduler
 from flask import Flask, render_template
 
@@ -134,64 +134,62 @@ def inject_global_data():
 
 def enviar_informe_ventas(periodo):
     with app.app_context():
-        # 1. Obtener el rango de fechas y datos
-        hoy = date.today()
+#        # 1. Obtener el rango de fechas y datos
+ #       hoy = date.today()
         
-        if periodo == 'semanal':
+  #      if periodo == 'semanal':
             # Informe Semanal: Últimos 7 días
-            inicio = hoy - timedelta(days=7)
-            asunto = f"📊 Informe Semanal de Ventas - {hoy.strftime('%d/%m/%Y')}"
-            total = db.session.query(func.sum(Venta.total)).filter(Venta.fecha >= inicio).scalar() or 0
+   #         inicio = hoy - timedelta(days=7)
+    #        asunto = f"📊 Informe Semanal de Ventas - {hoy.strftime('%d/%m/%Y')}"
+     #       total = db.session.query(func.sum(Venta.total)).filter(Venta.fecha >= inicio).scalar() or 0
         
-        elif periodo == 'mensual':
+      #  elif periodo == 'mensual':
             # Informe Mensual: Mes actual
-            inicio = hoy.replace(day=1)
-            asunto = f"💰 Informe Mensual de Ventas - {hoy.strftime('%B %Y')}"
-            total = db.session.query(func.sum(Venta.total)).filter(Venta.fecha >= inicio).scalar() or 0
-        else:
-            return
+       #     inicio = hoy.replace(day=1)
+        #    asunto = f"💰 Informe Mensual de Ventas - {hoy.strftime('%B %Y')}"
+         #   total = db.session.query(func.sum(Venta.total)).filter(Venta.fecha >= inicio).scalar() or 0
+        #else:
+         #   return
 
         # 2. Obtener más detalles (ej: total por vendedor para el periodo)
-        ventas_vendedor = db.session.query(
-            Usuario.username,
-            func.sum(Venta.total)
-        ).join(Venta, Usuario.id == Venta.usuario_id
-        ).filter(Venta.fecha >= inicio
-        ).group_by(Usuario.username).order_by(func.sum(Venta.total).desc()).all()
+        #ventas_vendedor = db.session.query(
+         #   Usuario.username,
+          #  func.sum(Venta.total)
+        #).join(Venta, Usuario.id == Venta.usuario_id
+        #).filter(Venta.fecha >= inicio
+        #).group_by(Usuario.username).order_by(func.sum(Venta.total).desc()).all()
 
         # 3. Construir el cuerpo del mensaje
-        cuerpo = f"""
-        Hola Administradora,
+        #cuerpo = f"""
+       # Hola Administradora,
+        #Adjunto los datos resumidos del {periodo} de ventas:
+        
+        #OTAL DE VENTAS {periodo.upper()}: ${"{:,.0f}".format(total)}
 
-        Adjunto los datos resumidos del {periodo} de ventas:
+    
+        #Ventas por Vendedor:
         
-        TOTAL DE VENTAS {periodo.upper()}: ${"{:,.0f}".format(total)}
-
-        ---
-        Ventas por Vendedor:
+       # """
+        #for v, t in ventas_vendedor:
+         #   cuerpo += f"- {v}: ${"{:,.0f}".format(t or 0)}\n"
         
-        """
-        for v, t in ventas_vendedor:
-            cuerpo += f"- {v}: ${"{:,.0f}".format(t or 0)}\n"
-        
-        cuerpo += """
-        ---
-        Para ver el informe detallado y gráficos, por favor ingresa al sistema.
-        """
+        #cuerpo += """
+        #Para ver el informe detallado y gráficos, por favor ingresa al sistema.
+        #"""
         
         # 4. Enviar el correo
-        msg = Message(asunto, sender=app.config['MAIL_USERNAME'], recipients=[app.config['ADMIN_EMAIL']])
-        msg.body = cuerpo
-        try:
-            mail.send(msg)
-            print(f"Correo de informe {periodo} enviado exitosamente.")
-        except Exception as e:
-            print(f"ERROR al enviar correo {periodo}: {e}")
+        #msg = Message(asunto, sender=app.config['MAIL_USERNAME'], recipients=[app.config['ADMIN_EMAIL']])
+        #msg.body = cuerpo
+        #try:
+            #mail.send(msg)
+            #print(f"Correo de informe {periodo} enviado exitosamente.")
+        #except Exception as e:
+            #print(f"ERROR al enviar correo {periodo}: {e}")
 
 # Inyecta la función generar_barcode_base64 en el contexto (la moví de antes)
-def generar_barcode_base64(codigo):
+#//def generar_barcode_base64(codigo):
     # ... (cuerpo de tu función de código de barras) ...
-    pass
+   # pass
 
 # =================================================================
 #  FUNCIONES DE UTILIDAD (NO TIENE QUE VER CON EL CONTEXT_PROCESSOR)
