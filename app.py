@@ -15,8 +15,8 @@ from barcode.writer import ImageWriter
 from io import BytesIO
 from collections import defaultdict
 import base64
-#from flask_mail import Mail, Message
 from flask import Flask, render_template
+
 # =================================================================
 # 2. APP CONFIG & DATABASE
 # =================================================================
@@ -850,6 +850,12 @@ def eliminar_venta(venta_id):
 
 # IMPORTANTE: Toda la lógica de creación de la base de datos y tareas programadas
 # ha sido movida al archivo 'init_db.py' para el correcto despliegue con Gunicorn.
+class Inventario(db.Model):
+    __tablename__ = 'inventario'
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(100))
+    ...
+
 
 if __name__ == '__main__':
     # Esta línea SÓLO se ejecuta cuando corres 'python app.py' localmente.
