@@ -21,7 +21,7 @@ from flask import Flask, render_template
 # 2. APP CONFIG & DATABASE
 # =================================================================
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///pos_cosmetiqueria.db'
+app.configapp.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////data/inventario.db'
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', os.urandom(24))
 
 db = SQLAlchemy(app) # Define la instancia de DB aquí
