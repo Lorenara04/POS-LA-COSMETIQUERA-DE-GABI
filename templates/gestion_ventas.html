@@ -3,19 +3,20 @@
 {% block title %}Gestión de Ventas{% endblock %}
 
 {% block content %}
-<h2 class="mb-4 text-center titulo-ventas">⚠️ Gestión de Ventas: Anular/Reversar ⚠️</h2>
+<div id="flash-container" class="container mt-3"></div>
+
+<h2 class="mb-4 text-center titulo-ventas">📊 Gestión de Ventas: Detalle y Anulación ⚠️</h2>
 <p class="text-center text-muted subtitulo-ventas">
-    Esta tabla muestra las últimas 30 ventas y permite anularlas, devolviendo el stock al inventario.<br>
+    Esta tabla muestra las últimas 30 ventas y permite ver sus detalles, editar información básica o anularlas (devolviendo el stock).<br>
     <strong>Esta acción es solo para Administradores.</strong>
 </p>
 
 <style>
-    /* Fondo y tipografía general */
+    /* Estilos CSS */
     body {
         background: linear-gradient(135deg, #fff 0%, #ffe6f3 100%);
         font-family: 'Poppins', sans-serif;
     }
-
     .titulo-ventas {
         background: linear-gradient(90deg, #9c0277, #aa0066);
         -webkit-background-clip: text;
@@ -24,20 +25,16 @@
         letter-spacing: 1px;
         text-shadow: 0 0 8px rgba(156, 2, 119, 0.3);
     }
-
     .subtitulo-ventas {
         font-size: 0.95rem;
         color: #6c757d;
     }
-
-    /* Tabla de ventas */
     .tabla-ventas {
         border: 2px solid #aa0066;
         border-radius: 15px;
         overflow: hidden;
         box-shadow: 0 0 20px rgba(156, 2, 119, 0.15);
     }
-
     .tabla-ventas thead th {
         background: linear-gradient(90deg, #9c0277, #aa0066);
         color: white;
@@ -46,26 +43,18 @@
         font-weight: 600;
         letter-spacing: 0.5px;
     }
-
-    .tabla-ventas tbody tr {
-        transition: all 0.3s ease;
-    }
-
     .tabla-ventas tbody tr:hover {
         background-color: rgba(170, 0, 102, 0.08);
         transform: scale(1.01);
     }
-
     .tabla-ventas td {
         vertical-align: middle;
         text-align: center;
         color: #333;
         font-weight: 500;
     }
-
-    /* Botón anular */
-    .btn-eliminar {
-        background: linear-gradient(90deg, #9c0277, #aa0066);
+    .btn-anular {
+        background: linear-gradient(90deg, #aa0066, #d32f2f);
         color: #fff !important;
         border: none;
         border-radius: 20px;
@@ -73,30 +62,36 @@
         font-weight: 600;
         font-size: 0.9rem;
         transition: all 0.3s ease;
-        box-shadow: 0 0 10px rgba(156, 2, 119, 0.4);
+        box-shadow: 0 0 10px rgba(211, 47, 47, 0.4);
         text-decoration: none;
     }
-
-    .btn-eliminar:hover {
-        background: linear-gradient(90deg, #aa0066, #9c0277);
+    .btn-anular:hover {
+        background: linear-gradient(90deg, #d32f2f, #aa0066);
         color: #fff;
-        box-shadow: 0 0 20px rgba(156, 2, 119, 0.6);
+        box-shadow: 0 0 20px rgba(211, 47, 47, 0.6);
         transform: translateY(-2px) scale(1.05);
     }
-
-    /* Contenedor tabla */
+    .btn-detalle {
+        background-color: #007bff;
+        color: white;
+        border-radius: 20px;
+        padding: 7px 15px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+        margin-right: 8px;
+    }
+    .btn-detalle:hover {
+        background-color: #0056b3;
+    }
     .table-responsive {
         margin-top: 30px;
         animation: fadeIn 0.8s ease-in-out;
     }
-
-    /* Animación suave */
     @keyframes fadeIn {
         from { opacity: 0; transform: translateY(10px); }
         to { opacity: 1; transform: translateY(0); }
     }
-
-    /* Mensaje de acceso restringido */
     .alert-danger {
         background: linear-gradient(90deg, #aa0066, #9c0277);
         border: none;
@@ -104,6 +99,16 @@
         font-weight: 600;
         border-radius: 15px;
         box-shadow: 0 0 15px rgba(156, 2, 119, 0.3);
+    }
+    .modal-content-custom {
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+    }
+    .modal-header-custom {
+        background: linear-gradient(90deg, #9c0277, #aa0066);
+        color: white;
+        border-radius: 15px 15px 0 0;
+        border-bottom: none;
     }
 </style>
 
@@ -125,20 +130,403 @@
             <tr>
                 <td>{{ venta.id }}</td>
                 <td>{{ (venta.fecha - timedelta(hours=5)).strftime('%d/%m/%Y %I:%M %p') }}</td>
-                <td>${{ "{:,.0f}".format(venta.total) }}</td>
+                <td>${{ venta.total | format_number }}</td>
                 <td>{{ venta.vendedor.username if venta.vendedor else 'N/A' }}</td>
                 <td>{{ venta.comprador.nombre if venta.comprador else 'Contado / Genérico' }}</td>
                 <td>
+                    <button type="button" class="btn-detalle btn" data-bs-toggle="modal" data-bs-target="#detalleModal" data-venta-id="{{ venta.id }}">
+                        <i class="fas fa-eye me-1"></i> Ver/Editar
+                    </button>
                     <a href="{{ url_for('eliminar_venta', venta_id=venta.id) }}" 
-                       onclick="return confirm('¿Estás segura de que quieres ANULAR la Venta N° {{ venta.id }}? Esta acción es irreversible y devolverá el stock.');" 
-                       class="btn-eliminar">✨ Anular</a>
+                        onclick="return confirm('¿Estás segura de que quieres ANULAR la Venta N° {{ venta.id }}? Esta acción es irreversible y devolverá el stock.');" 
+                        class="btn-anular"><i class="fas fa-undo me-1"></i> Anular</a>
                 </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 </div>
+
+<div class="modal fade" id="detalleModal" tabindex="-1" aria-labelledby="detalleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content modal-content-custom">
+            <div class="modal-header modal-header-custom">
+                <h5 class="modal-title" id="detalleModalLabel">Detalle de Venta N° <span id="modal-venta-id"></span></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="form-editar-info-basica" method="POST" action="">
+                    <input type="hidden" name="venta_id" id="input-venta-id">
+                    <div class="row">
+                        <div class="col-md-7">
+                            <h4><i class="fas fa-shopping-cart me-2"></i> Productos Vendidos <button type="button" class="btn btn-sm btn-outline-success ms-3" id="btn-agregar-producto-modal"><i class="fas fa-plus"></i> Agregar Producto</button></h4>
+                            
+                            <div class="alert alert-info mt-2" role="alert">
+                                ⚠️ **Edición de Productos:** Haz clic en la cantidad para modificarla o en el botón de la derecha para anular la línea y devolver el stock. ¡Recuerda Guardar Cambios al Detalle!
+                            </div>
+
+                            <table class="table table-striped table-bordered mt-3">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 45%;">Producto y Descripción</th>
+                                        <th style="width: 15%;">Cant.</th>
+                                        <th style="width: 20%;">Precio Unitario</th>
+                                        <th style="width: 20%;">Subtotal / **Anular**</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="productos-vendidos-body">
+                                    </tbody>
+                            </table>
+                            <div class="text-end mt-3">
+                                <button type="button" class="btn btn-lg btn-danger" id="btn-guardar-detalle-venta"><i class="fas fa-magic me-2"></i> Guardar Cambios al Detalle</button>
+                                <strong class="ms-3">Total Venta: </strong> $ <span id="modal-total-venta" class="fs-4 text-danger fw-bold"></span>
+                                <input type="hidden" name="total_venta_editado" id="input-total-venta-editado">
+                            </div>
+                        </div>
+
+                        <div class="col-md-5 border-start ps-4">
+                            <h4><i class="fas fa-info-circle me-2"></i> Información Básica</h4>
+                            <div class="mb-3">
+                                <label for="modal-fecha">Fecha y Hora</label>
+                                <input type="text" id="modal-fecha" class="form-control" readonly>
+                            </div>
+                            <div class="mb-3">
+                                <label for="modal-vendedor">Vendedor</label>
+                                <select name="vendedor_id" id="modal-vendedor" class="form-select">
+                                    {% for user in vendedores_full %}
+                                        <option value="{{ user.id }}">{{ user.username }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="modal-cliente">Cliente</label>
+                                <select name="cliente_id" id="modal-cliente" class="form-select">
+                                    {% for cliente in clientes_full %}
+                                        <option value="{{ cliente.id }}">{{ cliente.nombre }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <hr>
+                            <h4><i class="fas fa-credit-card me-2"></i> Detalle de Pagos</h4>
+                            <div id="modal-detalle-pagos" class="mb-3"></div>
+                            <div class="mt-4 text-center">
+                                <button type="submit" class="btn btn-success btn-lg"><i class="fas fa-save me-2"></i> Guardar Cambios Básicos</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="agregarProductoModal" tabindex="-1" aria-labelledby="agregarProductoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="agregarProductoModalLabel"><i class="fas fa-box-open me-2"></i> Agregar Producto a Venta N° <span id="modal-agregar-venta-id"></span></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="select-producto-agregar" class="form-label">Buscar Producto (por nombre o descripción)</label>
+                    <select id="select-producto-agregar" class="form-select w-100"></select>
+                </div>
+                <div id="info-producto-seleccionado" class="mt-3 p-3 border rounded" style="display:none;">
+                    <p><strong>Precio Venta:</strong> $<span id="info-precio-venta"></span></p>
+                    <p><strong>Stock Disponible:</strong> <span id="info-stock"></span> unidades</p>
+                    <div class="d-flex align-items-center">
+                        <label for="input-cantidad-agregar" class="me-3">Cantidad a Añadir:</label>
+                        <input type="number" id="input-cantidad-agregar" class="form-control w-25 me-3" value="1" min="1">
+                        <button type="button" class="btn btn-primary" id="btn-confirmar-agregar"><i class="fas fa-plus-circle me-2"></i> Añadir a Venta</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% else %}
 <div class="alert alert-danger text-center">Solo los administradores pueden acceder a la gestión de ventas.</div>
 {% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+    let productosEnVenta = [];
+    let productosInventario = []; 
+
+    function formatCurrency(value) {
+        if (typeof value === 'string') {
+            value = parseFloat(value);
+        }
+        return value.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    }
+
+    // Función para mostrar mensajes de alerta (requiere el div #flash-container)
+    function flashMessage(message, category = 'success') {
+        const container = $('#flash-container');
+        if (!container.length) {
+            console.warn("Contenedor de flash no encontrado.");
+            return;
+        }
+
+        const alertHtml = `<div class="alert alert-${category === 'danger' ? 'danger' : (category === 'warning' ? 'warning' : 'success')} alert-dismissible fade show" role="alert">${message}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>`;
+        container.html(alertHtml);
+        setTimeout(() => container.empty(), 5000);
+    }
+
+    // Recalcula el total y actualiza la UI
+    function recalcularTotales() {
+        let total = 0;
+        productosEnVenta.forEach(p => {
+            if (p.cantidad > 0) {
+                const subtotal = p.cantidad * p.precio_unitario;
+                p.subtotal = subtotal;
+                total += subtotal;
+            } else {
+                p.subtotal = 0;
+            }
+        });
+
+        $('#modal-total-venta').text(formatCurrency(total));
+        $('#input-total-venta-editado').val(total.toFixed(2));
+    }
+
+    // Renderiza la tabla de productos
+    function renderProductos() {
+        const $tbody = $('#productos-vendidos-body');
+        $tbody.empty();
+
+        const productosVisibles = productosEnVenta.filter(p => p.cantidad > 0);
+
+        if (productosVisibles.length === 0) {
+            $tbody.html('<tr><td colspan="4" class="text-muted">No hay productos activos en esta venta.</td></tr>');
+            recalcularTotales();
+            return;
+        }
+
+        productosEnVenta.forEach((p, index) => {
+            if (p.cantidad <= 0) return;
+
+            const row = `
+                <tr data-index="${index}" data-id="${p.id}" data-precio="${p.precio_unitario}">
+                    <td class="text-start">
+                        <strong>${p.nombre}</strong><br>
+                        <small class="text-muted">${p.descripcion || 'Sin descripción'}</small>
+                    </td>
+                    <td>
+                        <input type="number" class="form-control form-control-sm text-center input-cantidad-producto" 
+                               value="${p.cantidad}" min="1" data-index="${index}" style="width: 80px; display: inline-block;">
+                    </td>
+                    <td>$${formatCurrency(p.precio_unitario)}</td>
+                    <td>
+                        <span class="fw-bold">$${formatCurrency(p.subtotal)}</span>
+                        <button type="button" class="btn btn-sm btn-danger btn-anular-producto ms-2" data-index="${index}" title="Anular este producto y devolver stock">
+                            <i class="fas fa-undo-alt"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+            $tbody.append(row);
+        });
+        recalcularTotales();
+    }
+
+    $(document).ready(function() {
+        // Inicializar Select2 para info básica (Solo estos dos en ready)
+        $('#modal-vendedor').select2({ dropdownParent: $('#detalleModal') });
+        $('#modal-cliente').select2({ dropdownParent: $('#detalleModal') });
+    });
+    
+    // Función de Inicialización del Modal Principal
+    $('#detalleModal').on('show.bs.modal', function (event) {
+        const button = $(event.relatedTarget);
+        const ventaId = button.data('venta-id');
+        const modal = $(this);
+
+        modal.find('.modal-title #modal-venta-id').text(ventaId);
+        modal.find('#input-venta-id').val(ventaId);
+        $('#modal-agregar-venta-id').text(ventaId);
+        
+        // Asignar action dinámico para la información básica
+        modal.find('#form-editar-info-basica').attr('action', `/ventas/editar_info/${ventaId}`);
+        
+        // CORRECCIÓN: Destruir el Select2 de productos antes de inicializarlo con nuevos datos
+        if ($('#select-producto-agregar').data('select2')) {
+            $('#select-producto-agregar').select2('destroy');
+        }
+
+        $.when(
+            $.getJSON(`/api/ventas/detalle/${ventaId}`),
+            $.getJSON(`{{ url_for('api_todos_los_productos') }}`)
+        ).done(function(ventaResponse, productosResponse) {
+            const data = ventaResponse[0];
+            productosInventario = productosResponse[0].productos;
+
+            // Cargar datos de la venta y renderizar tabla
+            productosEnVenta = data.productos;
+            renderProductos();
+
+            $('#modal-fecha').val(data.fecha);
+            $('#modal-cliente').val(data.cliente_id).trigger('change');
+            $('#modal-vendedor').val(data.vendedor_id).trigger('change');
+
+            // Cargar detalle de pagos
+            const pagos = data.pagos || {};
+            let pagosHtml = '';
+            const metodosPago = ['Efectivo', 'Nequi', 'Daviplata', 'Transferencia', 'Tarjeta/Bold'];
+
+            metodosPago.forEach(metodo => {
+                const monto = pagos[metodo] || 0;
+                if (monto > 0) {
+                    pagosHtml += `<div class="mb-2 p-2 border rounded" style="background-color: #f7f7f7;"><strong>${metodo}:</strong> $${formatCurrency(monto)}</div>`;
+                }
+            });
+            $('#modal-detalle-pagos').html(pagosHtml || '<p class="text-muted">No se registraron detalles de pago.</p>');
+            
+            // Re-inicializar Select2 del buscador (CORRECCIÓN)
+            const select2Data = productosInventario.map(p => ({
+                id: p.id,
+                text: `${p.nombre} (${p.descripcion.substring(0, 30)}...) [Stock: ${p.cantidad_stock}]`,
+                data: p
+            }));
+            $('#select-producto-agregar').empty().select2({
+                dropdownParent: $('#agregarProductoModal'),
+                data: select2Data,
+                placeholder: "Buscar o seleccionar producto",
+                allowClear: true,
+                width: '100%',
+                templateResult: function(data) {
+                    if (!data.id) { return data.text; }
+                    return $('<span>' + data.text + '</span>');
+                }
+            });
+            $('#select-producto-agregar').val(null).trigger('change');
+            $('#info-producto-seleccionado').hide();
+
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            console.error('Error cargando datos:', errorThrown);
+            flashMessage('Error al cargar los detalles de la venta.', 'danger');
+        });
+    });
+
+    // GESTIÓN DE EVENTOS DE EDICIÓN DE DETALLE
+    $('#productos-vendidos-body')
+        .on('change', '.input-cantidad-producto', function() {
+            const index = $(this).data('index');
+            let nuevaCantidad = parseInt($(this).val()) || 0;
+            if (nuevaCantidad < 1) {
+                nuevaCantidad = 1; 
+                $(this).val(1);
+            }
+            productosEnVenta[index].cantidad = nuevaCantidad;
+            renderProductos();
+        })
+        .on('click', '.btn-anular-producto', function() {
+            if (!confirm('¿Estás segura de que quieres ANULAR este producto?')) return;
+            const index = $(this).data('index');
+            productosEnVenta[index].cantidad = 0; 
+            renderProductos();
+            flashMessage('Producto marcado para anulación.', 'warning');
+        });
+
+    // Evento para abrir el modal de agregar producto
+    $('#btn-agregar-producto-modal').on('click', function() {
+        $('#agregarProductoModal').modal('show');
+        $('#detalleModal').modal('hide');
+    });
+    
+    // Evento para seleccionar un producto en el modal de adición
+    $('#select-producto-agregar').on('select2:select', function(e) {
+        const producto = e.params.data.data;
+        if (producto) {
+            $('#info-precio-venta').text(formatCurrency(producto.valor_venta));
+            $('#info-stock').text(producto.cantidad_stock);
+            $('#input-cantidad-agregar').val(1).attr('max', producto.cantidad_stock);
+            $('#info-producto-seleccionado').data('producto', producto).show();
+        } else {
+            $('#info-producto-seleccionado').hide();
+        }
+    });
+
+    // Evento para confirmar la adición del producto
+    $('#btn-confirmar-agregar').on('click', function() {
+        const productoData = $('#info-producto-seleccionado').data('producto');
+        let cantidad = parseInt($('#input-cantidad-agregar').val());
+        const stock = productoData.cantidad_stock;
+        
+        if (!productoData || cantidad <= 0 || isNaN(cantidad)) {
+            alert('Selecciona un producto y cantidad válida.');
+            return;
+        }
+        if (cantidad > stock) {
+            alert(`Error: La cantidad disponible es ${stock}.`);
+            return;
+        }
+
+        const existingIndex = productosEnVenta.findIndex(p => p.id === productoData.id);
+        if (existingIndex !== -1) {
+            productosEnVenta[existingIndex].cantidad += cantidad;
+        } else {
+            productosEnVenta.push({
+                id: productoData.id,
+                nombre: productoData.nombre,
+                descripcion: productoData.descripcion,
+                cantidad: cantidad,
+                precio_unitario: productoData.valor_venta,
+                subtotal: 0
+            });
+        }
+        
+        renderProductos();
+        $('#agregarProductoModal').modal('hide');
+        $('#detalleModal').modal('show');
+        flashMessage(`Producto añadido. ¡Guarda los cambios al detalle!`, 'info');
+    });
+
+    // LÓGICA DE GUARDAR EL DETALLE DE LA VENTA (AJAX)
+    $('#btn-guardar-detalle-venta').on('click', function() {
+        const ventaId = $('#input-venta-id').val();
+        const url = `/api/ventas/detalle/editar/${ventaId}`;
+
+        const productosAEnviar = productosEnVenta.filter(p => p.cantidad > 0).map(p => ({
+            id: p.id,
+            cantidad: p.cantidad,
+            precio_unitario: p.precio_unitario,
+        }));
+        
+        if (productosAEnviar.length === 0) {
+                if (!confirm('Advertencia: La venta quedará sin productos. ¿Continuar?')) return;
+        }
+
+        const $btn = $(this);
+        $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-2"></i> Guardando Detalle...');
+
+        $.ajax({
+            url: url,
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ productos: productosAEnviar }),
+            success: function(response) {
+                $btn.prop('disabled', false).html('<i class="fas fa-magic me-2"></i> Guardar Cambios al Detalle');
+                if (response.success) {
+                    flashMessage(`✅ Detalle de venta N° ${ventaId} actualizado. Nuevo Total: $${formatCurrency(response.nuevo_total)}.`, 'success');
+                    $('#modal-total-venta').text(formatCurrency(response.nuevo_total));
+                    $('#input-total-venta-editado').val(response.nuevo_total);
+                    setTimeout(() => location.reload(), 1500); 
+                } else {
+                    flashMessage(`❌ Error al guardar detalle: ${response.message}`, 'danger');
+                    renderProductos(); 
+                }
+            },
+            error: function(jqXHR) {
+                $btn.prop('disabled', false).html('<i class="fas fa-magic me-2"></i> Guardar Cambios al Detalle');
+                const errorMsg = jqXHR.responseJSON && jqXHR.responseJSON.message ? jqXHR.responseJSON.message : 'Error de comunicación con el servidor.';
+                flashMessage(`❌ Error: ${errorMsg}`, 'danger');
+            }
+        });
+    });
+</script>
 {% endblock %}

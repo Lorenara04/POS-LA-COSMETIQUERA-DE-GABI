@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+
+{% block title %}Historial de Cierres de Caja{% endblock %}
+
+{% block content %}
+<style>
+    /* Estilos copiados de reportes.html para mantener consistencia */
+    .card { border: none; border-radius: 18px; box-shadow: 0 5px 15px rgba(225, 0, 137, 0.25); }
+    .table thead th { background: linear-gradient(250deg, #9c0277, #e10089); color: white; font-weight: 600; }
+    .table tbody tr { background-color: #fff; transition: all 0.2s ease; }
+    .table tbody tr:hover { background-color: #ffe6f4; }
+    .table td { vertical-align: middle; color: #5a004a; }
+    
+    /* Estilos específicos para el modal */
+    .resumen-modal-box {
+        background-color: #fff0f7;
+        border-left: 5px solid #c71585;
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 8px;
+    }
+    .resumen-modal-box h5 {
+        font-weight: 700;
+        color: #9c0277;
+    }
+    .resumen-modal-box .monto {
+        font-size: 1.5rem;
+        font-weight: 700;
+    }
+    .monto-efectivo { color: #007bff; }
+    .monto-electronico { color: #d9007b; }
+</style>
+
+<h2 class="mb-4 text-center" style="color:#9c0277;">
+    📜 Historial de Cierres de Caja 📜
+</h2>
+
+<div class="row">
+    <div class="col-12">
+        <a href="{{ url_for('reportes') }}" class="btn btn-outline-secondary mb-3"><i class="fas fa-arrow-left me-2"></i> Volver a Informes Diarios</a>
+    </div>
+</div>
+
+<div class="table-responsive shadow-sm" style="border: 2px solid #9c0277; border-radius: 15px;">
+    <table class="table text-center align-middle mb-0">
+        <thead style="position: sticky; top: 0; z-index: 1;">
+            <tr style="background: linear-gradient(250deg, #9c0277, #e10089); color: white;">
+                <th>Fecha de Cierre</th>
+                <th>Vendedor (Cierre)</th>
+                <th>Total Venta</th>
+                <th>Total Efectivo</th>
+                <th>Total Electrónico</th>
+                <th>Detalles</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for cierre in cierres %}
+            <tr>
+                {# Mostramos la fecha del cierre, ajustada a la hora local (asumiendo UTC -5) #}
+                <td>{{ (cierre.fecha_cierre - timedelta(hours=5)).strftime('%d/%m/%Y %I:%M %p') }}</td>
+                <td>{{ cierre.usuario.username }}</td>
+                <td style="font-weight:600;">${{ "{:,.0f}".format(cierre.total_venta) }}</td>
+                <td>${{ "{:,.0f}".format(cierre.total_efectivo) }}</td>
+                <td style="color:#d9007b; font-weight:600;">${{ "{:,.0f}".format(cierre.total_electronico) }}</td>
+                <td>
+                    <button type="button" class="btn btn-sm" style="background-color: #e10089; color: white;" data-bs-toggle="modal" data-bs-target="#modalDetalle{{ cierre.id }}">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{# Generación dinámica de modales para ver el detalle del JSON guardado #}
+{% for cierre in cierres %}
+<div class="modal fade" id="modalDetalle{{ cierre.id }}" tabindex="-1" aria-labelledby="modalDetalleLabel{{ cierre.id }}" aria-hidden="true">
+    <div class="modal-dialog modal-xl"> {# Cambiado a modal-xl para más espacio #}
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: #9c0277; color: white;">
+                <h5 class="modal-title" id="modalDetalleLabel{{ cierre.id }}">Detalle del Cierre - {{ (cierre.fecha_cierre - timedelta(hours=5)).strftime('%d/%m/%Y %I:%M %p') }}</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                {# Usamos el filtro 'from_json' para convertir la cadena JSON a un diccionario #}
+                {% set detalles = cierre.detalles_json | from_json %}
+                {% set desglose_general = detalles.GENERAL if 'GENERAL' in detalles else {} %}
+
+                <div class="row text-center">
+                    <div class="col-md-6 mb-3">
+                        <div class="resumen-modal-box">
+                            <h5>TOTAL EFECTIVO A CONTAR</h5>
+                            <p class="monto monto-efectivo">${{ "{:,.0f}".format(cierre.total_efectivo) }}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="resumen-modal-box">
+                            <h5>TOTAL ELECTRÓNICO (Verificado)</h5>
+                            <p class="monto monto-electronico">${{ "{:,.0f}".format(cierre.total_electronico) }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <h6 class="mt-4 mb-3" style="color:#9c0277; font-weight:700;">💳 Desglose General de Pagos Electrónicos:</h6>
+                
+                {# PRIMERA TABLA: Desglose general de pagos electrónicos #}
+                <div class="table-responsive mb-4">
+                    <table class="table table-sm table-bordered text-center">
+                        <thead style="background-color: #e6e6e6;">
+                            <tr>
+                                <th>Nequi</th>
+                                <th>Daviplata</th>
+                                <th>Transferencia</th>
+                                <th>Tarjeta/Bold</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="font-weight:600; color:#d9007b;">${{ "{:,.0f}".format(desglose_general.Nequi or 0) }}</td>
+                                <td style="font-weight:600; color:#d9007b;">${{ "{:,.0f}".format(desglose_general.Daviplata or 0) }}</td>
+                                <td style="font-weight:600; color:#d9007b;">${{ "{:,.0f}".format(desglose_general.Transferencia or 0) }}</td>
+                                <td style="font-weight:600; color:#d9007b;">${{ "{:,.0f}".format(desglose_general['Tarjeta/Bold'] or 0) }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h6 class="mt-4 mb-3" style="color:#9c0277; font-weight:700;">👩 Desglose de Ventas por Vendedor:</h6>
+                
+                {# SEGUNDA TABLA: Desglose por vendedor (Efectivo vs. Electrónico) #}
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped table-hover text-center">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Vendedor</th>
+                                <th>Total Venta</th>
+                                <th>Total Efectivo</th>
+                                <th>Total Electrónico</th>
+                                <th>(Nequi)</th>
+                                <th>(Daviplata)</th>
+                                <th>(Transferencia)</th>
+                                <th>(Tarjeta)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {# Iteramos sobre las claves que NO son 'GENERAL' (que son los vendedores) #}
+                            {% for vendedor, datos in detalles.items() %}
+                            {% if vendedor != 'GENERAL' %}
+                            {% set total_electronico_vendedor = (datos.Nequi or 0) + (datos.Daviplata or 0) + (datos.Transferencia or 0) + (datos['Tarjeta/Bold'] or 0) %}
+                            <tr>
+                                <td>{{ vendedor }}</td>
+                                <td style="font-weight:600;">${{ "{:,.0f}".format(datos.total_venta or 0) }}</td>
+                                
+                                <td style="font-weight:600; color:#007bff;">${{ "{:,.0f}".format(datos.Efectivo or 0) }}</td>
+                                <td style="font-weight:600; color:#d9007b;">${{ "{:,.0f}".format(total_electronico_vendedor) }}</td>
+                                
+                                {# DETALLES Electrónicos #}
+                                <td>${{ "{:,.0f}".format(datos.Nequi or 0) }}</td>
+                                <td>${{ "{:,.0f}".format(datos.Daviplata or 0) }}</td>
+                                <td>${{ "{:,.0f}".format(datos.Transferencia or 0) }}</td>
+                                <td>${{ "{:,.0f}".format(datos['Tarjeta/Bold'] or 0) }}</td>
+                            </tr>
+                            {% endif %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <p class="mt-3 fs-5 text-end" style="color:#9c0277;">
+                    <strong>TOTAL GENERAL DEL DÍA:</strong> ${{ "{:,.0f}".format(cierre.total_venta) }}
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+// No se requiere JS adicional, Bootstrap maneja los modales.
+</script>
+{% endblock %}

@@ -12,12 +12,16 @@
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <style>
+        /* [Se mantienen todos los estilos CSS para el diseño] */
         :root {
             --color-primario: #c71585; 
             --color-primario-hover: #a6126f;
-            background: linear-gradient(160deg, #f9e8f1 0%, #ffffff 100%); /* <-- Fondo Rosa Pálido */
+            background: linear-gradient(160deg, #f9e8f1 0%, #ffffff 100%);
             --color-card: #FFFFFF;
             --color-card-header: #37474F; 
             --color-card-header-texto: #FFFFFF;
@@ -30,22 +34,21 @@
         html { height: 100%; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
-            background-color: var(--color-fondo) !important; /* <-- Forzamos el fondo rosa */
+            background-color: var(--color-fondo) !important;
             color: var(--color-texto);
             display: flex;
             flex-direction: column;
             min-height: 100%; 
         }
 
-        /* Contenedor principal de la venta */
         .container-venta {
             display: flex;
-            flex-wrap: wrap; /* Para móviles */
+            flex-wrap: wrap;
             gap: 20px;
             max-width: 1400px;
             margin: 20px auto; 
             padding: 0 20px; 
-            flex: 1; /* Empuja el footer */
+            flex: 1;
         }
 
         .columna-izquierda {
@@ -64,7 +67,6 @@
             min-width: 300px;
         }
 
-        /* Diseño de las tarjetas internas */
         .card {
             background-color: var(--color-card);
             border-radius: 12px;
@@ -185,7 +187,6 @@
         }
         
         .detalles-pago {
-            display: none; 
             margin-top: 15px;
             border-top: 1px dashed #ccc;
             padding-top: 15px;
@@ -198,15 +199,13 @@
             font-size: 0.9rem;
         }
 
-        /* ARREGLO PARA EL 5º CAMPO DE PAGO */
         .pagos-grid .form-grupo:last-child:nth-child(odd) {
             grid-column: 1 / -1; 
         }
 
-        /* Estilo para el footer (copiado de tu base.html) */
         footer {
-            background-color: var(--color-secundario); 
-            color: var(--color-texto-claro); 
+            background-color: var(--color-secundario, #c71585); 
+            color: #fff; 
             padding: 10px 0; 
             text-align: center;
             margin-top: auto; 
@@ -215,7 +214,7 @@
         }
         footer a {
             font-weight: 600;
-            color: var(--color-texto-claro); 
+            color: #fff; 
             text-decoration: none;
         }
         footer a:hover {
@@ -225,491 +224,435 @@
 </head>
 <body>
 
-    {% if current_user.is_authenticated %}
-    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
-        <div class="container-fluid">
-            <a class="navbar-brand d-flex align-items-center" href="{{ url_for('dashboard') or url_for('clientes') }}">
-                <img src="{{ url_for('static', filename='img/LOGO.png') }}" alt="Logo" style="height:40px; margin-right:8px;">
-                LA COSMETIQUERA DE GABI
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+{% if current_user.is_authenticated %}
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
+    <div class="container-fluid">
+        <a class="navbar-brand d-flex align-items-center" href="{{ url_for('dashboard') or url_for('clientes') }}">
+            <img src="{{ url_for('static', filename='img/LOGO.png') }}" alt="Logo" style="height:40px; margin-right:8px;">
+            LA COSMETIQUERA DE GABI
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
 
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('inventario') }}">Inventario</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('clientes') }}">Clientes</a></li>
-                    <li class="nav-item"><a class="nav-link active" aria-current="page" href="{{ url_for('nueva_venta') }}">Ventas Diarias</a></li> 
-                    {% if current_user.rol.lower() == 'administrador' %}
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('reportes') }}">Cierre / Informes</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('usuarios') }}">Gestión de Usuarios</a></li>
-                    {% endif %}
-                </ul>
-                <span class="navbar-text me-3 text-white">
-                    Hola, {{ current_user.username }}
-                    <span class="badge bg-white text-dark">{{ current_user.rol }}</span>
-                </span>
-                <a class="btn btn-primary" href="{{ url_for('logout') }}">Cerrar Sesión</a>
-            </div>
-        </div>
-    </nav>
-    {% endif %}
-
-    <script id="product-data" type="application/json">
-        [
-          {% for p in productos %}
-          {
-            "id": {{ p.id }},
-            "nombre": {{ p.nombre | tojson }},
-            "codigo": "{{ p.codigo }}",
-            "precio": {{ p.valor_venta }},
-            "stock": {{ p.cantidad }}
-          }
-          {% if not loop.last %},{% endif %}
-          {% endfor %}
-        ]
-    </script>
-
-    <div class="container-venta">
-        
-        <div class="columna-izquierda">
-            
-            <div class="card">
-                <div class="card-header"><i class="bi bi-upc-scan"></i> ESCANEAR PRODUCTO (Lector o Manual)</div>
-                <div class="card-body">
-                    <div class="form-grupo">
-                        <input type="text" id="escaner_codigo" class="form-control" placeholder="Escanee el código aquí y presione Enter...">
-                    </div>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-header"><i class="bi bi-person-plus"></i> Añadir Productos Manualmente</div>
-                <div class="card-body">
-                    <div class="form-grupo">
-                        <label for="manual_producto">Producto</label>
-                        <select id="manual_producto" class="form-select">
-                            <option value="">-- Seleccionar Producto --</option>
-                            {% for p in productos %}
-                                <option value="{{ p.id }}">
-                                    {{ p.nombre }} (${{ "%.0f"|format(p.valor_venta) }}) - Stock: {{ p.cantidad }}
-                                </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="form-grupo">
-                        <label for="manual_cantidad">Cantidad</label>
-                        <input type="number" id="manual_cantidad" class="form-control" value="1" min="1">
-                    </div>
-                    <button type="button" class="btn btn-primario" onclick="agregarManual()">
-                        <i class="bi bi-plus-circle"></i> Agregar Manual
-                    </button>
-                </div>
-            </div>
-            
-            <div class="card">
-                <div class="card-header"><i class="bi bi-person"></i> Selección de Cliente</div>
-                <div class="card-body">
-                    <div class="form-grupo">
-                        <select name="cliente_id" id="cliente_id" class="form-select" form="form_venta"> 
-                            {% for cliente in clientes %}
-                                <option value="{{ cliente.id }}">{{ cliente.nombre }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-
-        <div class="columna-derecha">
-            
-            <form method="POST" id="form_venta" onsubmit="return validarYEnviar(event)" style="display: flex; flex-direction: column; gap: 20px;">
-
-                <div class="card">
-                    <div class="card-header"><i class="bi bi-cart3"></i> Resumen de Carrito</div>
-                    <div class="card-body">
-                        <table class="tabla">
-                            <thead>
-                                <tr>
-                                    <th>Item</th>
-                                    <th>Cant.</th>
-                                    <th>Subtotal</th>
-                                    <th>Acción</th>
-                                </tr>
-                            </thead>
-                            <tbody id="carrito-body">
-                                </tbody>
-                        </table>
-                        <div class="resumen-total">
-                            TOTAL: $ <span id="total-final">0.00</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <div class="card-header"><i class="bi bi-cash-coin"></i> Pagos Mixtos</div>
-                    <div class="card-body">
-                        
-                        <div class="pagos-grid">
-                            <div class="form-grupo">
-                                <label for="pago_efectivo">Efectivo</label>
-                                <input type="number" step="100" min="0" value="0" name="pago_efectivo" id="pago_efectivo" class="form-control pago-input">
-                            </div>
-                            <div class="form-grupo">
-                                <label for="pago_nequi">Nequi</label>
-                                <input type="number" step="100" min="0" value="0" name="pago_nequi" id="pago_nequi" class="form-control pago-input">
-                            </div>
-                            <div class="form-grupo">
-                                <label for="pago_daviplata">Daviplata</label>
-                                <input type="number" step="100" min="0" value="0" name="pago_daviplata" id="pago_daviplata" class="form-control pago-input">
-                            </div>
-                            <div class="form-grupo">
-                                <label for="pago_transferencia">Transferencia</label>
-                                <input type="number" step="100" min="0" value="0" name="pago_transferencia" id="pago_transferencia" class="form-control pago-input">
-                            </div>
-                            <div class="form-grupo">
-                                <label for="pago_tarjeta">Tarjeta/Bold</label>
-                                <input type="number" step="100" min="0" value="0" name="pago_tarjeta" id="pago_tarjeta" class="form-control pago-input">
-                            </div>
-                        </div>
-
-                        <div id="detalles_efectivo" class="detalles-pago">
-                            <strong>Detalles Efectivo</strong>
-                            <div class="form-grupo">
-                                <label for="codigo_efectivo">Ref. Efectivo (Opcional)</label>
-                                <input type="text" name="codigo_efectivo" id="codigo_efectivo" class="form-control" placeholder="Ej: Denominación billete, etc.">
-                            </div>
-                            <div class="form-grupo">
-                                <label for="fecha_efectivo">Fecha Efectivo</label>
-                                <input type="datetime-local" name="fecha_efectivo" id="fecha_efectivo" class="form-control">
-                            </div>
-                        </div>
-                        <div id="detalles_nequi" class="detalles-pago">
-                            <strong>Detalles Nequi</strong>
-                            <div class="form-grupo">
-                                <label for="codigo_nequi">Código Nequi</label>
-                                <input type="text" name="codigo_nequi" id="codigo_nequi" class="form-control" placeholder="Requerido si paga con Nequi">
-                            </div>
-                            <div class="form-grupo">
-                                <label for="fecha_nequi">Fecha Nequi</label>
-                                <input type="datetime-local" name="fecha_nequi" id="fecha_nequi" class="form-control">
-                            </div>
-                        </div>
-                        <div id="detalles_daviplata" class="detalles-pago">
-                            <strong>Detalles Daviplata</strong>
-                            <div class="form-grupo">
-                                <label for="codigo_daviplata">Código Daviplata</label>
-                                <input type="text" name="codigo_daviplata" id="codigo_daviplata" class="form-control" placeholder="Requerido si paga con Daviplata">
-                            </div>
-                            <div class="form-grupo">
-                                <label for="fecha_daviplata">Fecha Daviplata</label>
-                                <input type="datetime-local" name="fecha_daviplata" id="fecha_daviplata" class="form-control">
-                            </div>
-                        </div>
-                        <div id="detalles_transferencia" class="detalles-pago">
-                            <strong>Detalles Transferencia</strong>
-                            <div class="form-grupo">
-                                <label for="codigo_transferencia">Código Transferencia</label>
-                                <input type="text" name="codigo_transferencia" id="codigo_transferencia" class="form-control" placeholder="Requerido si paga con Transferencia">
-                            </div>
-                            <div class="form-grupo">
-                                <label for="fecha_transferencia">Fecha Transferencia</label>
-                                <input type="datetime-local" name="fecha_transferencia" id="fecha_transferencia" class="form-control">
-                            </div>
-                        </div>
-                        <div id="detalles_tarjeta" class="detalles-pago">
-                            <strong>Detalles Tarjeta/Bold</strong>
-                            <div class="form-grupo">
-                                <label for="codigo_tarjeta">Código Tarjeta/Bold</label>
-                                <input type="text" name="codigo_tarjeta" id="codigo_tarjeta" class="form-control" placeholder="Requerido si paga con Tarjeta">
-                            </div>
-                            <div class="form-grupo">
-                                <label for="fecha_tarjeta">Fecha Tarjeta</label>
-                                <input type="datetime-local" name="fecha_tarjeta" id="fecha_tarjeta" class="form-control">
-                            </div>
-                        </div>
-
-                        <div class="resumen-total" style="font-size: 1.2rem; color: #555; margin-top: 15px;">
-                            Monto Pendiente: $ <span id="monto-pendiente">0.00</span>
-                        </div>
-                        
-                        <input type="hidden" name="productos_vendidos_json" id="productos_vendidos_json">
-                        <input type="hidden" name="total_venta" id="total_venta_hidden">
-
-                        <button type="submit" class="btn btn-primario" style="margin-top: 20px;">
-                            <i class="bi bi-check-lg"></i> PROCESAR PAGO
-                        </button>
-                    </div>
-                </div>
-            </form>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('inventario') }}">Inventario</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('clientes') }}">Clientes</a></li>
+                <li class="nav-item"><a class="nav-link active" aria-current="page" href="{{ url_for('nueva_venta') }}">Ventas Diarias</a></li> 
+                {% if current_user.rol.lower() == 'administrador' %}
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('reportes') }}">Cierre / Informes</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('usuarios') }}">Gestión de Usuarios</a></li>
+                {% endif %}
+            </ul>
+            <span class="navbar-text me-3 text-white">
+                Hola, {{ current_user.username }}
+                <span class="badge bg-white text-dark">{{ current_user.rol }}</span>
+            </span>
+            <a class="btn btn-primary" href="{{ url_for('logout') }}">Cerrar Sesión</a>
         </div>
     </div>
+</nav>
+{% endif %}
 
-    <footer>
-        <div>Creado por: Lorena Rodriguez Ramos</div>
-        <div>Email: <a href="mailto:lorenarodriguezr155@gmail.com">lorenarodriguezr155@gmail.com</a> | Teléfono: <a href="tel:+573222823687">3222823687</a></div>
-        &copy; 2025 La Cosmetiquera de Gabi
-    </footer>
+<script id="product-data" type="application/json">
+[
+  {% for p in productos %}
+  {
+    "id": {{ p.id }},
+    "nombre": {{ p.nombre | tojson }},
+    "codigo": "{{ p.codigo }}",
+    "precio": {{ p.valor_venta }},
+    "stock": {{ p.cantidad }}
+  }
+  {% if not loop.last %},{% endif %}
+  {% endfor %}
+]
+</script>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <script>
-        // Estado global de la aplicación
-        let carrito = [];
-        let productosPorId = {};
-        let productosPorCodigo = {};
-        let totalGlobal = 0;
+<div class="container-venta">
+    <div class="columna-izquierda">
 
-        // Función para formatear moneda
-        function formatCurrency(value) {
-            return parseFloat(value).toLocaleString('es-CO', {
-                style: 'currency',
-                currency: 'COP',
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 0
-            });
-        }
+        <div class="card">
+            <div class="card-header"><i class="bi bi-upc-scan"></i> ESCANEAR PRODUCTO (Lector o Manual)</div>
+            <div class="card-body">
+                <div class="form-grupo">
+                    <input type="text" id="escaner_codigo" class="form-control" placeholder="Escanee el código aquí y presione Enter...">
+                </div>
+            </div>
+        </div>
 
-        // --- 1. INICIALIZACIÓN ---
-        document.addEventListener('DOMContentLoaded', function() {
-            // Cargar datos de productos desde Flask
-            try {
-                const productData = JSON.parse(document.getElementById('product-data').textContent);
-                productData.forEach(p => {
-                    productosPorId[p.id] = p;
-                    productosPorCodigo[p.codigo] = p;
-                });
-            } catch (e) {
-                console.error("Error al cargar datos de productos:", e);
-            }
+        <div class="card">
+            <div class="card-header"><i class="bi bi-person-plus"></i> Añadir Productos Manualmente</div>
+            <div class="card-body">
+                <div class="form-grupo">
+                    <label for="manual_producto">Producto</label>
+                    <select name="producto" id="manual_producto" class="form-select">
+                        <option value="">-- Seleccionar Producto --</option>
+                        {% for p in productos %}
+                        <option value="{{ p.id }}">
+                            {{ p.nombre }} - {{ p.descripcion }} | (${{ "%.0f"|format(p.valor_venta) }}) - Stock: {{ p.cantidad }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-grupo">
+                    <label for="manual_cantidad">Cantidad</label>
+                    <input type="number" id="manual_cantidad" class="form-control" value="1" min="1">
+                </div>
+                <button type="button" class="btn btn-primario" onclick="agregarManual()">
+                    <i class="bi bi-plus-circle"></i> Agregar Manual
+                </button>
+            </div>
+        </div>
 
-            // Listener para el escaner (al presionar Enter)
-            if (document.getElementById('escaner_codigo')) {
-                document.getElementById('escaner_codigo').addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter') {
-                        e.preventDefault();
-                        escanearProducto(e.target.value);
-                        e.target.value = '';
-                    }
-                });
-            }
+        <div class="card">
+            <div class="card-header"><i class="bi bi-person"></i> Selección de Cliente</div>
+            <div class="card-body">
+                <div class="form-grupo">
+                    <select name="cliente_id" id="cliente_id" class="form-select" form="form_venta"> 
+                        {% for cliente in clientes %}
+                            <option value="{{ cliente.id }}" {% if cliente.id == 1 %}selected{% endif %}>{{ cliente.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
 
-            // Listeners para los campos de pago
-            document.querySelectorAll('.pago-input').forEach(input => {
-                input.addEventListener('input', actualizarPagos);
-            });
+    </div>
+
+    <div class="columna-derecha">
+        <form method="POST" id="form_venta" onsubmit="return validarYEnviar(event)" style="display: flex; flex-direction: column; gap: 20px;">
             
-            actualizarPagos();
+            <div class="card">
+                <div class="card-header"><i class="bi bi-cart3"></i> Resumen de Carrito</div>
+                <div class="card-body">
+                    <table class="tabla">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Cant.</th>
+                                <th>Subtotal</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="carrito-body"></tbody>
+                    </table>
+                    <div class="resumen-total">
+                        TOTAL: $ <span id="total-final">0.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header"><i class="bi bi-cash-coin"></i> Pagos Mixtos</div>
+                <div class="card-body">
+                    <div class="pagos-grid">
+                        <div class="form-grupo">
+                            <label for="pago_efectivo">Efectivo</label>
+                            <input type="number" step="100" min="0" value="0" name="pago_efectivo" id="pago_efectivo" class="form-control pago-input">
+                        </div>
+                        <div class="form-grupo">
+                            <label for="pago_nequi">Nequi</label>
+                            <input type="number" step="100" min="0" value="0" name="pago_nequi" id="pago_nequi" class="form-control pago-input">
+                        </div>
+                        <div class="form-grupo">
+                            <label for="pago_daviplata">Daviplata</label>
+                            <input type="number" step="100" min="0" value="0" name="pago_daviplata" id="pago_daviplata" class="form-control pago-input">
+                        </div>
+                        <div class="form-grupo">
+                            <label for="pago_transferencia">Transferencia</label>
+                            <input type="number" step="100" min="0" value="0" name="pago_transferencia" id="pago_transferencia" class="form-control pago-input">
+                        </div>
+                        <div class="form-grupo">
+                            <label for="pago_tarjeta">Tarjeta/Bold</label>
+                            <input type="number" step="100" min="0" value="0" name="pago_tarjeta" id="pago_tarjeta" class="form-control pago-input">
+                        </div>
+                    </div>
+
+                    <div id="detalles_pago_electronico" class="detalles-pago" style="display:none;">
+                        <strong>Referencia de Pago (Obligatoria para Electrónicos)</strong>
+                        <p class="text-muted small mt-2">
+                            * Si hay pagos electrónicos (Nequi, Davi, Transf/Tarjeta), debe ingresar el código antes de finalizar la venta.
+                        </p>
+                        <div class="form-grupo">
+                            <label for="codigo_transaccion">Código de Referencia</label>
+                            <input type="text" name="codigo_transaccion" id="codigo_transaccion" class="form-control" placeholder="Ingresa el código alfanumérico aquí" oninput="this.value = this.value.toUpperCase()">
+                        </div>
+                        <div class="form-grupo">
+                            <label for="fecha_transaccion">Fecha/Hora de la Transacción (Opcional)</label>
+                            <input type="datetime-local" name="fecha_transaccion" id="fecha_transaccion" class="form-control">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primario"><i class="bi bi-check2-circle"></i> Finalizar Venta</button>
+        </form>
+    </div>
+</div>
+
+<footer>
+    POS Cosmetiquería | Todos los derechos reservados &copy; 
+    {{ now.year }} 
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // 1. Carga de datos de productos
+    const productData = JSON.parse(document.getElementById('product-data').textContent);
+    let carrito = {}; 
+
+    $(document).ready(function() {
+        $('#manual_producto').select2();
+        $('#cliente_id').select2({
+            placeholder: "Selecciona o busca un cliente",
+            allowClear: true
         });
 
-
-        // --- 2. LÓGICA DE CARRITO ---
-        function escanearProducto(codigo) {
-            const producto = productosPorCodigo[codigo];
-            if (producto) {
-                agregarAlCarrito(producto.id, 1);
-            } else {
-                alert('Error: Producto no encontrado con ese código.');
-            }
-        }
-
-        function agregarManual() {
-            const productoSelect = document.getElementById('manual_producto');
-            const cantidadInput = document.getElementById('manual_cantidad');
-            
-            if (!productoSelect || !cantidadInput) return;
-
-            const productoId = productoSelect.value;
-            const cantidad = parseInt(cantidadInput.value);
-            
-            if (!productoId) {
-                alert('Por favor, seleccione un producto.');
-                return;
-            }
-            if (isNaN(cantidad) || cantidad <= 0) {
-                alert('Por favor, ingrese una cantidad válida.');
-                return;
-            }
-            
-            agregarAlCarrito(productoId, cantidad);
-        }
-
-        function agregarAlCarrito(productoId, cantidad) {
-            const producto = productosPorId[productoId];
-            if (!producto) return;
-
-            const cantidadAAgregar = parseInt(cantidad);
-            const itemEnCarrito = carrito.find(item => item.id == productoId);
-
-            if (itemEnCarrito) {
-                const nuevaCantidad = itemEnCarrito.cantidad + cantidadAAgregar;
-                if (nuevaCantidad > producto.stock) {
-                    alert(`Error: Stock insuficiente para ${producto.nombre}. Disponible: ${producto.stock}`);
+        // Inicializar evento para mostrar Referencia
+        document.querySelectorAll('.pago-input').forEach(input => {
+            input.addEventListener('input', toggleDetallesPago);
+        });
+        
+        // Inicializar eventos para actualizar el carrito (siempre que cambie la cantidad)
+        document.getElementById('carrito-body').addEventListener('input', function(event) {
+            if (event.target.classList.contains('cantidad-input')) {
+                const tr = event.target.closest('tr');
+                const productoId = parseInt(tr.dataset.productoId);
+                const newQuantity = parseInt(event.target.value) || 0;
+                
+                if (newQuantity <= 0) {
+                    eliminarFila(event.target);
                     return;
                 }
-                itemEnCarrito.cantidad = nuevaCantidad;
-            } else {
-                if (cantidadAAgregar > producto.stock) {
-                    alert(`Error: Stock insuficiente para ${producto.nombre}. Disponible: ${producto.stock}`);
-                    return;
+                
+                const producto = productData.find(p => p.id === productoId);
+                if (producto) {
+                    const newSubtotal = producto.precio * newQuantity;
+                    tr.cells[2].textContent = `$${newSubtotal.toFixed(0)}`; 
+                    
+                    carrito[productoId].cantidad = newQuantity;
+                    carrito[productoId].subtotal = newSubtotal;
                 }
-                carrito.push({
+                actualizarTotal();
+            }
+        });
+        
+        // Al cargar la página, asegurarse de que los campos de pago estén a 0 si están vacíos
+        document.querySelectorAll('.pago-input').forEach(input => {
+            if (!input.value) input.value = 0;
+        });
+    });
+
+    // Función para mostrar/ocultar el campo de referencia
+    function toggleDetallesPago() {
+        let mostrarReferencia = false;
+        const pagosElectronicos = ['pago_nequi', 'pago_daviplata', 'pago_transferencia', 'pago_tarjeta'];
+        
+        pagosElectronicos.forEach(id => {
+            if (parseFloat(document.getElementById(id).value) > 0) {
+                mostrarReferencia = true;
+            }
+        });
+
+        const detallesDiv = document.getElementById('detalles_pago_electronico');
+        detallesDiv.style.display = mostrarReferencia ? 'block' : 'none';
+    }
+    
+    // Función para agregar un producto del menú desplegable
+    function agregarManual() {
+        const select = document.getElementById('manual_producto');
+        const cantidad = parseInt(document.getElementById('manual_cantidad').value) || 1;
+        const productoId = parseInt(select.value);
+        
+        if (!productoId) return alert('Seleccione un producto');
+        if (cantidad <= 0) return alert('La cantidad debe ser mayor a cero.');
+
+        const producto = productData.find(p => p.id === productoId);
+        if (!producto) return;
+
+        // Validar Stock
+        const stockActual = producto.stock;
+        const cantidadActualEnCarrito = carrito[productoId] ? carrito[productoId].cantidad : 0;
+        const cantidadTotalSolicitada = cantidadActualEnCarrito + cantidad;
+
+        if (cantidadTotalSolicitada > stockActual) {
+            return alert(`Stock insuficiente. Disponible: ${stockActual}, Solicitado: ${cantidadTotalSolicitada}.`);
+        }
+        
+        if (carrito[productoId]) {
+            const nuevaCantidad = carrito[productoId].cantidad + cantidad;
+            carrito[productoId].cantidad = nuevaCantidad;
+            carrito[productoId].subtotal = producto.precio * nuevaCantidad;
+            
+            const tr = document.querySelector(`#carrito-body tr[data-producto-id='${productoId}']`);
+            tr.querySelector('.cantidad-input').value = nuevaCantidad;
+            tr.cells[2].textContent = `$${carrito[productoId].subtotal.toFixed(0)}`;
+        } else {
+            const subtotal = producto.precio * cantidad;
+            carrito[productoId] = {
+                id: producto.id,
+                nombre: producto.nombre,
+                precio: producto.precio,
+                cantidad: cantidad,
+                subtotal: subtotal
+            };
+            
+            const tbody = document.getElementById('carrito-body');
+            const tr = document.createElement('tr');
+            tr.dataset.productoId = producto.id;
+            tr.innerHTML = `
+                <td>${producto.nombre}</td>
+                <td><input type="number" value="${cantidad}" min="1" class="form-control cantidad-input"></td>
+                <td>$${subtotal.toFixed(0)}</td>
+                <td><button type="button" class="btn-rojo" onclick="eliminarFila(this)"><i class="bi bi-trash"></i></button></td>
+            `;
+            tbody.appendChild(tr);
+        }
+
+        document.getElementById('manual_cantidad').value = 1;
+        actualizarTotal();
+    }
+    
+    // Función para eliminar producto
+    function eliminarFila(element) {
+        const tr = element.closest('tr');
+        const productoId = parseInt(tr.dataset.productoId);
+        delete carrito[productoId];
+        tr.remove();
+        actualizarTotal();
+    }
+
+    // Función para recalcular el total
+    function actualizarTotal() {
+        let total = 0;
+        for (const id in carrito) {
+            total += carrito[id].subtotal;
+        }
+        document.getElementById('total-final').textContent = total.toFixed(0);
+        toggleDetallesPago(); 
+    }
+    
+    // Lógica de Escáner
+    document.getElementById('escaner_codigo').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const codigo = this.value.trim();
+            if (!codigo) return;
+            
+            const producto = productData.find(p => p.codigo === codigo);
+            if (!producto) return alert(`Producto con código ${codigo} no encontrado.`);
+            
+            const productoId = producto.id;
+            const cantidad = 1;
+
+            const stockActual = producto.stock;
+            const cantidadActualEnCarrito = carrito[productoId] ? carrito[productoId].cantidad : 0;
+            const cantidadTotalSolicitada = cantidadActualEnCarrito + cantidad;
+
+            if (cantidadTotalSolicitada > stockActual) {
+                return alert(`Stock insuficiente. Disponible: ${stockActual}, Solicitado: ${cantidadTotalSolicitada}.`);
+            }
+
+            if (carrito[productoId]) {
+                const nuevaCantidad = carrito[productoId].cantidad + cantidad;
+                carrito[productoId].cantidad = nuevaCantidad;
+                carrito[productoId].subtotal = producto.precio * nuevaCantidad;
+                
+                const tr = document.querySelector(`#carrito-body tr[data-producto-id='${productoId}']`);
+                tr.querySelector('.cantidad-input').value = nuevaCantidad;
+                tr.cells[2].textContent = `$${carrito[productoId].subtotal.toFixed(0)}`;
+            } else {
+                const subtotal = producto.precio * cantidad;
+                carrito[productoId] = {
                     id: producto.id,
                     nombre: producto.nombre,
                     precio: producto.precio,
-                    cantidad: cantidadAAgregar,
-                    stock: producto.stock
-                });
-            }
-            actualizarCarritoUI();
-        }
-
-        function eliminarDelCarrito(productoId) {
-            carrito = carrito.filter(item => item.id != productoId);
-            actualizarCarritoUI();
-        }
-
-        function actualizarCarritoUI() {
-            const tbody = document.getElementById('carrito-body');
-            if (!tbody) return;
-
-            tbody.innerHTML = '';
-            totalGlobal = 0;
-
-            carrito.forEach(item => {
-                const subtotal = item.precio * item.cantidad;
-                totalGlobal += subtotal;
+                    cantidad: cantidad,
+                    subtotal: subtotal
+                };
                 
+                const tbody = document.getElementById('carrito-body');
                 const tr = document.createElement('tr');
+                tr.dataset.productoId = producto.id;
                 tr.innerHTML = `
-                    <td>${item.nombre}</td>
-                    <td>${item.cantidad}</td>
-                    <td>${formatCurrency(subtotal)}</td>
-                    <td>
-                        <button type="button" class="btn btn-rojo" onclick="eliminarDelCarrito(${item.id})">
-                            <i class="bi bi-trash"></i>
-                        </button>
-                    </td>
+                    <td>${producto.nombre}</td>
+                    <td><input type="number" value="${cantidad}" min="1" class="form-control cantidad-input"></td>
+                    <td>$${subtotal.toFixed(0)}</td>
+                    <td><button type="button" class="btn-rojo" onclick="eliminarFila(this)"><i class="bi bi-trash"></i></button></td>
                 `;
                 tbody.appendChild(tr);
-            });
-
-            const totalFinalSpan = document.getElementById('total-final');
-            if(totalFinalSpan) {
-                totalFinalSpan.textContent = formatCurrency(totalGlobal).replace('COP', '');
-            }
-            actualizarPagos(); 
-        }
-
-        // --- 3. LÓGICA DE PAGOS ---
-        function manejarSeccionPago(monto, seccionId, codigoId, fechaId, esCodigoRequerido = true) {
-            const seccion = document.getElementById(seccionId);
-            const codigoInput = document.getElementById(codigoId);
-            const fechaInput = document.getElementById(fechaId);
-
-            if (!seccion || !codigoInput || !fechaInput) return;
-
-            if (monto > 0) {
-                seccion.style.display = 'block';
-                fechaInput.setAttribute('required', 'required'); 
-                
-                if (esCodigoRequerido) {
-                    codigoInput.setAttribute('required', 'required');
-                } else {
-                    codigoInput.removeAttribute('required');
-                }
-                
-                if (!fechaInput.value) {
-                    const now = new Date();
-                    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-                    fechaInput.value = now.toISOString().slice(0, 16);
-                }
-            } else {
-                seccion.style.display = 'none';
-                codigoInput.removeAttribute('required');
-                fechaInput.removeAttribute('required');
-                codigoInput.value = '';
-                fechaInput.value = '';
-            }
-        }
-
-        function actualizarPagos() {
-            const pagoEfectivo = parseFloat(document.getElementById('pago_efectivo')?.value) || 0;
-            const pagoNequi = parseFloat(document.getElementById('pago_nequi')?.value) || 0;
-            const pagoDaviplata = parseFloat(document.getElementById('pago_daviplata')?.value) || 0;
-            const pagoTransferencia = parseFloat(document.getElementById('pago_transferencia')?.value) || 0;
-            const pagoTarjeta = parseFloat(document.getElementById('pago_tarjeta')?.value) || 0;
-
-            const totalPagado = pagoEfectivo + pagoNequi + pagoDaviplata + pagoTransferencia + pagoTarjeta;
-            const montoPendiente = totalGlobal - totalPagado;
-
-            const montoPendienteSpan = document.getElementById('monto-pendiente');
-            if (montoPendienteSpan) {
-                montoPendienteSpan.textContent = formatCurrency(montoPendiente).replace('COP', '');
-            }
-
-            manejarSeccionPago(pagoEfectivo, 'detalles_efectivo', 'codigo_efectivo', 'fecha_efectivo', false); 
-            manejarSeccionPago(pagoNequi, 'detalles_nequi', 'codigo_nequi', 'fecha_nequi', true);
-            manejarSeccionPago(pagoDaviplata, 'detalles_daviplata', 'codigo_daviplata', 'fecha_daviplata', true);
-            manejarSeccionPago(pagoTransferencia, 'detalles_transferencia', 'codigo_transferencia', 'fecha_transferencia', true);
-            manejarSeccionPago(pagoTarjeta, 'detalles_tarjeta', 'codigo_tarjeta', 'fecha_tarjeta', true);
-        }
-
-        // --- 4. ENVÍO DE FORMULARIO ---
-        function validarYEnviar(event) {
-            event.preventDefault(); 
-
-            // ¡Importante! Tenemos que pasar el cliente_id al formulario
-            const clienteId = document.getElementById('cliente_id').value;
-            
-            // Creamos un input oculto o lo actualizamos
-            let clienteInput = document.getElementById('cliente_id_hidden');
-            if (!clienteInput) {
-                clienteInput = document.createElement('input');
-                clienteInput.type = 'hidden';
-                clienteInput.id = 'cliente_id_hidden';
-                clienteInput.name = 'cliente_id';
-                document.getElementById('form_venta').appendChild(clienteInput);
-            }
-            clienteInput.value = clienteId;
-            
-
-            const pagoEfectivo = parseFloat(document.getElementById('pago_efectivo')?.value) || 0;
-            const pagoNequi = parseFloat(document.getElementById('pago_nequi')?.value) || 0;
-            const pagoDaviplata = parseFloat(document.getElementById('pago_daviplata')?.value) || 0;
-            const pagoTransferencia = parseFloat(document.getElementById('pago_transferencia')?.value) || 0;
-            const pagoTarjeta = parseFloat(document.getElementById('pago_tarjeta')?.value) || 0;
-
-            const totalPagado = pagoEfectivo + pagoNequi + pagoDaviplata + pagoTransferencia + pagoTarjeta;
-
-            if (carrito.length === 0) {
-                alert('Error: El carrito está vacío.');
-                return false;
-            }
-
-            if (totalPagado < (totalGlobal - 1)) {
-                alert('Error: El total pagado es menor al total de la venta.');
-                return false;
             }
             
-            const jsonInput = document.getElementById('productos_vendidos_json');
-            const totalInput = document.getElementById('total_venta_hidden');
-            const form = document.getElementById('form_venta');
-
-            if (jsonInput) jsonInput.value = JSON.stringify(carrito);
-            if (totalInput) totalInput.value = totalGlobal;
-            
-            if (form) {
-                if (!form.checkValidity()) {
-                    form.reportValidity(); 
-                    return false;
-                }
-                form.submit();
-            }
+            actualizarTotal();
+            this.value = ''; // Limpiar el campo del escáner
         }
-    </script>
+    });
+
+
+    // Función Final de Validación y Envío (BLOQUEA si falta código en pagos electrónicos)
+    function validarYEnviar(e) {
+        e.preventDefault();
+        
+        const totalCarrito = parseFloat(document.getElementById('total-final').textContent);
+        
+        if (totalCarrito <= 0 || Object.keys(carrito).length === 0) {
+            return alert('Error: El carrito está vacío o el total es cero.');
+        }
+
+        const pagoEfectivo = parseFloat(document.getElementById('pago_efectivo').value) || 0;
+        const pagoNequi = parseFloat(document.getElementById('pago_nequi').value) || 0;
+        const pagoDaviplata = parseFloat(document.getElementById('pago_daviplata').value) || 0;
+        const pagoTransferencia = parseFloat(document.getElementById('pago_transferencia').value) || 0;
+        const pagoTarjeta = parseFloat(document.getElementById('pago_tarjeta').value) || 0;
+        
+        const totalPagado = pagoEfectivo + pagoNequi + pagoDaviplata + pagoTransferencia + pagoTarjeta;
+
+        if (Math.round(totalPagado * 100) < Math.round(totalCarrito * 100)) {
+            return alert(`Error: El total pagado ($${totalPagado.toFixed(0)}) es menor al total de la venta ($${totalCarrito.toFixed(0)}).`);
+        }
+
+        // 🚨 LÓGICA CLAVE: BLOQUEAR SI NO HAY CÓDIGO MANUAL EN PAGOS ELECTRÓNICOS
+        const tienePagoElectronico = pagoNequi > 0 || pagoDaviplata > 0 || pagoTransferencia > 0 || pagoTarjeta > 0;
+        const codTransaccionInput = document.getElementById('codigo_transaccion');
+        const codigoManual = codTransaccionInput.value.trim();
+        
+        if (tienePagoElectronico && !codigoManual) {
+            // Bloquea el envío y pide la referencia.
+            codTransaccionInput.focus();
+            return alert('⚠️ ERROR: Los pagos electrónicos (Nequi, Daviplata, Transferencia o Tarjeta) requieren obligatoriamente el Código Alfanumérico o Número de Referencia.');
+        }
+        // ------------------------------------
+        
+        // Adjuntar campos ocultos al formulario
+        const form = document.getElementById('form_venta');
+        
+        // 1. JSON de productos vendidos
+        const carritoJson = JSON.stringify(Object.values(carrito));
+        let inputHiddenJson = form.querySelector('input[name="productos_vendidos_json"]');
+        if (!inputHiddenJson) {
+             inputHiddenJson = document.createElement('input');
+             inputHiddenJson.type = 'hidden';
+             inputHiddenJson.name = 'productos_vendidos_json';
+             form.appendChild(inputHiddenJson);
+        }
+        inputHiddenJson.value = carritoJson;
+        
+        // 2. Total de la venta
+        let totalInput = form.querySelector('input[name="total_venta"]');
+        if (!totalInput) {
+             totalInput = document.createElement('input');
+             totalInput.type = 'hidden';
+             totalInput.name = 'total_venta';
+             form.appendChild(totalInput);
+        }
+        totalInput.value = totalCarrito;
+
+        e.target.submit();
+    }
+</script>
+
 </body>
 </html>

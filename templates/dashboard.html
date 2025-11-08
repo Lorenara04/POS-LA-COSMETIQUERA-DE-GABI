@@ -34,11 +34,14 @@
             <p class="stat-value">${{ ventas_hoy | default(0.00) | format_number }}</p> 
         </div>
 
-        <div class="stat-card low-stock">
-            <h3>Stock Bajo</h3>
-            <p class="stat-value">{{ productos_stock_bajo | default(0) }} Productos</p>
+        <div class="stat-card total-inventory"> 
+            <h3>Total de Inventario</h3>
+            <p class="stat-value">
+                {{ total_inventario | default(0) | format_number }} 
+                <span style="font-size: 0.5em; display: block;">unidades</span>
+            </p>
         </div>
-
+        
         <div class="stat-card new-clients">
             <h3>Clientes Nuevos</h3>
             <p class="stat-value">{{ clientes_nuevos_mes | default(0) }} Este Mes</p>
@@ -66,9 +69,9 @@
 }
 
 @keyframes flotar {
-    0%   { transform: translateY(0) rotate(0deg); }
-    50%  { transform: translateY(-100px) rotate(180deg); }
-    100% { transform: translateY(0) rotate(360deg); }
+    0%{ transform: translateY(0) rotate(0deg); }
+    50%{ transform: translateY(-100px) rotate(180deg); }
+    100%{ transform: translateY(0) rotate(360deg); }
 }
 
 /* ---------------- DASHBOARD CONTAINER ---------------- */
@@ -89,7 +92,7 @@
     background: linear-gradient(135deg, #ffb6e1, #ff69b4, #ff1493);
     color: #fff;
     border-radius: 25px;
-    padding: 25px 35px; /* Altura reducida */
+    padding: 25px 35px;
     box-shadow: 0 15px 35px rgba(0,0,0,0.2);
     text-align: center;
     max-width: 600px;
@@ -174,13 +177,12 @@
     background: linear-gradient(135deg, #4CAF50, #8BC34A); 
 }
 
-/* ---------------- ESTADÍSTICAS RÁPIDAS (NUEVAS) ---------------- */
+/* ---------------- ESTADÍSTICAS RÁPIDAS ---------------- */
 .stats-section {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
     gap: 25px;
-    /* MARGEN AJUSTADO PARA SEPARAR DE LOS BOTONES */
     margin-top: 70px; 
     max-width: 900px;
     width: 100%;
@@ -205,7 +207,7 @@
 
 .stat-card h3 {
     font-size: 1.1rem;
-    color: #d63384; /* Magenta */
+    color: #d63384; 
     margin-bottom: 10px;
     font-weight: 600;
 }
@@ -217,13 +219,14 @@
 
 /* Colores para diferenciar las tarjetas */
 .stat-card.sales-today {
-    border-bottom: 5px solid #ff1493; /* Rosa fuerte */
-}
-.stat-card.low-stock {
-    border-bottom: 5px solid #ffcc33; /* Amarillo/Dorado para alerta */
+    border-bottom: 5px solid #ff1493;
 }
 .stat-card.new-clients {
-    border-bottom: 5px solid #00BCD4; /* Turquesa */
+    border-bottom: 5px solid #00BCD4; 
+}
+/* Estilo para el nuevo Total Inventario */
+.stat-card.total-inventory {
+    border-bottom: 5px solid #9C27B0;
 }
 
 

@@ -1,7 +1,3 @@
-# app.py
-# =================================================================
-# 1. IMPORTS Y CONFIGURACIÓN
-# =================================================================
 from flask import Flask, render_template, redirect, url_for, request, flash, abort, jsonify
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user, UserMixin
 from flask_sqlalchemy import SQLAlchemy
@@ -15,61 +11,77 @@ from barcode.writer import ImageWriter
 from io import BytesIO
 from collections import defaultdict
 import base64
-from flask import Flask, render_template
+from apscheduler.schedulers.background import BackgroundScheduler
+import locale
 
 # =================================================================
-# 2. APP CONFIG & DATABASE
+# APP CONFIG & DATABASE
 # =================================================================
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////data/pos_cosmetiqueria.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///pos_cosmetiqueria.db'
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', os.urandom(24))
 
-db = SQLAlchemy(app) # Define la instancia de DB aquí
+db = SQLAlchemy(app)
 
 # LOGIN MANAGER
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', os.urandom(24))
+# ----------------------------------------
+# CONFIGURACIÓN DE CORREO (Opcional - Mantener comentada si no se usa)
+# ----------------------------------------
+app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
+app.config['MAIL_PORT'] = int(os.environ.get('MAIL_PORT', 587))
+app.config['MAIL_USE_TLS'] = bool(os.environ.get('MAIL_USE_TLS', True))
+app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME', '')
+app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD', '')
+app.config['ADMIN_EMAIL'] = os.environ.get('ADMIN_EMAIL', '')
+# mail = Mail(app)
 
-# ----------------------------------------
-# CONFIGURACIÓN DE CORREO (AJUSTA ESTOS VALORES)
-# ----------------------------------------
-#app.config['MAIL_SERVER'] = 'smtp.gmail.com' # Corregido: Eliminado el espacio oculto U+00A0
-#app.config['MAIL_PORT'] = 587
-#app.config['MAIL_USE_TLS'] = True
-#app.config['MAIL_USERNAME'] = 'lacomestiqueradegabi@outlook.com' # Correo del que se envía
-#app.config['MAIL_PASSWORD'] = 'Gabi52830265' # Contraseña o clave de app
-#app.config['ADMIN_EMAIL'] = 'johanna.chacon@outlook.es' # Correo de la administradora (DESTINATARIO)
-# ----------------------------------------
-
-#mail = Mail(app)
 # =================================================================
-# AÑADIDO: CONFIGURACIÓN DE LOCALE Y FILTRO DE JINJA (para 'format_number')
+# CONTEXT PROCESSOR (Soluciona el error 'now' no definido en plantillas)
 # =================================================================
-import locale
+@app.context_processor
+def inject_now():
+    """Hace que 'now' esté disponible en todas las plantillas automáticamente."""
+    return {'now': datetime.now()}
 
-# Configurar el locale a español para el formato de moneda
+# =================================================================
+# LOCALE Y FILTRO JINJA (format_number y from_json)
+# =================================================================
+# Intento de configurar locale español
 try:
     locale.setlocale(locale.LC_ALL, 'es_ES.utf8')
 except locale.Error:
     try:
         locale.setlocale(locale.LC_ALL, 'es_ES')
     except locale.Error:
-        pass # Ignorar si no se puede configurar
+        pass
 
 @app.template_filter('format_number')
 def format_number_filter(value):
     """Formatea un número con separador de miles y dos decimales."""
     try:
-        # Convierte el valor a float y luego formatea
-        return locale.format_string("%.2f", float(value), grouping=True)
+        # Intenta usar la configuración regional para un formato más limpio
+        return locale.format_string("%.0f", float(value), grouping=True)
     except Exception:
-        return value
-        
+        try:
+            # Fallback a un formato de Python estándar si locale falla
+            return f"{float(value):,.0f}"
+        except Exception:
+            return value
+
+@app.template_filter('from_json')
+def from_json_filter(value):
+    """Convierte una cadena JSON a un objeto Python. Necesario para CierreCaja."""
+    try:
+        return json.loads(value)
+    except Exception:
+        return {}
+
 # =================================================================
-# 3. MODELOS (DEFINIDOS AQUÍ PARA EVITAR EL IMPORTERROR)
-# ==============================================================
+# MODELOS
+# =================================================================
 class Usuario(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(100), unique=True, nullable=False)
@@ -78,20 +90,23 @@ class Usuario(UserMixin, db.Model):
     cedula = db.Column(db.String(20), unique=True, nullable=False)
     rol = db.Column(db.String(50), default='Vendedora')
     password_hash = db.Column(db.String(200))
-    
+
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
+
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+
 
 class Cliente(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(100), nullable=False)
     telefono = db.Column(db.String(20))
     direccion = db.Column(db.String(200))
-    email = db.Column(db.String(100)) 
-    
+    email = db.Column(db.String(100))
+    fecha_registro = db.Column(db.DateTime, default=datetime.utcnow)
     ventas = db.relationship('Venta', backref='comprador', lazy=True)
+
 
 class Producto(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -101,8 +116,9 @@ class Producto(db.Model):
     cantidad = db.Column(db.Integer, default=0)
     valor_venta = db.Column(db.Float)
     valor_interno = db.Column(db.Float)
-    stock_minimo = db.Column(db.Integer, default=5) 
-    
+    stock_minimo = db.Column(db.Integer, default=5)
+
+
 class Venta(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     fecha = db.Column(db.DateTime, default=datetime.utcnow)
@@ -113,6 +129,7 @@ class Venta(db.Model):
     detalle_pago = db.Column(db.Text)
     vendedor = db.relationship('Usuario', backref='ventas_realizadas', lazy=True)
 
+
 class VentaDetalle(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     venta_id = db.Column(db.Integer, db.ForeignKey('venta.id'))
@@ -122,72 +139,25 @@ class VentaDetalle(db.Model):
     subtotal = db.Column(db.Float)
     producto = db.relationship('Producto', backref='detalles_venta', lazy=True)
 
+
+class CierreCaja(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    fecha_cierre = db.Column(db.DateTime, default=datetime.utcnow)
+    usuario_id = db.Column(db.Integer, db.ForeignKey('usuario.id'))
+    total_venta = db.Column(db.Float)
+    total_efectivo = db.Column(db.Float)
+    total_electronico = db.Column(db.Float)
+    detalles_json = db.Column(db.Text)
+    usuario = db.relationship('Usuario', backref='cierres_caja', lazy=True)
+
 # =================================================================
-# 4. FUNCIONES DE UTILIDAD E INYECCIÓN DE CONTEXTO
+# FUNCIONES DE UTILIDAD
 # =================================================================
 @app.context_processor
 def inject_global_data():
-    from datetime import timedelta
     return dict(timedelta=timedelta)
 
-#//def enviar_informe_ventas(periodo):
- #   with app.app_context():
-#        # 1. Obtener el rango de fechas y datos
- #       hoy = date.today()
-        
-  #      if periodo == 'semanal':
-            # Informe Semanal: Últimos 7 días
-   #         inicio = hoy - timedelta(days=7)
-    #        asunto = f"📊 Informe Semanal de Ventas - {hoy.strftime('%d/%m/%Y')}"
-     #       total = db.session.query(func.sum(Venta.total)).filter(Venta.fecha >= inicio).scalar() or 0
-        
-      #  elif periodo == 'mensual':
-            # Informe Mensual: Mes actual
-       #     inicio = hoy.replace(day=1)
-        #    asunto = f"💰 Informe Mensual de Ventas - {hoy.strftime('%B %Y')}"
-         #   total = db.session.query(func.sum(Venta.total)).filter(Venta.fecha >= inicio).scalar() or 0
-        #else:
-         #   return
 
-        # 2. Obtener más detalles (ej: total por vendedor para el periodo)
-        #ventas_vendedor = db.session.query(
-         #   Usuario.username,
-          #  func.sum(Venta.total)
-        #).join(Venta, Usuario.id == Venta.usuario_id
-        #).filter(Venta.fecha >= inicio
-        #).group_by(Usuario.username).order_by(func.sum(Venta.total).desc()).all()
-
-        # 3. Construir el cuerpo del mensaje
-        #cuerpo = f"""
-       # Hola Administradora,
-        #Adjunto los datos resumidos del {periodo} de ventas:
-        
-        #OTAL DE VENTAS {periodo.upper()}: ${"{:,.0f}".format(total)}
-
-    
-        #Ventas por Vendedor:
-        
-       # """
-        #for v, t in ventas_vendedor:
-         #   cuerpo += f"- {v}: ${"{:,.0f}".format(t or 0)}\n"
-        
-        #cuerpo += """
-        #Para ver el informe detallado y gráficos, por favor ingresa al sistema.
-        #"""
-        
-        # 4. Enviar el correo
-        #msg = Message(asunto, sender=app.config['MAIL_USERNAME'], recipients=[app.config['ADMIN_EMAIL']])
-        #msg.body = cuerpo
-        #try:
-            #mail.send(msg)
-            #print(f"Correo de informe {periodo} enviado exitosamente.")
-        #except Exception as e:
-            #print(f"ERROR al enviar correo {periodo}: {e}")
-
-# Inyecta la función generar_barcode_base64 en el contexto (la moví de antes)
-
-#  FUNCIONES DE UTILIDAD (NO TIENE QUE VER CON EL CONTEXT_PROCESSOR)
-# =================================================================
 def generar_barcode_base64(codigo):
     """Genera un codigo de barras (Code128) y lo devuelve como imagen Base64."""
     try:
@@ -201,33 +171,78 @@ def generar_barcode_base64(codigo):
     except Exception as e:
         print(f"Error al generar barcode: {e}")
         return None
+
+
+def enviar_informe_ventas(periodo):
+    """
+    Función para generar y (opcionalmente) enviar informes por correo.
+    """
+    with app.app_context():
+        hoy = date.today()
+
+        if periodo == 'semanal':
+            inicio = hoy - timedelta(days=7)
+            asunto = f"📊 Informe Semanal de Ventas - {hoy.strftime('%d/%m/%Y')}"
+            total = db.session.query(func.sum(Venta.total)).filter(Venta.fecha >= inicio).scalar() or 0
+
+        elif periodo == 'mensual':
+            inicio = hoy.replace(day=1)
+            asunto = f"💰 Informe Mensual de Ventas - {hoy.strftime('%B %Y')}"
+            total = db.session.query(func.sum(Venta.total)).filter(Venta.fecha >= inicio).scalar() or 0
+        else:
+            return
+
+        ventas_vendedor = db.session.query(
+            Usuario.username,
+            func.sum(Venta.total)
+        ).join(Venta, Usuario.id == Venta.usuario_id
+        ).filter(Venta.fecha >= inicio
+        ).group_by(Usuario.username
+        ).order_by(func.sum(Venta.total).desc()).all()
+
+        cuerpo = f"Hola Administradora,\n\nAdjunto los datos resumidos del {periodo} de ventas:\n\n"
+        cuerpo += f"TOTAL DE VENTAS {periodo.upper()}: ${total:,.2f}\n\nVentas por Vendedor:\n"
+        for v, t in ventas_vendedor:
+            cuerpo += f"- {v}: ${t or 0:,.2f}\n"
+
+        cuerpo += "\nPara ver el informe detallado y gráficos, por favor ingresa al sistema.\n"
+        
+        # (Aquí iría la lógica de envío de correo)
+        print(asunto)
+        print(cuerpo)
+
+
 # =================================================================
-# 5. RUTAS DE AUTENTICACIÓN Y DASHBOARD
+# RUTAS Y LÓGICA
 # =================================================================
 @login_manager.user_loader
 def load_user(user_id):
     return Usuario.query.get(int(user_id))
 
+
 @app.route('/')
 def inicio():
     if current_user.is_authenticated:
-        return redirect(url_for('dashboard')) # Corregido: Eliminado el espacio oculto U+00A0
+        return redirect(url_for('dashboard'))
     return redirect(url_for('login'))
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('dashboard')) # Corregido: Eliminado el espacio oculto U+00A0
+        return redirect(url_for('dashboard'))
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
         user = Usuario.query.filter_by(username=username).first()
-        if user and user.check_password(password):
+        
+        if user and user.check_password(password): 
             login_user(user)
-            # flash(f'¡Bienvenido, {user.username}!', 'success') # ELIMINADO para quitar el cuadro rosado en la esquina.
-            return redirect(url_for('dashboard')) # Corregido: Eliminado el espacio oculto U+00A0
+            return redirect(url_for('dashboard'))
+            
         flash('Usuario o contraseña incorrectos.', 'danger')
     return render_template('login.html')
+
 
 @app.route('/logout')
 @login_required
@@ -236,53 +251,59 @@ def logout():
     flash('Sesión cerrada correctamente.', 'info')
     return redirect(url_for('login'))
 
+
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    """
-    Renderiza el dashboard principal.
-    AÑADIDO: Lógica para calcular y pasar las estadísticas al template.
-    """
-    # -----------------------------------------------------
-    # LÓGICA AGREGADA PARA ESTADÍSTICAS DEL DASHBOARD
-    # -----------------------------------------------------
-    
-    # 1. Productos con Stock Bajo
+    # -------------------------------------------------------------
+    # 1. CÁLCULO DE STOCK BAJO (se mantiene para la otra tarjeta)
+    # -------------------------------------------------------------
     try:
-        # Consulta: Productos donde la cantidad actual es menor o igual al stock_minimo (default 5)
         productos_bajos = Producto.query.filter(Producto.cantidad <= Producto.stock_minimo).count()
     except Exception:
-        productos_bajos = 0 # Valor por defecto en caso de error
+        productos_bajos = 0
 
-    # 2. Ventas de Hoy
+    # -------------------------------------------------------------
+    # 2. CÁLCULO DEL TOTAL DE INVENTARIO (CORREGIDO)
+    # -------------------------------------------------------------
+    try:
+        # Suma la columna 'cantidad' de todos los productos
+        total_inventario_query = db.session.query(func.sum(Producto.cantidad)).scalar()
+        # Asegura que sea 0 si es None, y lo pasa a entero
+        total_inventario = int(total_inventario_query) if total_inventario_query is not None else 0
+    except Exception:
+        total_inventario = 0
+
+    # -------------------------------------------------------------
+    # 3. CÁLCULO DE VENTAS Y CLIENTES (se mantiene)
+    # -------------------------------------------------------------
     try:
         hoy = datetime.now().date()
-        # Suma los totales de las ventas de hoy (comparando solo la fecha)
         ventas_hoy_query = db.session.query(func.sum(Venta.total)).filter(func.date(Venta.fecha) == hoy).scalar()
         ventas_hoy = ventas_hoy_query if ventas_hoy_query is not None else 0.00
     except Exception:
         ventas_hoy = 0.00
-        
-    # 3. Clientes Nuevos del Mes
+
     try:
         inicio_mes = datetime.now().replace(day=1).date()
-        # Cuenta los clientes registrados desde el inicio del mes
         clientes_nuevos_mes = Cliente.query.filter(func.date(Cliente.fecha_registro) >= inicio_mes).count()
     except Exception:
         clientes_nuevos_mes = 0
 
-    # -----------------------------------------------------
-    
+    # -------------------------------------------------------------
+    # 4. PASAR TODAS LAS VARIABLES A LA PLANTILLA
+    # -------------------------------------------------------------
     return render_template(
-        'dashboard.html', 
+        'dashboard.html',
         current_user=current_user,
         productos_stock_bajo=productos_bajos,
+        total_inventario=total_inventario, # <<< VARIABLE CORRECTA
         ventas_hoy=ventas_hoy,
         clientes_nuevos_mes=clientes_nuevos_mes
     )
-# =================================================================
-# 6. RUTAS DE CLIENTES (CRUD y BÚSQUEDA)
-# =================================================================
+
+
+# ===================== RUTAS CLIENTES =====================
 @app.route('/clientes')
 @login_required
 def clientes():
@@ -295,6 +316,7 @@ def clientes():
     else:
         clientes = Cliente.query.all()
     return render_template('clientes.html', clientes=clientes)
+
 
 @app.route('/clientes/agregar', methods=['POST'])
 @login_required
@@ -314,10 +336,11 @@ def agregar_cliente():
         flash(f'Error al agregar cliente: {e}', 'danger')
     return redirect(url_for('clientes'))
 
+
 @app.route('/clientes/eliminar/<int:cliente_id>')
 @login_required
 def eliminar_cliente(cliente_id):
-    if cliente_id == 1: 
+    if cliente_id == 1:
         flash('No se puede eliminar el cliente genérico.', 'danger')
         return redirect(url_for('clientes'))
     cliente = Cliente.query.get_or_404(cliente_id)
@@ -325,6 +348,7 @@ def eliminar_cliente(cliente_id):
     db.session.commit()
     flash('Cliente eliminado correctamente.', 'success')
     return redirect(url_for('clientes'))
+
 
 @app.route('/clientes/editar/<int:cliente_id>', methods=['POST'])
 @login_required
@@ -342,9 +366,8 @@ def editar_cliente(cliente_id):
         flash(f'Error al editar cliente: {e}', 'danger')
     return redirect(url_for('clientes'))
 
-# =================================================================
-# 7. RUTAS DE INVENTARIO (CRUD y BÚSQUEDA)
-# =================================================================
+
+# ===================== RUTAS INVENTARIO =====================
 @app.route('/inventario')
 @login_required
 def inventario():
@@ -356,8 +379,9 @@ def inventario():
             (Producto.descripcion.ilike(f'%{search_query}%'))
         ).all()
     else:
-        productos = Producto.query.all()
+        productos = Producto.query.order_by(Producto.id.desc()).all()
     return render_template('productos.html', productos=productos)
+
 
 @app.route('/inventario/agregar', methods=['POST'])
 @login_required
@@ -366,7 +390,6 @@ def agregar_producto():
         flash('Permiso denegado. Solo administradores pueden agregar productos.', 'danger')
         return redirect(url_for('inventario'))
     try:
-        # CORRECCIÓN: Se usa 'or 0' para evitar error 'NoneType' si el campo está vacío
         cantidad_val = request.form.get('cantidad') or 0
         valor_venta_val = request.form.get('valor_venta') or 0
         valor_interno_val = request.form.get('valor_interno') or 0
@@ -393,7 +416,8 @@ def agregar_producto():
         db.session.rollback()
         flash(f'Error general al agregar producto: {e}', 'danger')
     return redirect(url_for('inventario'))
-    
+
+
 @app.route('/inventario/eliminar/<int:producto_id>')
 @login_required
 def eliminar_producto(producto_id):
@@ -406,6 +430,7 @@ def eliminar_producto(producto_id):
     flash('Producto eliminado correctamente.', 'success')
     return redirect(url_for('inventario'))
 
+
 @app.route('/inventario/editar/<int:producto_id>', methods=['GET', 'POST'])
 @login_required
 def editar_producto(producto_id):
@@ -414,7 +439,7 @@ def editar_producto(producto_id):
         if current_user.rol.lower() != 'administrador':
             flash('Permiso denegado.', 'danger')
             return redirect(url_for('inventario'))
-        
+
         try:
             producto.codigo = request.form.get('codigo')
             producto.nombre = request.form.get('nombre')
@@ -428,9 +453,10 @@ def editar_producto(producto_id):
             flash(f'Error al actualizar producto: {e}', 'danger')
             db.session.rollback()
         return redirect(url_for('inventario'))
-        
+
     barcode_img = generar_barcode_base64(producto.codigo)
     return render_template('editar_producto.html', producto=producto, barcode_img=barcode_img)
+
 
 @app.route('/inventario/agregar_stock', methods=['POST'])
 @login_required
@@ -444,17 +470,17 @@ def agregar_stock_por_codigo():
 
     try:
         cantidad_a_agregar = int(cantidad or 0)
-        
+
         if cantidad_a_agregar <= 0:
             flash('Error: La cantidad a agregar debe ser positiva.', 'danger')
             return redirect(url_for('inventario'))
-        
+
         producto = Producto.query.filter_by(codigo=codigo).first()
-        
+
         if not producto:
             flash(f'Error: Producto con código {codigo} no encontrado.', 'danger')
             return redirect(url_for('inventario'))
-            
+
         producto.cantidad += cantidad_a_agregar
         db.session.commit()
         flash(f'Stock de {producto.nombre} actualizado (+{cantidad_a_agregar}).', 'success')
@@ -464,12 +490,11 @@ def agregar_stock_por_codigo():
     except Exception as e:
         db.session.rollback()
         flash(f'Error al agregar stock: {e}', 'danger')
-        
+
     return redirect(url_for('inventario'))
 
-# =================================================================
-# 8. RUTAS DE VENTAS Y COMPROBANTES (CON TRANSFERENCIA)
-# =================================================================
+
+# ===================== RUTAS VENTAS =====================
 @app.route('/ventas/nueva', methods=['GET', 'POST'])
 @login_required
 def nueva_venta():
@@ -477,58 +502,55 @@ def nueva_venta():
     clientes = Cliente.query.all()
 
     if request.method == 'GET':
-        return render_template('nueva_venta.html', productos=productos, clientes=clientes)
+        return render_template('nueva_venta.html', 
+                                productos=productos, 
+                                clientes=clientes)
 
     if request.method == 'POST':
         try:
-            # 1. Conversión de valores monetarios (Robusto contra strings vacíos o None)
             total_venta = float(request.form.get('total_venta', 0) or 0)
             pago_efectivo = float(request.form.get('pago_efectivo', 0) or 0)
             pago_nequi = float(request.form.get('pago_nequi', 0) or 0)
-            pago_transferencia = float(request.form.get('pago_transferencia', 0) or 0) 
+            pago_transferencia = float(request.form.get('pago_transferencia', 0) or 0)
             pago_daviplata = float(request.form.get('pago_daviplata', 0) or 0)
             pago_tarjeta = float(request.form.get('pago_tarjeta', 0) or 0)
-            
+
             cod_transaccion = request.form.get('codigo_transaccion', '').strip()
             fecha_transaccion = request.form.get('fecha_transaccion', '')
-            
+
             total_pagado = pago_efectivo + pago_nequi + pago_transferencia + pago_daviplata + pago_tarjeta
 
-            # 2. Validación de Pago (uso de round() para precisión decimal)
             if round(total_pagado, 2) < round(total_venta, 2):
                 flash('Error: El total pagado es menor al total de la venta.', 'danger')
                 return redirect(url_for('nueva_venta'))
 
-            # 3. Creación del diccionario de detalle de pagos
             detalle_pago_dict = {
                 'Efectivo': pago_efectivo,
                 'Nequi': pago_nequi,
-                'Transferencia': pago_transferencia, 
+                'Transferencia': pago_transferencia,
                 'Daviplata': pago_daviplata,
                 'Tarjeta/Bold': pago_tarjeta,
                 'Ref_Codigo': cod_transaccion,
                 'Ref_Fecha': fecha_transaccion
             }
-            
+
             tipos_pagos = [k for k, v in detalle_pago_dict.items()
-                           if k not in ['Ref_Codigo', 'Ref_Fecha'] and float(v or 0) > 0]
+                             if k not in ['Ref_Codigo', 'Ref_Fecha'] and float(v or 0) > 0]
             tipo_pago_general = "Mixto" if len(tipos_pagos) > 1 else tipos_pagos[0] if tipos_pagos else "Sin Pago"
 
             cliente_id = int(request.form.get('cliente_id') or 1)
 
-            # 4. Creación de la Venta Principal
             nueva_venta = Venta(
                 fecha=datetime.utcnow(),
                 total=total_venta,
                 usuario_id=current_user.id,
                 cliente_id=cliente_id,
                 tipo_pago=tipo_pago_general,
-                detalle_pago=json.dumps(detalle_pago_dict) 
+                detalle_pago=json.dumps(detalle_pago_dict)
             )
             db.session.add(nueva_venta)
             db.session.flush()
 
-            # 5. Procesamiento de los detalles de la venta
             productos_vendidos_json = request.form.get('productos_vendidos_json', '[]')
             try:
                 productos_vendidos = json.loads(productos_vendidos_json)
@@ -536,16 +558,14 @@ def nueva_venta():
                 flash(f'Error de formato JSON en productos vendidos: {e}', 'danger')
                 db.session.rollback()
                 return redirect(url_for('nueva_venta'))
-                
+
             for item in productos_vendidos:
-                # Conversión segura a números
                 item_id = int(item.get('id', 0))
                 cantidad_vendida = int(item.get('cantidad', 0))
                 precio_unitario = float(item.get('precio', 0))
                 subtotal = float(item.get('subtotal', 0))
                 producto = Producto.query.get(item_id)
-                
-                # 6. Validación de Stock y Decremento (Uso de INT() para la comparación)
+
                 if producto and int(producto.cantidad) >= cantidad_vendida:
                     detalle = VentaDetalle(
                         venta_id=nueva_venta.id,
@@ -557,12 +577,10 @@ def nueva_venta():
                     db.session.add(detalle)
                     producto.cantidad -= cantidad_vendida
                 else:
-                    # Manejo de error de stock
                     flash(f"Stock insuficiente para {producto.nombre if producto else 'desconocido'}. Cantidad solicitada: {cantidad_vendida}, disponible: {producto.cantidad if producto else 0}.", 'danger')
                     db.session.rollback()
                     return redirect(url_for('nueva_venta'))
 
-            # 7. Commit Final
             db.session.commit()
             flash('Venta registrada exitosamente!', 'success')
             return redirect(url_for('imprimir_comprobante', venta_id=nueva_venta.id))
@@ -571,14 +589,14 @@ def nueva_venta():
             flash(f'Ocurrió un error general al procesar la venta: {e}', 'danger')
             return redirect(url_for('nueva_venta'))
 
+
 @app.route('/ventas/comprobante/<int:venta_id>')
 @login_required
 def imprimir_comprobante(venta_id):
     venta = Venta.query.get_or_404(venta_id)
-    fecha_local = venta.fecha - timedelta(hours=5) 
+    fecha_local = venta.fecha - timedelta(hours=5)
     detalles = VentaDetalle.query.filter_by(venta_id=venta_id).all()
-    
-    # Agrupar productos (sin cambios)
+
     detalles_agrupados = defaultdict(lambda: {'cantidad': 0, 'subtotal': 0.0, 'precio_unitario': 0.0, 'producto': None})
     for d in detalles:
         pid = d.producto_id
@@ -588,39 +606,203 @@ def imprimir_comprobante(venta_id):
             detalles_agrupados[pid]['producto'] = d.producto
             detalles_agrupados[pid]['precio_unitario'] = d.precio_unitario
     detalles_finales = list(detalles_agrupados.values())
-    
-    # Cargar y normalizar el JSON de detalle de pago
+
     pagos_normalizados = {}
     try:
         detalle_pago_dict = json.loads(venta.detalle_pago) if venta.detalle_pago else {}
-        
-        first_value = next(iter(detalle_pago_dict.values()), None)
 
-        if isinstance(first_value, dict):
-            pagos_normalizados = {k: v for k, v in detalle_pago_dict.items() if isinstance(v, dict) and v.get('monto', 0) > 0}
-        
-        elif first_value is not None:
-            ref_cod = detalle_pago_dict.get('Ref_Codigo', '')
-            ref_fecha = detalle_pago_dict.get('Ref_Fecha', '')
-            
-            for k, v in detalle_pago_dict.items():
-                if k not in ['Ref_Codigo', 'Ref_Fecha'] and (isinstance(v, (int, float)) and v > 0):
+        ref_cod = detalle_pago_dict.get('Ref_Codigo', '')
+        ref_fecha = detalle_pago_dict.get('Ref_Fecha', '')
+
+        for k, v in detalle_pago_dict.items():
+            if k not in ['Ref_Codigo', 'Ref_Fecha'] and (isinstance(v, (int, float)) and v > 0):
+                if k in ['Nequi', 'Transferencia', 'Daviplata', 'Tarjeta/Bold']:
                     pagos_normalizados[k] = {'monto': v, 'cod': ref_cod, 'fecha': ref_fecha}
+                else:
+                    pagos_normalizados[k] = {'monto': v, 'cod': '', 'fecha': ''}
 
     except Exception as e:
         print(f"Error normalizando detalle_pago para Venta ID {venta.id}: {e}")
-        pagos_normalizados = {} 
+        pagos_normalizados = {}
 
     return render_template(
-        'comprobante.html', 
-        venta=venta, 
-        detalles=detalles_finales, 
-        pagos=pagos_normalizados, 
+        'comprobante.html',
+        venta=venta,
+        detalles=detalles_finales,
+        pagos=pagos_normalizados,
         fecha_local=fecha_local
     )
-# =================================================================
-# 9. RUTAS DE USUARIOS (CRUD SOLO ADMINISTRADOR)
-# =================================================================
+
+
+# ===================== RUTAS CIERRE DE CAJA =====================
+@app.route('/cierre_caja/ejecutar', methods=['POST'])
+@login_required
+def ejecutar_cierre_caja():
+    if current_user.rol.lower() != 'administrador':
+        flash('Permiso denegado. Solo administradores pueden realizar el cierre de caja.', 'danger')
+        return redirect(url_for('reportes'))
+
+    hoy = date.today()
+
+    # 1. Verificar si ya hay un cierre para hoy
+    cierre_existente = CierreCaja.query.filter(func.date(CierreCaja.fecha_cierre) == hoy).first()
+    if cierre_existente:
+        flash('⚠️ El cierre de caja para hoy ya fue registrado. Puedes consultarlo en el historial.', 'warning')
+        return redirect(url_for('reportes'))
+
+    # 2. Recalcular los datos del día
+    ventas_del_dia = Venta.query.filter(func.date(Venta.fecha) == hoy).all()
+    if not ventas_del_dia:
+        flash('ℹ️ No se registraron ventas hoy. El cierre se registra con total $0.', 'info')
+
+    total_diario = 0.0
+    total_efectivo = 0.0
+    
+    total_pagos_electronicos = defaultdict(float)
+    
+    informe_diario_detallado = defaultdict(lambda: {
+        'total_venta': 0.0,
+        'Efectivo': 0.0,
+        'Nequi': 0.0,
+        'Daviplata': 0.0,
+        'Transferencia': 0.0,
+        'Tarjeta/Bold': 0.0
+    })
+
+    for venta in ventas_del_dia:
+        total_diario += venta.total
+        try:
+            pagos = json.loads(venta.detalle_pago)
+            efectivo = pagos.get('Efectivo', 0.0)
+            nequi = pagos.get('Nequi', 0.0)
+            daviplata = pagos.get('Daviplata', 0.0)
+            transferencia = pagos.get('Transferencia', 0.0)
+            tarjeta = pagos.get('Tarjeta/Bold', 0.0)
+
+            total_efectivo += efectivo
+            
+            total_pagos_electronicos['Nequi'] += nequi
+            total_pagos_electronicos['Daviplata'] += daviplata
+            total_pagos_electronicos['Transferencia'] += transferencia
+            total_pagos_electronicos['Tarjeta/Bold'] += tarjeta
+
+            vendedor_username = venta.vendedor.username if venta.vendedor else "N/A"
+            
+            informe_diario_detallado[vendedor_username]['total_venta'] += venta.total
+            informe_diario_detallado[vendedor_username]['Efectivo'] += efectivo
+            informe_diario_detallado[vendedor_username]['Nequi'] += nequi
+            informe_diario_detallado[vendedor_username]['Daviplata'] += daviplata
+            informe_diario_detallado[vendedor_username]['Transferencia'] += transferencia
+            informe_diario_detallado[vendedor_username]['Tarjeta/Bold'] += tarjeta
+
+        except Exception:
+            pass 
+
+    # 3. Crear el JSON de detalles que incluye el desglose general
+    detalles_para_guardar = dict(informe_diario_detallado)
+    detalles_para_guardar['GENERAL'] = {
+        'Total_Efectivo': total_efectivo,
+        'Nequi': total_pagos_electronicos['Nequi'],
+        'Daviplata': total_pagos_electronicos['Daviplata'],
+        'Transferencia': total_pagos_electronicos['Transferencia'],
+        'Tarjeta/Bold': total_pagos_electronicos['Tarjeta/Bold']
+    }
+    
+    total_electronico_sum = sum(total_pagos_electronicos.values())
+
+    # 4. Crear y guardar el registro de cierre
+    nuevo_cierre = CierreCaja(
+        usuario_id=current_user.id,
+        total_venta=total_diario,
+        total_efectivo=total_efectivo,
+        total_electronico=total_electronico_sum,
+        detalles_json=json.dumps(detalles_para_guardar)
+    )
+    
+    db.session.add(nuevo_cierre)
+    db.session.commit()
+    
+    flash(f'✅ Cierre de Caja registrado exitosamente para el día {hoy.strftime("%d/%m/%Y")}. Total vendido: ${total_diario:,.0f}', 'success')
+    return redirect(url_for('reportes'))
+
+
+@app.route('/cierre_caja/historial')
+@login_required
+def historial_cierres():
+    if current_user.rol.lower() != 'administrador':
+        flash('Permiso denegado.', 'danger')
+        return redirect(url_for('clientes'))
+    
+    cierres = CierreCaja.query.order_by(CierreCaja.fecha_cierre.desc()).all()
+    return render_template('historial_cierres.html', cierres=cierres, timedelta=timedelta)
+
+
+# ===================== RUTAS REPORTES =====================
+@app.route('/reportes')
+@login_required
+def reportes():
+    if current_user.rol.lower() != 'administrador':
+        flash('Permiso denegado.', 'danger')
+        return redirect(url_for('clientes'))
+
+    hoy = date.today()
+    inicio_mes = hoy.replace(day=1)
+
+    total_diario = db.session.query(func.sum(Venta.total)).filter(func.date(Venta.fecha) == hoy).scalar() or 0
+
+    inicio_semana = hoy - timedelta(days=hoy.weekday())
+    total_semanal = db.session.query(func.sum(Venta.total)).filter(Venta.fecha >= inicio_semana).scalar() or 0
+
+    total_mensual = db.session.query(func.sum(Venta.total)).filter(Venta.fecha >= inicio_mes).scalar() or 0
+
+    informe_diario = db.session.query(
+        Usuario.username.label('vendedor'),
+        Venta.tipo_pago,
+        func.sum(Venta.total).label('total_vendido')
+    ).join(Usuario, Usuario.id == Venta.usuario_id
+    ).filter(func.date(Venta.fecha) == hoy
+    ).group_by(Usuario.username, Venta.tipo_pago).all()
+
+    ventas_por_vendedor = db.session.query(
+        Usuario.username.label('vendedor'),
+        func.sum(Venta.total).label('total_vendido')
+    ).join(Venta, Usuario.id == Venta.usuario_id
+    ).filter(Venta.fecha >= inicio_mes
+    ).group_by(Usuario.username
+    ).order_by(func.sum(Venta.total).desc()).all()
+
+    datos_vendedores = {'labels': [r.vendedor for r in ventas_por_vendedor],
+                        'data': [float(r.total_vendido or 0) for r in ventas_por_vendedor]}
+
+    informe_tendencia_semanal = db.session.query(
+        func.strftime('%Y-%W', Venta.fecha).label('semana'),
+        func.sum(Venta.total).label('total_vendido')
+    ).filter(Venta.fecha >= inicio_mes
+    ).group_by('semana'
+    ).order_by('semana').all()
+
+    def formatear_semana(semana_str):
+        return 'Semana ' + semana_str.split('-')[1] if '-' in semana_str else semana_str
+
+    datos_tendencia = {'labels': [formatear_semana(r.semana) for r in informe_tendencia_semanal],
+                        'data': [float(r.total_vendido or 0) for r in informe_tendencia_semanal]}
+                        
+    caja_cerrada_hoy = CierreCaja.query.filter(func.date(CierreCaja.fecha_cierre) == hoy).first() is not None
+
+    return render_template(
+        'reportes.html',
+        hoy=hoy,
+        informe_diario=informe_diario,
+        total_diario=total_diario,
+        total_semanal=total_semanal,
+        total_mensual=total_mensual,
+        datos_tendencia=json.dumps(datos_tendencia),
+        datos_vendedores=json.dumps(datos_vendedores),
+        caja_cerrada_hoy=caja_cerrada_hoy
+    )
+
+
+# ===================== RUTAS USUARIOS =====================
 @app.route('/usuarios')
 @login_required
 def usuarios():
@@ -629,6 +811,7 @@ def usuarios():
         return redirect(url_for('clientes'))
     usuarios_list = Usuario.query.all()
     return render_template('usuarios.html', usuarios=usuarios_list)
+
 
 @app.route('/usuarios/agregar', methods=['POST'])
 @login_required
@@ -671,6 +854,7 @@ def agregar_usuario():
 
     return redirect(url_for('usuarios'))
 
+
 @app.route('/usuarios/editar/<int:usuario_id>', methods=['GET', 'POST'])
 @login_required
 def editar_usuario(usuario_id):
@@ -701,16 +885,16 @@ def editar_usuario(usuario_id):
 
     return render_template('editar_usuario.html', usuario=usuario)
 
+
 @app.route('/usuarios/eliminar/<int:usuario_id>')
 @login_required
 def eliminar_usuario(usuario_id):
     if current_user.rol.lower() != 'administrador':
-        flash('Acceso denegado. Solo administradores pueden eliminar usuarios.', 'danger')
+        flash('Permiso denegado. Solo administradores pueden eliminar usuarios.', 'danger')
         return redirect(url_for('usuarios'))
 
     usuario_a_eliminar = Usuario.query.get_or_404(usuario_id)
 
-    # Evitar eliminar al único administrador
     if usuario_a_eliminar.rol.lower() == 'administrador' and \
        Usuario.query.filter(Usuario.rol.ilike('administrador')).count() <= 1:
         flash('Debe haber al menos un administrador en el sistema.', 'danger')
@@ -721,143 +905,233 @@ def eliminar_usuario(usuario_id):
     flash(f'Usuario {usuario_a_eliminar.username} eliminado correctamente.', 'success')
     return redirect(url_for('usuarios'))
 
-# =================================================================
-## =================================================================
-# 10. RUTAS DE REPORTES (Vista Consolidada y Gráficos)
-# =================================================================
-@app.route('/reportes')
-@login_required
-def reportes():
-    if current_user.rol.lower() != 'administrador':
-        flash('Permiso denegado.', 'danger')
-        return redirect(url_for('clientes'))
-    
-    hoy = date.today()
-    inicio_mes = hoy.replace(day=1)
 
-    # 1. Totales Consolidados para Tarjetas
-    total_diario = db.session.query(func.sum(Venta.total)).filter(func.date(Venta.fecha) == hoy).scalar() or 0
-    
-    inicio_semana = hoy - timedelta(days=hoy.weekday())
-    total_semanal = db.session.query(func.sum(Venta.total)).filter(Venta.fecha >= inicio_semana).scalar() or 0
-    
-    total_mensual = db.session.query(func.sum(Venta.total)).filter(Venta.fecha >= inicio_mes).scalar() or 0
-
-    # 2. Informe Diario Detallado (Para la tabla con scroll)
-    informe_diario = db.session.query(
-        Usuario.username.label('vendedor'),      
-        Venta.tipo_pago, # Corregido: Eliminado el espacio oculto U+00A0
-        func.sum(Venta.total).label('total_vendido')
-    ).join(Usuario, Usuario.id == Venta.usuario_id
-    ).filter(func.date(Venta.fecha) == hoy
-    ).group_by(Usuario.username, Venta.tipo_pago).all()
-    
-    # 3. Gráfico 1: Ventas por Vendedor (Mensual)
-    ventas_por_vendedor = db.session.query(
-        Usuario.username.label('vendedor'),
-        func.sum(Venta.total).label('total_vendido')
-    ).join(Venta, Usuario.id == Venta.usuario_id
-    ).filter(Venta.fecha >= inicio_mes
-    ).group_by(Usuario.username
-    ).order_by(func.sum(Venta.total).desc()).all()
-    
-    datos_vendedores = {'labels': [r.vendedor for r in ventas_por_vendedor],
-                        'data': [float(r.total_vendido or 0) for r in ventas_por_vendedor]}
-
-    # 4. Gráfico 2: Tendencia Semanal (Agrupado por Semana del Mes)
-    # CRÍTICO: Usamos strftime('%Y-%W') para agrupar por semana
-    informe_tendencia_semanal = db.session.query(
-        func.strftime('%Y-%W', Venta.fecha).label('semana'),
-        func.sum(Venta.total).label('total_vendido')
-    ).filter(Venta.fecha >= inicio_mes
-    ).group_by('semana'
-    ).order_by('semana').all()
-
-    def formatear_semana(semana_str):
-        # Transforma 'YYYY-WW' a 'Semana WW' (Ej: 2025-45 -> Semana 45)
-        return 'Semana ' + semana_str.split('-')[1]
-
-    datos_tendencia = {'labels': [formatear_semana(r.semana) for r in informe_tendencia_semanal],
-                       'data': [float(r.total_vendido or 0) for r in informe_tendencia_semanal]}
-    
-    return render_template(
-        'reportes.html',
-        hoy=hoy,
-        informe_diario=informe_diario,
-        total_diario=total_diario,
-        total_semanal=total_semanal,
-        total_mensual=total_mensual,
-        datos_tendencia=json.dumps(datos_tendencia),
-        datos_vendedores=json.dumps(datos_vendedores)
-    )
-
-# =================================================================
-# 10.1 RUTA DEDICADA PARA LA GESTIÓN DE VENTAS (ANULAR/REVERSAR)
-# =================================================================
+# ===================== GESTIÓN DE VENTAS =====================
 @app.route('/gestion_ventas')
 @login_required
 def gestion_ventas():
     if current_user.rol.lower() != 'administrador':
         flash('Permiso denegado.', 'danger')
         return redirect(url_for('clientes'))
+
+    ventas_recientes = Venta.query.order_by(Venta.id.desc()).limit(30).all()
     
-    # Consulta de Ventas Recientes (Para Anular/Reversar)
-    ventas_recientes = Venta.query.order_by(Venta.id.desc()).limit(30).all() 
-    
-    # Necesitas el archivo templates/gestion_ventas.html
-    return render_template('gestion_ventas.html', VentasRecientes=ventas_recientes)
+    # NUEVAS VARIABLES A PASAR (para el modal de edición):
+    todos_los_clientes = Cliente.query.all()
+    todos_los_vendedores = Usuario.query.all() # Todos los usuarios pueden ser vendedores aquí
+
+    return render_template('gestion_ventas.html', 
+                            VentasRecientes=ventas_recientes,
+                            clientes_full=todos_los_clientes,
+                            vendedores_full=todos_los_vendedores)
 
 
-# =================================================================
-# 10.2 RUTA PARA ANULAR/REVERSAR VENTA (FUNCIÓN)
-# =================================================================
 @app.route('/ventas/eliminar/<int:venta_id>')
 @login_required
 def eliminar_venta(venta_id):
     if current_user.rol.lower() != 'administrador':
         flash('Permiso denegado. Solo administradores pueden anular ventas.', 'danger')
-        return redirect(url_for('gestion_ventas')) # CORRECCIÓN: Redirige a la nueva ruta
+        return redirect(url_for('gestion_ventas'))
 
     venta = Venta.query.get_or_404(venta_id)
-    
+
     try:
-        # 1. Devolver el stock al inventario
         detalles = VentaDetalle.query.filter_by(venta_id=venta.id).all()
         for detalle in detalles:
             producto = Producto.query.get(detalle.producto_id)
             if producto:
-                producto.cantidad += detalle.cantidad 
+                producto.cantidad += detalle.cantidad
 
-        # 2. Eliminar los detalles de la venta y la venta principal
         VentaDetalle.query.filter_by(venta_id=venta.id).delete()
         db.session.delete(venta)
-        
         db.session.commit()
-        
         flash(f'Venta N° {venta_id} anulada correctamente. Stock devuelto al inventario.', 'success')
 
     except Exception as e:
         db.session.rollback()
         flash(f'Error al anular la venta: {e}', 'danger')
 
-    return redirect(url_for('gestion_ventas')) # CORRECCIÓN: Redirige a la nueva ruta
-
-# =================================================================
-# =================================================================
-# =================================================================
-# 11. INICIALIZACIÓN DE LA APLICACIÓN
-# =================================================================
-
-# IMPORTANTE: Toda la lógica de creación de la base de datos y tareas programadas
-# ha sido movida al archivo 'init_db.py' para el correcto despliegue con Gunicorn.
-class Inventario(db.Model):
-    __tablename__ = 'inventario'
-    id = db.Column(db.Integer, primary_key=True)
-    nombre = db.Column(db.String(100))
-    ...
+    return redirect(url_for('gestion_ventas'))
 
 
+# RUTA API: para obtener detalles de una venta por ID (usada por el modal)
+@app.route('/api/ventas/detalle/<int:venta_id>', methods=['GET'])
+@login_required
+def api_detalle_venta(venta_id):
+    if current_user.rol.lower() != 'administrador':
+        return jsonify({'error': 'Permiso denegado'}), 403
+
+    venta = Venta.query.get(venta_id)
+    if not venta:
+        return jsonify({'error': 'Venta no encontrada'}), 404
+
+    detalles = VentaDetalle.query.filter_by(venta_id=venta_id).all()
+    
+    productos_vendidos = []
+    for detalle in detalles:
+        producto = Producto.query.get(detalle.producto_id)
+        if producto:
+            productos_vendidos.append({
+                'id': producto.id, 
+                'nombre': producto.nombre,
+                'descripcion': producto.descripcion,
+                'cantidad': detalle.cantidad,
+                'precio_unitario': detalle.precio_unitario,
+                'subtotal': detalle.subtotal
+            })
+            
+    # Parseamos el detalle de pago para mostrarlo
+    try:
+        detalle_pago_json = json.loads(venta.detalle_pago)
+    except:
+        detalle_pago_json = {}
+
+    return jsonify({
+        'venta_id': venta.id,
+        'fecha': (venta.fecha - timedelta(hours=5)).strftime('%d/%m/%Y %I:%M %p'),
+        'total': venta.total,
+        # IDs para preseleccionar en el modal:
+        'cliente_id': venta.cliente_id, 
+        'vendedor_id': venta.usuario_id, 
+        'vendedor': venta.vendedor.username,
+        'cliente': venta.comprador.nombre if venta.comprador else 'Contado / Genérico',
+        'productos': productos_vendidos,
+        'pagos': detalle_pago_json
+    })
+
+
+# RUTA: Edición de una venta (Solo Cliente/Vendedor)
+@app.route('/ventas/editar_info/<int:venta_id>', methods=['POST'])
+@login_required
+def editar_informacion_venta(venta_id):
+    if current_user.rol.lower() != 'administrador':
+        flash('Permiso denegado.', 'danger')
+        return redirect(url_for('gestion_ventas'))
+    
+    venta = Venta.query.get_or_404(venta_id)
+    
+    try:
+        cliente_id_form = request.form.get('cliente_id')
+        vendedor_id_form = request.form.get('vendedor_id')
+        
+        venta.cliente_id = int(cliente_id_form)
+        venta.usuario_id = int(vendedor_id_form)
+        
+        db.session.commit()
+        flash(f'Información básica de la Venta N° {venta_id} actualizada.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error al editar información de la venta: {e}', 'danger')
+        
+    return redirect(url_for('gestion_ventas'))
+
+
+# RUTA API: Para obtener todos los productos (se usará en el modal para agregar)
+@app.route('/api/productos/todos', methods=['GET'])
+@login_required
+def api_todos_los_productos():
+    productos = Producto.query.all()
+    lista_productos = []
+    for p in productos:
+        lista_productos.append({
+            'id': p.id,
+            'nombre': p.nombre,
+            'descripcion': p.descripcion,
+            'valor_venta': p.valor_venta,
+            'cantidad_stock': p.cantidad 
+        })
+    return jsonify({'productos': lista_productos})
+
+
+# RUTA API: Edición detallada de productos en una venta (Anulación/Adición)
+@app.route('/api/ventas/detalle/editar/<int:venta_id>', methods=['POST'])
+@login_required
+def api_editar_detalle_venta(venta_id):
+    if current_user.rol.lower() != 'administrador':
+        return jsonify({'success': False, 'message': 'Permiso denegado.'}), 403
+
+    venta = Venta.query.get(venta_id)
+    if not venta:
+        return jsonify({'success': False, 'message': 'Venta no encontrada.'}), 404
+
+    try:
+        data = request.get_json()
+        productos_actualizados = data.get('productos', [])
+
+        # 1. Recuperar los detalles de venta existentes para compararlos
+        detalles_existentes = VentaDetalle.query.filter_by(venta_id=venta_id).all()
+        productos_originales = {detalle.producto_id: detalle.cantidad for detalle in detalles_existentes}
+
+        # 2. Eliminar todos los detalles existentes para re-insertar los nuevos
+        VentaDetalle.query.filter_by(venta_id=venta_id).delete()
+        
+        nuevo_total_venta = 0.0
+        productos_procesados = {}
+        
+        # 3. Procesar los detalles actualizados, calculando el nuevo total e insertando detalles
+        for item in productos_actualizados:
+            prod_id = int(item.get('id', 0))
+            cantidad_nueva = int(item.get('cantidad', 0))
+            precio_unitario = float(item.get('precio_unitario', 0))
+            
+            if cantidad_nueva <= 0:
+                continue # Producto anulado (eliminado del detalle)
+
+            producto = Producto.query.get(prod_id)
+            if not producto:
+                raise Exception(f"Producto con ID {prod_id} no encontrado.")
+
+            subtotal = round(cantidad_nueva * precio_unitario, 2)
+            nuevo_total_venta += subtotal
+            
+            # Crear y agregar el nuevo detalle
+            nuevo_detalle = VentaDetalle(
+                venta_id=venta_id,
+                producto_id=prod_id,
+                cantidad=cantidad_nueva,
+                precio_unitario=precio_unitario,
+                subtotal=subtotal
+            )
+            db.session.add(nuevo_detalle)
+            
+            productos_procesados[prod_id] = cantidad_nueva
+
+        # 4. Ajustar el inventario (devoluciones y adiciones)
+        productos_a_ajustar = set(productos_originales.keys()) | set(productos_procesados.keys())
+
+        for prod_id in productos_a_ajustar:
+            cantidad_original = productos_originales.get(prod_id, 0)
+            cantidad_nueva = productos_procesados.get(prod_id, 0)
+            
+            # Positivo = Devuelto a stock (Anulación), Negativo = Sacado de stock (Adición)
+            diferencia = cantidad_original - cantidad_nueva 
+            
+            producto = Producto.query.get(prod_id)
+            if producto:
+                producto.cantidad += diferencia
+                
+                # Verificación de stock para nuevas salidas/adiciones
+                if diferencia < 0 and producto.cantidad < 0:
+                    db.session.rollback()
+                    return jsonify({'success': False, 'message': f"Stock insuficiente para la adición de {producto.nombre}. Cantidad final en stock: {producto.cantidad}"}), 400
+
+        # 5. Actualizar el total de la Venta
+        venta.total = nuevo_total_venta
+        
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Detalle de venta actualizado correctamente. Inventario ajustado.', 'nuevo_total': nuevo_total_venta})
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error en edición detallada de venta: {e}")
+        return jsonify({'success': False, 'message': f'Error al procesar la edición: {e}'}), 500
+
+
+# =================================================================
+# INICIALIZACIÓN
+# =================================================================
 if __name__ == '__main__':
-    # Esta línea SÓLO se ejecuta cuando corres 'python app.py' localmente.
-    # Gunicorn la ignora, resolviendo el conflicto del servidor.
+    # Crear tablas si no existen (útil para desarrollo local)
+    with app.app_context():
+        db.create_all()
     app.run(debug=True)

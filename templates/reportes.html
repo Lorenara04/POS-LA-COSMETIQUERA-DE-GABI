@@ -104,6 +104,20 @@
     💖 Cierre e Informes de Ventas 💖
 </h2>
 
+<form action="{{ url_for('ejecutar_cierre_caja') }}" method="POST" class="text-center mb-5">
+    <button type="submit" class="btn btn-lg fw-bold" 
+            style="background-color: #d9007b; color: white; border-radius: 12px; transition: all 0.3s;"
+            {% if caja_cerrada_hoy %} disabled title="El cierre de caja para hoy ya fue realizado." {% endif %}
+            onclick="return confirm('¿Está seguro de que desea realizar el Cierre de Caja para el día de hoy? Esto registrará los totales de forma permanente.');"
+            >
+        <i class="fas fa-lock me-2"></i> 
+        {% if caja_cerrada_hoy %} Cierre de Caja Realizado {% else %} Realizar Cierre de Caja Hoy {% endif %}
+    </button>
+    
+    <a href="{{ url_for('historial_cierres') }}" class="btn btn-outline-dark btn-lg ms-3" style="border-radius: 12px;">
+        <i class="fas fa-history me-2"></i> Historial de Cierres
+    </a>
+</form>
 <div class="row mb-4 text-center">
     <div class="col-md-4 mb-3">
         <div class="card text-white" style="background:linear-gradient(300deg,#9c0277,#d9007b);">
@@ -139,7 +153,7 @@
 </p>
 
 <div class="table-responsive shadow-sm" 
-     style="max-height: 420px; overflow-y: auto; border: 2px solid #9c0277; border-radius: 15px;">
+      style="max-height: 420px; overflow-y: auto; border: 2px solid #9c0277; border-radius: 15px;">
     <table class="table text-center align-middle mb-0">
         <thead style="position: sticky; top: 0; z-index: 1;">
             <tr>
@@ -190,8 +204,9 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     try {
-        const datosVendedores = JSON.parse('{{ datos_vendedores | safe }}');
-        const datosTendencia = JSON.parse('{{ datos_tendencia | safe }}');
+        // Aseguramos que el JSON sea inyectado de forma segura
+        const datosVendedores = JSON.parse('{{ datos_vendedores | tojson }}'); 
+        const datosTendencia = JSON.parse('{{ datos_tendencia | tojson }}');
 
         const ctxVendedor = document.getElementById('ventasVendedorChart');
         if (ctxVendedor) {
@@ -231,7 +246,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         label: 'Venta Semanal Acumulada ($)',
                         data: datosTendencia.data,
                         backgroundColor: 'rgba(225, 0, 137, 0.15)',
-                        borderColor: '##9c0277',
+                        borderColor: '#9c0277', 
                         borderWidth: 3,
                         tension: 0.4,
                         fill: true,
@@ -251,6 +266,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     } catch (e) {
+        // Si hay un error, lo imprimimos en la consola del navegador para debug
         console.error("Error al inicializar los gráficos:", e);
     }
 });
