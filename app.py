@@ -11,7 +11,6 @@ from barcode.writer import ImageWriter
 from io import BytesIO
 from collections import defaultdict
 import base64
-from apscheduler.schedulers.background import BackgroundScheduler
 import locale
 
 # =================================================================
@@ -30,13 +29,13 @@ login_manager.login_view = 'login'
 # ----------------------------------------
 # CONFIGURACIÓN DE CORREO (Opcional - Mantener comentada si no se usa)
 # ----------------------------------------
-app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
-app.config['MAIL_PORT'] = int(os.environ.get('MAIL_PORT', 587))
-app.config['MAIL_USE_TLS'] = bool(os.environ.get('MAIL_USE_TLS', True))
-app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME', '')
-app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD', '')
-app.config['ADMIN_EMAIL'] = os.environ.get('ADMIN_EMAIL', '')
-# mail = Mail(app)
+#app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
+#app.config['MAIL_PORT'] = int(os.environ.get('MAIL_PORT', 587))
+#app.config['MAIL_USE_TLS'] = bool(os.environ.get('MAIL_USE_TLS', True))
+#app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME', '')
+#app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD', '')
+#app.config['ADMIN_EMAIL'] = os.environ.get('ADMIN_EMAIL', '')
+#mail = Mail(app)
 
 # =================================================================
 # CONTEXT PROCESSOR (Soluciona el error 'now' no definido en plantillas)
