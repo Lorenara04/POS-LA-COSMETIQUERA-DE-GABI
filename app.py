@@ -17,7 +17,15 @@ import locale
 # APP CONFIG & DATABASE
 # =================================================================
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///pos_cosmetiqueria.db'
+# ------------------------------------------------------------------
+# **RUTA DEL DISCO PERSISTENTE DE RENDER:**
+# Usamos os.path.join para construir la ruta al archivo dentro del disco montado en /data
+DB_FILENAME = 'pos_cosmetiqueria.db'
+DB_PATH = os.path.join('/data', DB_FILENAME) # Esto resulta en /data/pos_cosmetiqueria.db
+
+# ¡CAMBIO CRÍTICO! Apuntamos la URI a la ruta absoluta
+app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{DB_PATH}'
+# ------------------------------------------------------------------
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', os.urandom(24))
 
 db = SQLAlchemy(app)
