@@ -21,14 +21,11 @@ from sqlalchemy.exc import OperationalError
 DB_FILENAME = 'pos_cosmetiqueria.db'
 DB_PATH = os.path.join('/data', DB_FILENAME)  # /data/pos_cosmetiqueria.db
 
-# Asegurar la existencia del directorio /data
-DB_DIR = '/data'
-if not os.path.exists(DB_DIR):
-    os.makedirs(DB_DIR) 
 
 app = Flask(__name__)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{DB_PATH}'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////data/pos_cosmetiqueria.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', os.urandom(24))
 
 db = SQLAlchemy(app)
