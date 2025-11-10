@@ -13,27 +13,37 @@ from collections import defaultdict
 import base64
 import locale
 import sys
+from sqlalchemy.exc import OperationalError
 
 # =================================================================
 # APP CONFIG & DATABASE
 # =================================================================
-# Usamos os.path.join para construir la ruta al archivo dentro del disco montado en /data
 DB_FILENAME = 'pos_cosmetiqueria.db'
-DB_PATH = os.path.join('/data', DB_FILENAME) # Esto resulta en /data/pos_cosmetiqueria.db
+DB_PATH = os.path.join('/data', DB_FILENAME)  # /data/pos_cosmetiqueria.db
 
-# 🛑 ASEGURAR LA EXISTENCIA DEL DIRECTORIO /data
+# Asegurar la existencia del directorio /data
 DB_DIR = '/data'
 if not os.path.exists(DB_DIR):
     os.makedirs(DB_DIR) 
 
 app = Flask(__name__)
 
-# ¡CAMBIO CRÍTICO! Apuntamos la URI a la ruta absoluta
 app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{DB_PATH}'
-
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', os.urandom(24))
 
 db = SQLAlchemy(app)
+
+# ===================== CHEQUEO DE BASE =====================
+with app.app_context():
+    try:
+        # Intentar un simple query para ver si la tabla 'usuario' existe
+        db.session.execute("SELECT 1 FROM usuario LIMIT 1")
+    except OperationalError:
+        # Si falla, la tabla no existe → crear todas las tablas
+        print("Tablas no detectadas. Creando estructura...")
+        db.create_all()
+    else:
+        print("--- BASE DE DATOS RESTAURADA DETECTADA Y CARGADA. OMITIENDO INICIALIZACIÓN. ---")
 
 # =================================================================
 # MODELOS (DEBEN ESTAR DEFINIDOS ANTES DEL BLOQUE DE INICIALIZACIÓN)
