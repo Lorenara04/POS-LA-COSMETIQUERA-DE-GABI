@@ -12,6 +12,7 @@ from io import BytesIO
 from collections import defaultdict
 import base64
 import locale
+import sys # Importación para asegurar que app_context funcione
 
 # =================================================================
 # APP CONFIG & DATABASE
@@ -20,7 +21,7 @@ import locale
 DB_FILENAME = 'pos_cosmetiqueria.db'
 DB_PATH = os.path.join('/data', DB_FILENAME) # Esto resulta en /data/pos_cosmetiqueria.db
 
-# 🛑 ASEGURAR LA EXISTENCIA DEL DIRECTORIO /data (CORRECCIÓN CLAVE)
+# 🛑 ASEGURAR LA EXISTENCIA DEL DIRECTORIO /data
 DB_DIR = '/data'
 if not os.path.exists(DB_DIR):
     os.makedirs(DB_DIR) 
@@ -35,113 +36,7 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', os.urandom(24))
 db = SQLAlchemy(app)
 
 # =================================================================
-# LÓGICA DE INICIALIZACIÓN SEGURA (SOLO SI NO HAY DATOS)
-# ESTA LÓGICA RESUELVE EL PROBLEMA DE LOS LOGS.
-# =================================================================
-# Nota: La clase Usuario y Cliente deben estar definidas antes de este bloque.
-
-@app.before_first_request
-def initialize_database():
-    """Crea tablas y usuarios iniciales SOLO si la base de datos está vacía."""
-    with app.app_context():
-        # Usamos try/except porque el primer query puede fallar si la tabla NO existe.
-        try:
-            # Si ya existe algún usuario, asumimos que la DB está llena (tus datos restaurados).
-            if Usuario.query.first() is not None:
-                print("--- BASE DE DATOS EXISTENTE DETECTADA. OMITIENDO INICIALIZACIÓN. ---")
-                return
-        except Exception as e:
-            # Si falla (ej. tabla Usuario no existe), asumimos que hay que crearla.
-            print(f"Error al chequear usuarios: {e}. Procediendo a crear la estructura...")
-            db.create_all()
-
-        # Si llegamos aquí, creamos las tablas y los usuarios/clientes por defecto.
-        print("--- INICIALIZACIÓN DE ESTRUCTURA Y DATOS POR DEFECTO ---")
-        db.create_all()
-        
-        # Crear usuario administrador inicial
-        admin = Usuario(
-            username='admin',
-            nombre='Admin',
-            apellido='Principal',
-            cedula='0000',
-            rol='Administrador'
-        )
-        admin.set_password('1234')
-        db.session.add(admin)
-        print("Administrador 'admin' creado con contraseña '1234'.")
-        
-        # Crear cliente genérico
-        cliente_gen = Cliente(
-            nombre='Contado / Genérico',
-            telefono='',
-            direccion='',
-            email=''
-        )
-        db.session.add(cliente_gen)
-        print("Cliente genérico creado.")
-        
-        db.session.commit()
-        print("Base de datos inicializada correctamente con datos por defecto.")
-
-# LOGIN MANAGER
-login_manager = LoginManager(app)
-login_manager.login_view = 'login'
-
-# ----------------------------------------
-# CONFIGURACIÓN DE CORREO (Opcional - Mantener comentada si no se usa)
-# ----------------------------------------
-#app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
-#app.config['MAIL_PORT'] = int(os.environ.get('MAIL_PORT', 587))
-#app.config['MAIL_USE_TLS'] = bool(os.environ.get('MAIL_USE_TLS', True))
-#app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME', '')
-#app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD', '')
-#app.config['ADMIN_EMAIL'] = os.environ.get('ADMIN_EMAIL', '')
-#mail = Mail(app)
-
-# =================================================================
-# CONTEXT PROCESSOR (Soluciona el error 'now' no definido en plantillas)
-# =================================================================
-@app.context_processor
-def inject_now():
-    """Hace que 'now' esté disponible en todas las plantillas automáticamente."""
-    return {'now': datetime.now()}
-
-# =================================================================
-# LOCALE Y FILTRO JINJA (format_number y from_json)
-# =================================================================
-# Intento de configurar locale español
-try:
-    locale.setlocale(locale.LC_ALL, 'es_ES.utf8')
-except locale.Error:
-    try:
-        locale.setlocale(locale.LC_ALL, 'es_ES')
-    except locale.Error:
-        pass
-
-@app.template_filter('format_number')
-def format_number_filter(value):
-    """Formatea un número con separador de miles y dos decimales."""
-    try:
-        # Intenta usar la configuración regional para un formato más limpio
-        return locale.format_string("%.0f", float(value), grouping=True)
-    except Exception:
-        try:
-            # Fallback a un formato de Python estándar si locale falla
-            return f"{float(value):,.0f}"
-        except Exception:
-            return value
-
-@app.template_filter('from_json')
-def from_json_filter(value):
-    """Convierte una cadena JSON a un objeto Python. Necesario para CierreCaja."""
-    try:
-        return json.loads(value)
-    except Exception:
-        return {}
-
-# =================================================================
-# MODELOS
+# MODELOS (DEBEN ESTAR DEFINIDOS ANTES DEL BLOQUE DE INICIALIZACIÓN)
 # =================================================================
 class Usuario(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -210,6 +105,109 @@ class CierreCaja(db.Model):
     total_electronico = db.Column(db.Float)
     detalles_json = db.Column(db.Text)
     usuario = db.relationship('Usuario', backref='cierres_caja', lazy=True)
+
+
+# =================================================================
+# LÓGICA DE INICIALIZACIÓN SEGURA (SOLUCIÓN AL FALLO DE DESPLIEGUE)
+# =================================================================
+# La ejecución se hace inmediatamente después de definir los modelos.
+with app.app_context():
+    try:
+        # Chequea si la tabla Usuario tiene datos (asume que si hay, son tus datos restaurados)
+        if Usuario.query.first() is not None:
+            print("--- BASE DE DATOS EXISTENTE DETECTADA. OMITIENDO INICIALIZACIÓN. ---")
+        else:
+            # Si la tabla está vacía, inicializa:
+            print("--- INICIALIZACIÓN DE ESTRUCTURA Y DATOS POR DEFECTO ---")
+            db.create_all()
+            
+            # Crear usuario administrador inicial
+            admin = Usuario(
+                username='admin',
+                nombre='Admin',
+                apellido='Principal',
+                cedula='0000',
+                rol='Administrador'
+            )
+            admin.set_password('1234')
+            db.session.add(admin)
+            
+            # Crear cliente genérico
+            cliente_gen = Cliente(
+                nombre='Contado / Genérico',
+                telefono='',
+                direccion='',
+                email=''
+            )
+            db.session.add(cliente_gen)
+            
+            db.session.commit()
+            print("Base de datos inicializada correctamente con datos por defecto.")
+            
+    except Exception as e:
+        # Si falla (ej. la tabla no existe), es un primer arranque total.
+        # Solo crea las tablas para que el servicio pueda iniciar.
+        print(f"Error durante chequeo inicial: {e}. Creando estructura de tablas...")
+        db.create_all()
+        db.session.commit()
+        # Nota: Los datos por defecto (admin/genérico) NO se crearán si falla.
+
+# LOGIN MANAGER
+login_manager = LoginManager(app)
+login_manager.login_view = 'login'
+
+# ----------------------------------------
+# CONFIGURACIÓN DE CORREO (Opcional - Mantener comentada si no se usa)
+# ----------------------------------------
+#app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
+#app.config['MAIL_PORT'] = int(os.environ.get('MAIL_PORT', 587))
+#app.config['MAIL_USE_TLS'] = bool(os.environ.get('MAIL_USE_TLS', True))
+#app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME', '')
+#app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD', '')
+#app.config['ADMIN_EMAIL'] = os.environ.get('ADMIN_EMAIL', '')
+#mail = Mail(app)
+
+# =================================================================
+# CONTEXT PROCESSOR (Soluciona el error 'now' no definido en plantillas)
+# =================================================================
+@app.context_processor
+def inject_now():
+    """Hace que 'now' esté disponible en todas las plantillas automáticamente."""
+    return {'now': datetime.now()}
+
+# =================================================================
+# LOCALE Y FILTRO JINJA (format_number y from_json)
+# =================================================================
+# Intento de configurar locale español
+try:
+    locale.setlocale(locale.LC_ALL, 'es_ES.utf8')
+except locale.Error:
+    try:
+        locale.setlocale(locale.LC_ALL, 'es_ES')
+    except locale.Error:
+        pass
+
+@app.template_filter('format_number')
+def format_number_filter(value):
+    """Formatea un número con separador de miles y dos decimales."""
+    try:
+        # Intenta usar la configuración regional para un formato más limpio
+        return locale.format_string("%.0f", float(value), grouping=True)
+    except Exception:
+        try:
+            # Fallback a un formato de Python estándar si locale falla
+            return f"{float(value):,.0f}"
+        except Exception:
+            return value
+
+@app.template_filter('from_json')
+def from_json_filter(value):
+    """Convierte una cadena JSON a un objeto Python. Necesario para CierreCaja."""
+    try:
+        return json.loads(value)
+    except Exception:
+        return {}
+
 
 # =================================================================
 # FUNCIONES DE UTILIDAD
