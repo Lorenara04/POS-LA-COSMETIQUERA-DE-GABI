@@ -12,7 +12,7 @@ from io import BytesIO
 from collections import defaultdict
 import base64
 import locale
-import sys # Importación para asegurar que app_context funcione
+import sys
 
 # =================================================================
 # APP CONFIG & DATABASE
@@ -108,36 +108,35 @@ class CierreCaja(db.Model):
 
 
 # =================================================================
-# LÓGICA DE INICIALIZACIÓN SEGURA (SOLUCIÓN AL FALLO DE DESPLIEGUE)
+# LÓGICA DE INICIALIZACIÓN SEGURA (Chequeo por Tamaño de Archivo)
 # =================================================================
-# La ejecución se hace inmediatamente después de definir los modelos.
+DB_FILE_PATH_FULL = os.path.join('/data', 'pos_cosmetiqueria.db')
+MIN_DB_SIZE = 1000 # 1KB es suficiente para indicar que tiene datos reales
+
 with app.app_context():
     try:
-        # Chequea si la tabla Usuario tiene datos (asume que si hay, son tus datos restaurados)
-        if Usuario.query.first() is not None:
-            print("--- BASE DE DATOS EXISTENTE DETECTADA. OMITIENDO INICIALIZACIÓN. ---")
+        # 1. Chequeo CLAVE: Si el archivo existe y tiene un tamaño significativo
+        if os.path.exists(DB_FILE_PATH_FULL) and os.path.getsize(DB_FILE_PATH_FULL) > MIN_DB_SIZE:
+            
+            # Intentamos leer la tabla Usuario; si falla, el archivo está dañado.
+            Usuario.query.first() 
+            print("--- BASE DE DATOS RESTAURADA DETECTADA Y CARGADA. OMITIENDO INICIALIZACIÓN. ---")
+            
         else:
-            # Si la tabla está vacía, inicializa:
+            # 2. Si el archivo no existe o está vacío (o si el chequeo de arriba falló)
             print("--- INICIALIZACIÓN DE ESTRUCTURA Y DATOS POR DEFECTO ---")
             db.create_all()
             
             # Crear usuario administrador inicial
             admin = Usuario(
-                username='admin',
-                nombre='Admin',
-                apellido='Principal',
-                cedula='0000',
-                rol='Administrador'
+                username='admin', nombre='Admin', apellido='Principal', cedula='0000', rol='Administrador'
             )
             admin.set_password('1234')
             db.session.add(admin)
             
             # Crear cliente genérico
             cliente_gen = Cliente(
-                nombre='Contado / Genérico',
-                telefono='',
-                direccion='',
-                email=''
+                nombre='Contado / Genérico', telefono='', direccion='', email=''
             )
             db.session.add(cliente_gen)
             
@@ -145,12 +144,13 @@ with app.app_context():
             print("Base de datos inicializada correctamente con datos por defecto.")
             
     except Exception as e:
-        # Si falla (ej. la tabla no existe), es un primer arranque total.
-        # Solo crea las tablas para que el servicio pueda iniciar.
-        print(f"Error durante chequeo inicial: {e}. Creando estructura de tablas...")
+        # Esto atrapa errores como 'no such table' si la DB restaurada está dañada.
+        # Si llega aquí, significa que el archivo existe pero no es válido, así que lo sobreescribimos.
+        print(f"ATENCIÓN: Archivo DB encontrado pero dañado ({e}). Creando ESTRUCTURA DE TABLAS nueva...")
         db.create_all()
         db.session.commit()
-        # Nota: Los datos por defecto (admin/genérico) NO se crearán si falla.
+        # NOTA: Si el error persiste, deberás borrar manualmente el archivo .db en el Web Shell de Render.
+
 
 # LOGIN MANAGER
 login_manager = LoginManager(app)
