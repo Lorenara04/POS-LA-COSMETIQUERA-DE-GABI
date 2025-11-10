@@ -37,7 +37,7 @@ db = SQLAlchemy(app)
 with app.app_context():
     try:
         # Intentar un simple query para ver si la tabla 'usuario' existe
-        db.session.execute("SELECT 1 FROM usuario LIMIT 1")
+        db.session.execute(text("SELECT 1 FROM usuario LIMIT 1"))
     except OperationalError:
         # Si falla, la tabla no existe → crear todas las tablas
         print("Tablas no detectadas. Creando estructura...")
