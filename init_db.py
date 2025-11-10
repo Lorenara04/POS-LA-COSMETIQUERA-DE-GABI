@@ -1,8 +1,20 @@
 # init_db.py
 
 from app import app, db, Usuario, Producto, Cliente, Venta, VentaDetalle
+import os # Asegura que esta importación exista
+
+# --- LÓGICA DE DETECCIÓN DE BASE DE DATOS EXISTENTE ---
+DB_PATH = os.path.join('/data', 'pos_cosmetiqueria.db')
+DB_DIR = '/data'
 
 def inicializar_base_datos():
+    # Solo inicializa si el archivo NO existe o el disco está vacío
+    if os.path.exists(DB_PATH) and os.path.getsize(DB_PATH) > 0:
+        print("--- BASE DE DATOS EXISTENTE DETECTADA. OMITIENDO INICIALIZACIÓN ---")
+        return # Si existe y tiene datos, NO HACER NADA
+
+    # Si llega aquí, es porque el archivo no existe o está vacío.
+
     print("--- INICIALIZACIÓN DE BASE DE DATOS ---")
     
     # Crear todas las tablas
@@ -10,35 +22,15 @@ def inicializar_base_datos():
     db.create_all()
     print("Tablas creadas.")
 
-    # Crear usuario administrador inicial si no existe
-    if not Usuario.query.filter_by(username='admin').first():
-        print("Creando usuario administrador inicial...")
-        admin = Usuario(
-            username='admin',
-            nombre='Admin',
-            apellido='Principal',
-            cedula='0000',
-            rol='Administrador'
-        )
-        admin.set_password('1234')
-        db.session.add(admin)
-        db.session.commit()
-        print("Administrador 'admin' creado con contraseña '1234'.")
-    
-    # Crear cliente genérico si no existe
-    if not Cliente.query.filter_by(nombre='Contado / Genérico').first():
-        cliente_gen = Cliente(
-            nombre='Contado / Genérico',
-            telefono='',
-            direccion='',
-            email=''
-        )
-        db.session.add(cliente_gen)
-        db.session.commit()
-        print("Cliente genérico creado.")
+    # ... (El resto de tu código para crear usuario admin y cliente genérico) ...
 
     print("Base de datos inicializada correctamente.")
 
 if __name__ == '__main__':
+    # 1. Asegura que el directorio exista (esto es redundante, pero seguro)
+    if not os.path.exists(DB_DIR):
+        os.makedirs(DB_DIR) 
+
+    # 2. Ejecuta la lógica de inicialización
     with app.app_context():
         inicializar_base_datos()

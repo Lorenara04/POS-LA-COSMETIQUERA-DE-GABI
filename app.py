@@ -20,11 +20,10 @@ import locale
 DB_FILENAME = 'pos_cosmetiqueria.db'
 DB_PATH = os.path.join('/data', DB_FILENAME) # Esto resulta en /data/pos_cosmetiqueria.db
 
-# 🛑 ¡CORRECCIÓN CLAVE! ASEGURAR LA EXISTENCIA DEL DIRECTORIO /data
+# 🛑 ASEGURAR LA EXISTENCIA DEL DIRECTORIO /data (CORRECCIÓN CLAVE)
 DB_DIR = '/data'
 if not os.path.exists(DB_DIR):
     os.makedirs(DB_DIR) 
-# ------------------------------------------------------------------
 
 app = Flask(__name__)
 
@@ -34,6 +33,56 @@ app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{DB_PATH}'
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', os.urandom(24))
 
 db = SQLAlchemy(app)
+
+# =================================================================
+# LÓGICA DE INICIALIZACIÓN SEGURA (SOLO SI NO HAY DATOS)
+# ESTA LÓGICA RESUELVE EL PROBLEMA DE LOS LOGS.
+# =================================================================
+# Nota: La clase Usuario y Cliente deben estar definidas antes de este bloque.
+
+@app.before_first_request
+def initialize_database():
+    """Crea tablas y usuarios iniciales SOLO si la base de datos está vacía."""
+    with app.app_context():
+        # Usamos try/except porque el primer query puede fallar si la tabla NO existe.
+        try:
+            # Si ya existe algún usuario, asumimos que la DB está llena (tus datos restaurados).
+            if Usuario.query.first() is not None:
+                print("--- BASE DE DATOS EXISTENTE DETECTADA. OMITIENDO INICIALIZACIÓN. ---")
+                return
+        except Exception as e:
+            # Si falla (ej. tabla Usuario no existe), asumimos que hay que crearla.
+            print(f"Error al chequear usuarios: {e}. Procediendo a crear la estructura...")
+            db.create_all()
+
+        # Si llegamos aquí, creamos las tablas y los usuarios/clientes por defecto.
+        print("--- INICIALIZACIÓN DE ESTRUCTURA Y DATOS POR DEFECTO ---")
+        db.create_all()
+        
+        # Crear usuario administrador inicial
+        admin = Usuario(
+            username='admin',
+            nombre='Admin',
+            apellido='Principal',
+            cedula='0000',
+            rol='Administrador'
+        )
+        admin.set_password('1234')
+        db.session.add(admin)
+        print("Administrador 'admin' creado con contraseña '1234'.")
+        
+        # Crear cliente genérico
+        cliente_gen = Cliente(
+            nombre='Contado / Genérico',
+            telefono='',
+            direccion='',
+            email=''
+        )
+        db.session.add(cliente_gen)
+        print("Cliente genérico creado.")
+        
+        db.session.commit()
+        print("Base de datos inicializada correctamente con datos por defecto.")
 
 # LOGIN MANAGER
 login_manager = LoginManager(app)
@@ -515,8 +564,8 @@ def nueva_venta():
 
     if request.method == 'GET':
         return render_template('nueva_venta.html', 
-                                productos=productos, 
-                                clientes=clientes)
+                               productos=productos, 
+                               clientes=clientes)
 
     if request.method == 'POST':
         try:
@@ -933,9 +982,9 @@ def gestion_ventas():
     todos_los_vendedores = Usuario.query.all() # Todos los usuarios pueden ser vendedores aquí
 
     return render_template('gestion_ventas.html', 
-                            VentasRecientes=ventas_recientes,
-                            clientes_full=todos_los_clientes,
-                            vendedores_full=todos_los_vendedores)
+                           VentasRecientes=ventas_recientes,
+                           clientes_full=todos_los_clientes,
+                           vendedores_full=todos_los_vendedores)
 
 
 @app.route('/ventas/eliminar/<int:venta_id>')
@@ -1140,10 +1189,12 @@ def api_editar_detalle_venta(venta_id):
 
 
 # =================================================================
-# INICIALIZACIÓN
+# INICIALIZACIÓN (SOLO PARA DESARROLLO LOCAL)
 # =================================================================
 if __name__ == '__main__':
-    # Crear tablas si no existen (útil para desarrollo local)
+    # Esta sección solo se ejecuta cuando se corre `python app.py` localmente
     with app.app_context():
-        db.create_all()
+        # Puedes decidir si quieres que cree las tablas automáticamente en local:
+        # db.create_all() 
+        pass 
     app.run(debug=True)
