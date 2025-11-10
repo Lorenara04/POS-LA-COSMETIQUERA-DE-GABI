@@ -24,6 +24,7 @@ DB_PATH = os.path.join('/data', DB_FILENAME)  # /data/pos_cosmetiqueria.db
 
 app = Flask(__name__)
 
+# Ruta a la base de datos en Render Disk
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////data/pos_cosmetiqueria.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', os.urandom(24))
