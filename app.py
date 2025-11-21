@@ -1299,6 +1299,6 @@ with app.app_context():
         db.session.rollback()
 
 
+# Bloque para ejecución local de desarrollo (opcional, puede quedar vacío)
 if __name__ == "__main__":
-    # Solo ejecutar si se lanza con 'python app.py' para desarrollo local
-app.run(debug=True, port=5000)
+    app.run(debug=True, port=5000) 
