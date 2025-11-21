@@ -1,8 +1,3 @@
-{% extends "base.html" %}
-
-{% block title %}Historial de Cierres de Caja{% endblock %}
-
-{% block content %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -35,10 +30,6 @@
         .search-item { padding: 8px; cursor: pointer; }
         .search-item:hover { background-color: #f0f0f0; }
         .table-responsive { overflow-x: auto; }
-        /* CSS para asegurar que el área de detalle oculta no ocupe espacio */
-        #product-detail-area:empty:not([class*="hidden"]) {
-            display: none !important;
-        }
         @media (max-width: 768px) {
             .table-responsive { border: 1px solid #e5e7eb; border-radius: 0.5rem; }
             .table-responsive table { width: 100%; border-collapse: collapse; }
@@ -473,12 +464,3 @@
     </script>
 </body>
 </html>
-{% endfor %}
-
-{% endblock %}
-
-{% block scripts %}
-<script>
-// No se requiere JS adicional, Bootstrap maneja los modales.
-</script>
-{% endblock %}
