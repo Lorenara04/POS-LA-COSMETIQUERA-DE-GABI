@@ -1,0 +1,202 @@
+/* Productos - estilo coquette movido de plantilla
+   Se preservan colores y detalles visuales (coquette/rococó)
+*/
+
+/* Contenedor */
+.table-responsive {
+    overflow-x: auto;
+    padding: 8px;
+    background: #fff7fb; /* rosado muy suave */
+    border-radius: 14px;
+    border: 2px solid #f8c6dd; /* marco coquette */
+    box-shadow: 0 4px 12px rgba(255, 170, 200, 0.25);
+}
+
+/* Tabla */
+.tabla-inventario {
+    width: 100%;
+    border-collapse: separate !important;
+    border-spacing: 0 7px !important;
+    font-size: 0.84rem;
+}
+
+/* Encabezados – más coquette */
+.tabla-inventario thead th {
+    background: linear-gradient(145deg, #c2185b, #ad1457) !important;
+    color: #fff;
+    padding: 9px;
+    font-weight: 600;
+    border-radius: 10px;
+    box-shadow: inset 0 0 5px rgba(255,255,255,0.4);
+}
+
+/* Filas tarjetas */
+.tabla-inventario tbody tr {
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 3px 8px rgba(255, 170, 200, 0.35);
+    transition: 0.25s ease;
+}
+
+/* Alternas */
+.tabla-inventario tbody tr:nth-child(even) {
+    background: #fde6f0 !important;
+}
+
+/* Hover rococó */
+.tabla-inventario tbody tr:hover {
+    background: #f7e0ff !important;
+    transform: scale(1.01);
+}
+
+/* Celdas proporcionales */
+.tabla-inventario td {
+    padding: 5px 8px !important;
+    border-right: 1px solid rgba(255, 200, 220, 0.45);
+    vertical-align: middle !important;
+}
+
+.tabla-inventario td:last-child {
+    border-right: none;
+}
+
+/* Badges más lindos */
+.badge-stock {
+    padding: 4px 8px !important;
+    font-size: 0.7rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(255, 170, 200, 0.4);
+}
+
+/* Campo existencias más pequeño */
+#stock, #existencias, .input-stock {
+    width: 50px !important;
+    height: 24px !important;
+    padding: 2px 5px !important;
+}
+
+/* Acciones */
+.action-container {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.btn-action-base {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    font-size: 1.25rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: 0.25s ease;
+}
+
+/* Editar */
+.btn-action-edit {
+    background: #76c2ff !important;
+    color: #fff !important;
+    box-shadow: 0 3px 6px rgba(120,190,255,0.5);
+}
+.btn-action-edit:hover {
+    transform: scale(1.18);
+    background: #42a5f5 !important;
+}
+
+/* Eliminar */
+.btn-action-delete {
+    background: #ff82b2 !important;
+    color: #fff !important;
+    box-shadow: 0 3px 6px rgba(255, 150, 200, 0.5);
+}
+.btn-action-delete:hover {
+    transform: scale(1.18);
+    background: #ec407a !important;
+}
+
+/* --- RECEPCIÓN RÁPIDA COQUETTE + ROCOCÓ --- */
+
+.card-recepcion-rapida {
+    max-width: 750px;
+    margin: 0 auto 20px auto;
+    border-radius: 16px;
+    border: 2px solid #f8c6dd;
+    background: linear-gradient(135deg, #fde8f1, #f7e4ff);
+    box-shadow: 0 6px 15px rgba(255, 180, 210, 0.35);
+}
+
+.card-recepcion-rapida .card-header {
+    background: linear-gradient(145deg, #b40073, #a20067);
+    color: white;
+    font-size: 0.9rem;
+    font-weight: 700;
+    border-radius: 16px 16px 0 0;
+    box-shadow: inset 0 0 5px rgba(255,255,255,0.4);
+}
+
+/* Botón principal */
+.btn-submit-stock {
+    background-color: #e91e63;
+    color: #fff;
+    border-radius: 20px;
+    padding: 6px 10px;
+    font-weight: 600;
+    transition: 0.2s ease;
+}
+.btn-submit-stock:hover {
+    background-color: #d81b60;
+    transform: translateY(-2px);
+}
+
+/* Botón agregar producto */
+.btn-manual-add {
+    background-color: #f48fb1;
+    color: #fff;
+    border-radius: 20px;
+    padding: 4px 10px;
+    font-weight: 600;
+    box-shadow: 0 3px 6px rgba(244,143,177,0.4);
+    transition: 0.2s ease;
+}
+.btn-manual-add:hover {
+    background-color: #ec407a;
+    transform: translateY(-2px);
+}
+
+/* Búsqueda */
+#global_search_input {
+    box-shadow: 0 4px 12px rgba(255, 200, 220, 0.2) inset;
+}
+
+/* Evidenciar coincidencias */
+.td-match {
+    background: linear-gradient(90deg, rgba(255,235,245,0.9), rgba(255,245,250,0.5));
+}
+
+/* Responsive: convertir filas en tarjetas en móviles */
+@media (max-width: 768px) {
+    .tabla-inventario thead { display: none; }
+    .tabla-inventario, .tabla-inventario tbody, .tabla-inventario tr, .tabla-inventario td { display: block; width: 100%; }
+    .tabla-inventario tr { margin-bottom: 12px; }
+    .tabla-inventario td { 
+        text-align: left; 
+        padding: 10px 12px !important; 
+        border-right: none !important;
+        border-bottom: 1px solid rgba(240,220,230,0.6);
+        background: transparent;
+        border-radius: 10px;
+    }
+    .tabla-inventario td::before {
+        content: attr(data-label) ": ";
+        font-weight: 700;
+        display: inline-block;
+        width: 45%;
+        color: #6a1b9a;
+    }
+}
+
+/* Mantener contraste y legibilidad */
+@media (prefers-color-scheme: dark) {
+    .tabla-inventario thead th { opacity: 0.95; }
+}

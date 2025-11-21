@@ -3,173 +3,166 @@
 {% block title %}Gestión de Inventario{% endblock %}
 
 {% block content %}
-<h2 class="mb-4">Gestión de Inventario</h2>
+<h2 class="mb-4 text-center fw-bold" style="color:#6a1b9a;">Gestión de Inventario</h2>
 
-<!-- Mensajes flash -->
+<!-- Página específica: cargar estilos para productos (mantenemos el tema coquette) -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/productos.css') }}">
+
+<!-- Mensajes Flash -->
 {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-        {% for category, message in messages %}
-        <div class="alert alert-{{ category }} alert-dismissible fade show small" role="alert">
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-        {% endfor %}
-    {% endif %}
+    {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show small" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
 {% endwith %}
 
-<!-- Formulario rápido de añadir stock solo para administradores -->
+<!-- Recepción rápida compacta -->
 {% if current_user.rol.lower() == 'administrador' %}
-<div class="card mb-3 border-success shadow-sm">
-    <div class="card-header bg-success text-white py-2 fw-bold small">
-        **RECEPCIÓN RÁPIDA DE INVENTARIO** (Añadir Stock por Código o Buscar Producto)
-    </div>
-    <div class="card-body py-3">
+<div class="card mb-3 card-recepcion-rapida shadow-sm">
+    <div class="card-header py-1 fw-bold">RECEPCIÓN RÁPIDA DE INVENTARIO</div>
+    <div class="card-body py-2">
         <form id="stockScannerForm" method="POST" action="{{ url_for('agregar_stock_por_codigo') }}">
-            <div class="row align-items-end">
-                <div class="col-md-5 col-sm-12 mb-2 mb-md-0">
-                    <label for="barcode_stock_input" class="form-label small mb-1">
-                        Escanee Código / Busque por Marca o Descripción
-                    </label>
-                    <input 
-                        type="text" 
-                        id="barcode_stock_input" 
-                        name="codigo_scanner" 
-                        class="form-control form-control-sm" 
-                        placeholder="Escriba código, marca o descripción..." 
-                        autofocus 
-                        onkeyup="filtrarInventario()" 
-                        required>
+            <div class="row g-2 align-items-end">
+                <div class="col-md-5 col-sm-12">
+                    <label class="form-label small mb-1" style="font-size:0.8rem;">Escanee Código / Busque Producto</label>
+                    <input type="text" id="barcode_stock_input" name="codigo_scanner" class="form-control form-control-sm" placeholder="Código, Marca o Descripción" autofocus onkeyup="filtrarInventario()" required style="height:30px; font-size:0.8rem;">
                 </div>
-                <div class="col-md-3 col-sm-6 mb-2 mb-md-0">
-                    <label for="cantidad_stock_input" class="form-label small mb-1">Cantidad a Añadir</label>
-                    <input type="number" id="cantidad_stock_input" name="cantidad_scanner" class="form-control form-control-sm" value="1" min="1" required>
+                <div class="col-md-3 col-sm-6">
+                    <label class="form-label small mb-1" style="font-size:0.8rem;">Cantidad</label>
+                    <input type="number" id="cantidad_stock_input" name="cantidad_scanner" class="form-control form-control-sm" value="1" min="1" required style="height:30px; font-size:0.8rem;">
                 </div>
-                <div class="col-md-4 col-sm-6 d-grid">
-                    <button type="submit" class="btn btn-success btn-sm mt-3 mt-md-0 fw-bold">AÑADIR STOCK</button>
+                <div class="col-md-4 col-sm-6">
+                    <button type="submit" class="btn btn-submit-stock w-100 mt-2 mt-md-0" style="font-size:0.8rem; padding:5px 10px;"><i class="fas fa-box-open me-1"></i> AÑADIR STOCK</button>
                 </div>
             </div>
         </form>
-    </div>
-</div>
 
-<!-- Botón para abrir modal de agregar producto manual -->
-<button type="button" class="btn btn-primary btn-sm mb-3 shadow-sm fw-bold" data-bs-toggle="modal" data-bs-target="#agregarProductoModal">
-     AGREGAR PRODUCTO (MANUAL)
-</button>
-{% endif %}
-
-<!-- Tabla de inventario -->
-<div class="table-responsive">
-    <table class="table table-sm table-striped table-hover small" id="tablaInventario">
-        <thead class="table-dark">
-            <tr>
-                <th>ID</th>
-                <th>SKU/Código</th>
-                <th>Marca</th>
-                <th>Descripción</th>
-                <th>Stock</th>
-                <th>Costo Interno ($)</th>
-                <th>Valor a la Venta ($)</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for producto in productos %}
-            <tr>
-                <td>{{ producto.id }}</td>
-                <td>{{ producto.codigo }}</td>
-                <td>{{ producto.nombre }}</td>
-                <td>{{ producto.descripcion }}</td>
-                <td>
-                    {% if producto.cantidad <= 5 %}
-                        <span class="text-danger fw-bold">{{ producto.cantidad }} (Bajo)</span>
-                    {% else %}
-                        {{ producto.cantidad }}
-                    {% endif %}
-                </td>
-                <td>${{ "{:,.0f}".format(producto.valor_interno) }}</td>
-                <td>${{ "{:,.0f}".format(producto.valor_venta) }}</td>
-                <td>
-                    {% if current_user.rol.lower() == 'administrador' %}
-                    <a href="{{ url_for('editar_producto', producto_id=producto.id) }}" class="btn btn-sm btn-outline-primary me-1">
-                        Editar
-                    </a>
-                    <a href="{{ url_for('eliminar_producto', producto_id=producto.id) }}" 
-                       class="btn btn-sm btn-outline-danger" 
-                       onclick="return confirm('¿Seguro que desea eliminar {{ producto.nombre }}?')">
-                        Eliminar
-                    </a>
-                    {% else %}
-                    <span class="text-muted small">Ver Detalle</span>
-                    {% endif %}
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
-
-<!-- Modal para agregar producto manualmente -->
-<div class="modal fade" id="agregarProductoModal" tabindex="-1" aria-labelledby="agregarProductoLabel" aria-hidden="true">
-    <div class="modal-dialog modal-md">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white py-2">
-                <h5 class="modal-title" id="agregarProductoLabel">Agregar Nuevo Producto</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form action="{{ url_for('agregar_producto') }}" method="POST">
-                <div class="modal-body small">
-                    <p class="text-info small">Si deja el campo **Código** vacío, el sistema lo generará automáticamente.</p>
-                    
-                    <div class="mb-2"><label class="form-label small">Código/SKU</label><input type="text" name="codigo" class="form-control form-control-sm"></div>
-                    <div class="mb-2"><label class="form-label small">Nombre</label><input type="text" name="nombre" class="form-control form-control-sm" required></div>
-                    <div class="mb-2"><label class="form-label small">Descripción</label><textarea name="descripcion" class="form-control form-control-sm" rows="2"></textarea></div>
-                    <div class="mb-2"><label class="form-label small">Cantidad (Stock Inicial)</label><input type="number" name="cantidad" class="form-control form-control-sm" value="0" min="0" required></div>
-                    
-                    <div class="row">
-                        <div class="col-6 mb-2"><label class="form-label small">Valor Interno ($)</label><input type="number" step="0.01" name="valor_interno" class="form-control form-control-sm" required></div>
-                        <div class="col-6 mb-2"><label class="form-label small">Valor Venta ($)</label><input type="number" step="0.01" name="valor_venta" class="form-control form-control-sm" required></div>
-                    </div>
-                </div>
-                <div class="modal-footer py-2">
-                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
-                    <button type="submit" class="btn btn-primary btn-sm">Guardar Producto</button>
-                </div>
-            </form>
+        <div class="mt-2 text-center">
+            <button type="button" class="btn btn-manual-add btn-sm shadow-sm" data-bs-toggle="modal" data-bs-target="#agregarProductoModal" style="font-size:0.75rem; padding:4px 10px;">
+                <i class="fas fa-plus-circle me-1"></i> AGREGAR PRODUCTO
+            </button>
         </div>
     </div>
 </div>
+{% endif %}
 
-<!-- Script JS -->
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const scannerInput = document.getElementById('barcode_stock_input');
-    const cantidadInput = document.getElementById('cantidad_stock_input');
-    const form = document.getElementById('stockScannerForm');
+<!-- Búsqueda global (cliente) -->
+<div class="row mb-2">
+    <div class="col-md-6 col-sm-12 mb-2">
+        <input id="global_search_input" class="form-control form-control-sm" type="search" placeholder="Buscar productos (código, nombre, descripción)..." aria-label="Buscar productos">
+    </div>
+</div>
 
-    scannerInput.focus();
+<!-- Tabla Inventario -->
+<div class="table-responsive">
+    <table class="table table-sm tabla-inventario" id="tablaInventario">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>SKU/Código</th>
+                <th>Marca</th>
+                <th>Descripción</th>
+                <th>Existencias</th>
+                <th>Costo Interno ($)</th>
+                <th>Valor Venta ($)</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for producto in productos_paginados.items %}
+            <tr>
+                <td data-label="ID">{{ producto.id }}</td>
+                <td data-label="SKU/Código">{{ producto.codigo }}</td>
+                <td data-label="Marca">{{ producto.nombre }}</td>
+                <td data-label="Descripción">{{ producto.descripcion }}</td>
+                <td data-label="Existencias">
+                    {% if producto.cantidad <=5 %}
+                        <span class="badge bg-danger badge-stock">{{ producto.cantidad }} (Bajo)</span>
+                    {% elif producto.cantidad<15 %}
+                        <span class="badge bg-warning text-dark badge-stock">{{ producto.cantidad }} (Medio)</span>
+                    {% else %}
+                        <span class="badge bg-success badge-stock">{{ producto.cantidad }}</span>
+                    {% endif %}
+                </td>
+                <td data-label="Costo Interno">${{ producto.valor_interno | format_number }}</td>
+                <td data-label="Valor Venta">${{ producto.valor_venta | format_number }}</td>
+                <td data-label="Acciones">
+                    <div class="action-container">
+                        {% if current_user.rol.lower()=='administrador' %}
+                        <a href="{{ url_for('editar_producto', producto_id=producto.id) }}" class="btn btn-action-base btn-action-edit" title="Editar"><i class="fas fa-edit"></i></a>
+                <a href="{{ url_for('eliminar_producto', producto_id=producto.id) }}" class="btn btn-action-base btn-action-delete btn-eliminar" data-producto="{{ producto.nombre }}" title="Eliminar"><i class="fas fa-trash-alt"></i></a>
+                        {% else %}
+                        <span class="text-muted small">Ver</span>
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
 
-    // Envío rápido al presionar ENTER
-    scannerInput.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            if (scannerInput.value.trim() !== '' && parseInt(cantidadInput.value) > 0) {
-                form.submit();
-            }
-        }
-    });
-});
+<!-- Paginación -->
+<nav aria-label="Paginación de Productos">
+    <ul class="pagination justify-content-center mt-4">
+        <li class="page-item {% if not productos_paginados.has_prev %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('inventario', page=productos_paginados.prev_num) }}">&laquo;</a>
+        </li>
+        {% for page_num in productos_paginados.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+            {% if page_num %}
+                {% if productos_paginados.page==page_num %}
+                    <li class="page-item active"><a class="page-link" href="#">{{ page_num }}</a></li>
+                {% else %}
+                    <li class="page-item"><a class="page-link" href="{{ url_for('inventario', page=page_num) }}">{{ page_num }}</a></li>
+                {% endif %}
+            {% else %}
+                <li class="page-item disabled"><a class="page-link" href="#">...</a></li>
+            {% endif %}
+        {% endfor %}
+        <li class="page-item {% if not productos_paginados.has_next %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('inventario', page=productos_paginados.next_num) }}">&raquo;</a>
+        </li>
+    </ul>
+</nav>
+<div class="text-center text-muted mt-2">
+    Mostrando página {{ productos_paginados.page }} de {{ productos_paginados.pages }}. Total: {{ productos_paginados.total }} productos.
+</div>
 
-// 🔍 Función para filtrar inventario por código, marca o descripción en la tabla
-function filtrarInventario() {
-    const input = document.getElementById("barcode_stock_input").value.toLowerCase();
-    const filas = document.querySelectorAll("#tablaInventario tbody tr");
+<!-- Modal agregar producto -->
+<div class="modal fade" id="agregarProductoModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-md">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white py-2">
+                <h5 class="modal-title">Agregar Producto</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('agregar_producto') }}" method="POST">
+                <div class="modal-body small">
+                    <p class="text-info">Si deja el campo Código vacío, el sistema lo generará automáticamente.</p>
+                    <input class="form-control form-control-sm mb-2" type="text" name="codigo" placeholder="Código/SKU">
+                    <input class="form-control form-control-sm mb-2" type="text" name="nombre" placeholder="Nombre" required>
+                    <textarea class="form-control form-control-sm mb-2" name="descripcion" placeholder="Descripción" rows="2"></textarea>
+                    <input class="form-control form-control-sm mb-2" type="number" name="cantidad" placeholder="Stock inicial" value="0" min="0" required>
+                    <div class="row">
+                        <div class="col-6 mb-2"><input class="form-control form-control-sm" type="number" step="0.01" name="valor_interno" placeholder="Valor Interno" required></div>
+                        <div class="col-6 mb-2"><input class="form-control form-control-sm" type="number" step="0.01" name="valor_venta" placeholder="Valor Venta" required></div>
+                    </div>
+                </div>
+                <div class="modal-footer py-2">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="submit" class="btn btn-primary btn-sm">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
-    filas.forEach(fila => {
-        const texto = fila.innerText.toLowerCase();
-        fila.style.display = texto.includes(input) ? "" : "none";
-    });
-}
-</script>
-
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/productos.js') }}"></script>
 {% endblock %}
+{% endblock %}
+

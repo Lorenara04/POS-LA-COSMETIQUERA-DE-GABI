@@ -3,198 +3,154 @@
 {% block title %}Cierre e Informes{% endblock %}
 
 {% block content %}
+
 <style>
-    body {
-        background: linear-gradient(135deg, #fff0f7 0%, #ffe6f4 100%);
-        font-family: 'Poppins', sans-serif;
-    }
-
-    h2, h3 {
-        font-weight: 700;
-        letter-spacing: 0.5px;
-    }
-
-    /* Tarjetas de resumen */
-    .card {
+    /* Estilos Coquette */
+    .card-metric {
         border: none;
-        border-radius: 18px;
-        backdrop-filter: blur(10px);
-        transition: all 0.3s ease;
-        box-shadow: 0 5px 15px rgba(225, 0, 137, 0.25);
-    }
-
-    .card:hover {
-        transform: translateY(-6px);
-        box-shadow: 0 8px 22px rgba(217, 0, 123, 0.4);
-    }
-
-    .card h5 {
-        font-weight: 600;
-        color: #fff;
-    }
-
-    .card .card-text {
-        color: #fff;
-    }
-
-    /* Tabla */
-    .table {
-        border-collapse: separate;
-        border-spacing: 0;
         border-radius: 15px;
-        overflow: hidden;
-    }
-
-    .table thead th {
-        background: linear-gradient(250deg, #9c0277, #e10089);
+        transition: transform 0.2s;
         color: white;
-        font-weight: 600;
     }
-
-    .table tbody tr {
-        background-color: #fff;
-        transition: all 0.2s ease;
+    .card-metric:hover {
+        transform: translateY(-5px);
     }
-
-    .table tbody tr:hover {
-        background-color: #ffe6f4;
-    }
-
-    .table td {
-        vertical-align: middle;
-        color: #5a004a;
-    }
-
-    hr {
-        border-top: 2px solid #9c0277;
-        opacity: 0.8;
-    }
-
-    /* Tarjetas de gráficos */
-    .chart-card {
-        border: 2px solid rgba(225, 0, 137, 0.3);
-        border-radius: 18px;
-        background: rgba(255, 255, 255, 0.85);
-        box-shadow: 0 4px 18px rgba(225, 0, 137, 0.25);
-        backdrop-filter: blur(6px);
-        transition: transform 0.3s ease;
-    }
-
-    .chart-card:hover {
-        transform: translateY(-4px);
-    }
-
-    /* Scroll elegante */
-    .table-responsive::-webkit-scrollbar {
-        width: 8px;
-        height: 8px;
-    }
-
-    .table-responsive::-webkit-scrollbar-thumb {
-        background: linear-gradient(300deg, #9c0277, #e10089);
-        border-radius: 10px;
-    }
-
-    .table-responsive::-webkit-scrollbar-track {
-        background-color: #ffe6f4;
+    /* Paleta Coquette: Rosa/Fucsia (Clásico), Lavanda (Suave), Dorado (Elegante) */
+    .bg-gradient-pink { background: linear-gradient(45deg, #ff8c94, #ffb3b7); } /* Rosa Suave */
+    .bg-gradient-purple { background: linear-gradient(45deg, #b39ddb, #e6ceff); } /* Lavanda Pastel */
+    .bg-gradient-blue { background: linear-gradient(45deg, #ffc72c, #ffdb70); } /* Dorado Suave (Gold) */
+    
+    .chart-container {
+        background: white;
+        border-radius: 20px; /* Bordes más suaves */
+        padding: 20px;
+        box-shadow: 0 6px 10px rgba(0,0,0,0.08); /* Sombra más definida */
+        height: 350px;
+        position: relative;
     }
 </style>
 
-<h2 class="mb-4 text-center" style="color:#9c0277;">
-    💖 Cierre e Informes de Ventas 💖
-</h2>
-
-<form action="{{ url_for('ejecutar_cierre_caja') }}" method="POST" class="text-center mb-5">
-    <button type="submit" class="btn btn-lg fw-bold" 
-            style="background-color: #d9007b; color: white; border-radius: 12px; transition: all 0.3s;"
-            {% if caja_cerrada_hoy %} disabled title="El cierre de caja para hoy ya fue realizado." {% endif %}
-            onclick="return confirm('¿Está seguro de que desea realizar el Cierre de Caja para el día de hoy? Esto registrará los totales de forma permanente.');"
-            >
-        <i class="fas fa-lock me-2"></i> 
-        {% if caja_cerrada_hoy %} Cierre de Caja Realizado {% else %} Realizar Cierre de Caja Hoy {% endif %}
-    </button>
+<div class="container mt-4">
     
-    <a href="{{ url_for('historial_cierres') }}" class="btn btn-outline-dark btn-lg ms-3" style="border-radius: 12px;">
-        <i class="fas fa-history me-2"></i> Historial de Cierres
-    </a>
-</form>
-<div class="row mb-4 text-center">
-    <div class="col-md-4 mb-3">
-        <div class="card text-white" style="background:linear-gradient(300deg,#9c0277,#d9007b);">
-            <div class="card-body">
-                <h5 class="card-title">TOTAL DÍA ({{ hoy.strftime('%d/%m/%Y') }})</h5>
-                <p class="card-text fs-3 fw-bold">${{ "{:,.0f}".format(total_diario) }}</p>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 style="color: #ff69b4; font-weight: bold;">🎀 Reportes y Cierre ✨</h2>
+        
+        <form action="{{ url_for('ejecutar_cierre_caja') }}" method="POST" data-confirm="¿Estás segura de cerrar la caja?">
+            {% if caja_cerrada_hoy %}
+                <button type="button" class="btn btn-secondary btn-lg" disabled>
+                    <i class="fas fa-lock"></i> Caja Cerrada Hoy
+                </button>
+            {% else %}
+                <button type="submit" class="btn btn-danger btn-lg shadow" style="background-color: #ff69b4; border-color: #ff69b4;">
+                    <i class="fas fa-lock-open"></i> Cerrar Caja Ahora
+                </button>
+            {% endif %}
+            
+            <a href="{{ url_for('historial_cierres') }}" class="btn btn-outline-dark btn-lg ms-2">
+                <i class="fas fa-history"></i> Historial
+            </a>
+        </form>
+    </div>
+
+    <div class="row mb-5">
+        <div class="col-md-4 mb-3">
+            <div class="card card-metric bg-gradient-pink p-3 shadow">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase mb-1" style="opacity: 0.9;">Venta Hoy ({{ hoy }})</h6>
+                        <h2 class="mb-0 fw-bold">${{ "{:,.0f}".format(total_diario) }}</h2>
+                    </div>
+                    <i class="fas fa-calendar-day fa-3x" style="opacity: 0.3;"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card card-metric bg-gradient-purple p-3 shadow">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase mb-1" style="opacity: 0.9;">Acumulado Semana</h6>
+                        <h2 class="mb-0 fw-bold">${{ "{:,.0f}".format(total_semanal) }}</h2>
+                    </div>
+                    <i class="fas fa-calendar-week fa-3x" style="opacity: 0.3;"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card card-metric bg-gradient-blue p-3 shadow">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase mb-1" style="opacity: 0.9;">Acumulado Mes</h6>
+                        <h2 class="mb-0 fw-bold">${{ "{:,.0f}".format(total_mensual) }}</h2>
+                    </div>
+                    <i class="fas fa-calendar-alt fa-3x" style="opacity: 0.3;"></i>
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-md-4 mb-3">
-        <div class="card text-white" style="background:linear-gradient(300deg,#9c0277,#e10089);">
-            <div class="card-body">
-                <h5 class="card-title">TOTAL SEMANA</h5>
-                <p class="card-text fs-3 fw-bold">${{ "{:,.0f}".format(total_semanal) }}</p>
+
+    <hr class="my-4">
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <h4 class="mb-3 text-muted"><i class="fas fa-receipt"></i> Desglose de Pagos de Hoy</h4>
+            <div class="table-responsive shadow-sm rounded">
+                <table class="table table-hover align-middle mb-0" style="background: white;">
+                    <thead style="background-color: #fce4ec; color: #ff69b4; border-bottom: 2px solid #ffc8d9;">
+                        <tr>
+                            <th>Origen</th>
+                            <th>Método de Pago</th>
+                            <th class="text-end">Total Recibido</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for origen, metodo, total in informe_diario %}
+                        <tr>
+                            <td>{{ origen }}</td>
+                            <td>
+                                <span class="badge bg-light text-dark border">{{ metodo }}</span>
+                            </td>
+                            <td class="text-end fw-bold" style="color: #ff69b4;">
+                                ${{ "{:,.0f}".format(total) }}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="3" class="text-center text-muted py-4">
+                                No hay ventas registradas hoy todavía.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    {% if total_diario > 0 %}
+                    <tfoot style="background-color: #fff0f5;">
+                        <tr>
+                            <td colspan="2" class="text-end fw-bold">TOTAL GENERAL:</td>
+                            <td class="text-end fw-bold fs-5" style="color: #ff69b4;">${{ "{:,.0f}".format(total_diario) }}</td>
+                        </tr>
+                    </tfoot>
+                    {% endif %}
+                </table>
             </div>
         </div>
     </div>
-    <div class="col-md-4 mb-3">
-        <div class="card text-white" style="background:linear-gradient(300deg,#9c0277,#d9007b);">
-            <div class="card-body">
-                <h5 class="card-title">TOTAL MES</h5>
-                <p class="card-text fs-3 fw-bold">${{ "{:,.0f}".format(total_mensual) }}</p>
+
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <h5 class="text-center text-muted mb-3">Ventas del Día</h5>
+            <div class="chart-container">
+                <canvas id="chartVendedores"></canvas>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <h5 class="text-center text-muted mb-3">Tendencia Reciente</h5>
+            <div class="chart-container">
+                <canvas id="chartTendencia"></canvas>
             </div>
         </div>
     </div>
-</div>
 
-<hr>
-
-<h3 class="mt-4 text-center" style="color:#9c0277;">Informe Diario: Desglose de Pagos 💰</h3>
-<p class="text-center text-muted mb-4">
-    Total vendido hoy: <strong style="color:#9c0277;">${{ "{:,.0f}".format(total_diario) }}</strong>
-</p>
-
-<div class="table-responsive shadow-sm" 
-      style="max-height: 420px; overflow-y: auto; border: 2px solid #9c0277; border-radius: 15px;">
-    <table class="table text-center align-middle mb-0">
-        <thead style="position: sticky; top: 0; z-index: 1;">
-            <tr>
-                <th>Vendedora</th>
-                <th>Método de Pago</th>
-                <th>Total Recibido</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for vendedora, tipo, total in informe_diario %}
-            <tr>
-                <td>{{ vendedora }}</td>
-                <td>{{ tipo }}</td>
-                <td style="color:#d9007b; font-weight:600;">${{ "{:,.0f}".format(total) }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
-
-<hr>
-
-<h3 class="mt-4 text-center" style="color:#9c0277;">ACUMULADO SEMANAL Y MES 🌸</h3>
-
-<div class="row mt-4">
-    <div class="col-md-6 mb-4">
-        <div class="chart-card p-3">
-            <div class="text-center mb-2" style="color:#9c0277; font-weight:600;">
-                Ventas por Vendedor (Mensual)
-            </div>
-            <canvas id="ventasVendedorChart"></canvas>
-        </div>
-    </div>
-    <div class="col-md-6 mb-4">
-        <div class="chart-card p-3">
-            <div class="text-center mb-2" style="color:#9c0277; font-weight:600;">
-                Tendencia de Ventas (Acumulado Semanal)
-            </div>
-            <canvas id="tendenciaMensualChart"></canvas>
-        </div>
-    </div>
 </div>
 
 {% endblock %}
@@ -202,73 +158,76 @@
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    try {
-        // Aseguramos que el JSON sea inyectado de forma segura
-        const datosVendedores = JSON.parse('{{ datos_vendedores | tojson }}'); 
-        const datosTendencia = JSON.parse('{{ datos_tendencia | tojson }}');
+    document.addEventListener("DOMContentLoaded", function() {
+        
+        // 1. Recibimos los datos desde Python de forma segura
+        const datosVend = {{ datos_vendedores | default({}) | tojson | safe }};
+        const datosTend = {{ datos_tendencia | default({}) | tojson | safe }};
 
-        const ctxVendedor = document.getElementById('ventasVendedorChart');
-        if (ctxVendedor) {
-            new Chart(ctxVendedor.getContext('2d'), {
+        // 2. Configuración común para que se vean bonitos
+        const commonOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { 
+                        color: 'rgba(255, 192, 203, 0.3)', /* Líneas de grid rosa claro */
+                        borderDash: [5, 5] 
+                    } 
+                }
+            }
+        };
+
+        // 3. Gráfico de Barras (Vendedores / Tienda)
+        const ctx1 = document.getElementById('chartVendedores');
+        if(ctx1 && datosVend.labels && datosVend.labels.length > 0) {
+            new Chart(ctx1, {
                 type: 'bar',
                 data: {
-                    labels: datosVendedores.labels,
+                    labels: datosVend.labels,
                     datasets: [{
-                        label: 'Venta Total ($)',
-                        data: datosVendedores.data,
-                        backgroundColor: 'rgba(225, 0, 137, 0.7)',
-                        borderColor: '#9c0277',
+                        label: 'Ventas ($)',
+                        data: datosVend.data,
+                        backgroundColor: '#ff8c94', /* Rosa Suave */
+                        borderColor: '#ff69b4', /* Rosa Coquette */
                         borderWidth: 2,
-                        borderRadius: 10
+                        borderRadius: 10 /* Barras con bordes más redondeados y suaves */
                     }]
                 },
-                options: {
-                    responsive: true,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: { callback: v => '$' + v.toLocaleString() }
-                        }
-                    }
-                }
+                options: commonOptions
             });
+        } else {
+            if(ctx1) ctx1.parentNode.innerHTML = "<p class='text-center mt-5 text-muted'>Sin datos para mostrar</p>";
         }
 
-        const ctxTendencia = document.getElementById('tendenciaMensualChart');
-        if (ctxTendencia) {
-            new Chart(ctxTendencia.getContext('2d'), {
+        // 4. Gráfico de Línea (Tendencia)
+        const ctx2 = document.getElementById('chartTendencia');
+        if(ctx2 && datosTend.labels && datosTend.labels.length > 0) {
+            new Chart(ctx2, {
                 type: 'line',
                 data: {
-                    labels: datosTendencia.labels,
+                    labels: datosTend.labels,
                     datasets: [{
-                        label: 'Venta Semanal Acumulada ($)',
-                        data: datosTendencia.data,
-                        backgroundColor: 'rgba(225, 0, 137, 0.15)',
-                        borderColor: '#9c0277', 
-                        borderWidth: 3,
-                        tension: 0.4,
+                        label: 'Tendencia ($)',
+                        data: datosTend.data,
+                        backgroundColor: 'rgba(179, 157, 219, 0.3)', /* Fondo Lavanda Transparente */
+                        borderColor: '#b39ddb', /* Línea Lavanda */
+                        borderWidth: 4,
                         fill: true,
-                        pointBackgroundColor: '#9c0277'
+                        tension: 0.6, /* Línea más curva y delicada */
+                        pointBackgroundColor: '#ff8c94', /* Puntos Rosas Suaves */
+                        pointRadius: 5
                     }]
                 },
-                options: {
-                    responsive: true,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: { callback: v => '$' + v.toLocaleString() }
-                        }
-                    }
-                }
+                options: commonOptions
             });
+        } else {
+            if(ctx2) ctx2.parentNode.innerHTML = "<p class='text-center mt-5 text-muted'>Sin datos para mostrar</p>";
         }
-    } catch (e) {
-        // Si hay un error, lo imprimimos en la consola del navegador para debug
-        console.error("Error al inicializar los gráficos:", e);
-    }
-});
+    });
 </script>
 {% endblock %}

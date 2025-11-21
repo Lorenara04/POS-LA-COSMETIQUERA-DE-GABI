@@ -5,240 +5,502 @@
 {% block content %}
 <div id="flash-container" class="container mt-3"></div>
 
-<h2 class="mb-4 text-center titulo-ventas">📊 Gestión de Ventas: Detalle y Anulación ⚠️</h2>
-<p class="text-center text-muted subtitulo-ventas">
-    Esta tabla muestra las últimas 30 ventas y permite ver sus detalles, editar información básica o anularlas (devolviendo el stock).<br>
-    <strong>Esta acción es solo para Administradores.</strong>
+<h2 class="mb-2 text-center titulo-ventas-bonita">
+    <i class="fas fa-chart-line me-2"></i> Gestión de Ventas: Panel de Control
+</h2>
+<p class="text-center subtitulo-bonita">
+    Resumen de las últimas <strong>{{ ventas_paginadas.per_page }}</strong> transacciones por página.
+    <br><strong>Acceso Exclusivo para Administradoras.</strong>
 </p>
 
 <style>
-    /* Estilos CSS */
+    /* ------------------ PALETA "BONITA" CON MAGENTA ------------------ */
+    :root {
+        --color-magenta-principal: #FF4081; /* Un rosa vibrante y amigable */
+        --color-magenta-suave: #FCE4EC; /* Un rosa muy claro para fondos */
+        --color-magenta-oscuro: #AD1457; /* Magenta más profundo para texto o hover */
+        --color-fondo-pagina: #f9fbfd; /* Blanco azulado muy claro */
+        --color-tarjeta-fondo: #FFFFFF;
+        --color-texto-oscuro: #333333;
+        --color-texto-claro: #6c757d;
+        --color-borde-suave: #e0e0e0;
+        --color-sombra: rgba(0, 0, 0, 0.08);
+        --color-anular: #dc3545; /* Rojo de anulación */
+    }
+
     body {
-        background: linear-gradient(135deg, #fff 0%, #ffe6f3 100%);
+        background-color: var(--color-fondo-pagina);
+        font-family: 'Poppins', sans-serif; /* Fuente moderna y legible */
+        color: var(--color-texto-oscuro);
+    }
+
+    /* Títulos */
+    .titulo-ventas-bonita {
         font-family: 'Poppins', sans-serif;
-    }
-    .titulo-ventas {
-        background: linear-gradient(90deg, #9c0277, #aa0066);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
         font-weight: 700;
-        letter-spacing: 1px;
-        text-shadow: 0 0 8px rgba(156, 2, 119, 0.3);
+        color: var(--color-magenta-oscuro); 
+        letter-spacing: 0.8px;
+        margin-top: 25px;
+        margin-bottom: 10px;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.05); /* Sombra suave para el título */
     }
-    .subtitulo-ventas {
+    .subtitulo-bonita {
         font-size: 0.95rem;
-        color: #6c757d;
+        color: var(--color-texto-claro);
+        margin-bottom: 40px;
+        font-weight: 400;
     }
-    .tabla-ventas {
-        border: 2px solid #aa0066;
-        border-radius: 15px;
-        overflow: hidden;
-        box-shadow: 0 0 20px rgba(156, 2, 119, 0.15);
+    
+    /* Contenedor principal (tarjeta) */
+    .tabla-container-bonita {
+        background-color: var(--color-tarjeta-fondo);
+        border: 1px solid var(--color-borde-suave); 
+        border-radius: 15px; /* Bordes más redondeados */
+        padding: 0;
+        box-shadow: 0 8px 25px var(--color-sombra); /* Sombra más pronunciada pero suave */
+        margin-top: 30px;
+        overflow: hidden; /* Asegura que los bordes redondeados se apliquen a la tabla interna */
     }
-    .tabla-ventas thead th {
-        background: linear-gradient(90deg, #9c0277, #aa0066);
-        color: white;
+
+    /* Tabla */
+    .tabla-ventas-bonita {
+        margin-bottom: 0 !important;
+        border-collapse: separate; /* Necesario para border-radius en celdas si se usara, pero aquí mejor en el contenedor */
+    }
+    
+    /* Encabezado de la Tabla */
+    .tabla-ventas-bonita thead th {
+        background-color: var(--color-magenta-suave); /* Fondo rosa muy claro */
+        color: var(--color-magenta-oscuro);
         border: none;
         text-align: center;
         font-weight: 600;
-        letter-spacing: 0.5px;
+        padding: 15px 10px;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        border-bottom: 2px solid var(--color-magenta-principal); /* Línea inferior distintiva */
     }
-    .tabla-ventas tbody tr:hover {
-        background-color: rgba(170, 0, 102, 0.08);
-        transform: scale(1.01);
+    /* Estilo para la primera y última celda del thead para mantener el redondeado del contenedor */
+    .tabla-ventas-bonita thead tr th:first-child {
+        border-top-left-radius: 15px;
     }
-    .tabla-ventas td {
+    .tabla-ventas-bonita thead tr th:last-child {
+        border-top-right-radius: 15px;
+    }
+    
+    /* Filas */
+    .tabla-ventas-bonita tbody tr {
+        transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+    .tabla-ventas-bonita tbody tr:nth-child(even) {
+        background-color: #fcfdff; /* Rayado muy sutil */
+    }
+    .tabla-ventas-bonita tbody tr:hover {
+        background-color: var(--color-magenta-suave); 
+        transform: translateY(-2px); /* Efecto flotante al pasar el ratón */
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    }
+    .tabla-ventas-bonita td {
         vertical-align: middle;
         text-align: center;
-        color: #333;
-        font-weight: 500;
+        color: var(--color-texto-oscuro);
+        font-weight: 400;
+        padding: 12px 10px;
+        font-size: 0.875rem;
     }
-    .btn-anular {
-        background: linear-gradient(90deg, #aa0066, #d32f2f);
-        color: #fff !important;
-        border: none;
-        border-radius: 20px;
-        padding: 7px 15px;
+    /* Total de Venta */
+    .text-magenta-fuerte-bonita {
+        color: var(--color-magenta-principal) !important;
+        font-weight: 700 !important;
+        font-size: 1.05rem;
+    }
+    
+    /* Botones de Acción */
+    .btn-bonita-detalle, .btn-bonita-anular {
+        font-family: 'Poppins', sans-serif;
         font-weight: 600;
-        font-size: 0.9rem;
-        transition: all 0.3s ease;
-        box-shadow: 0 0 10px rgba(211, 47, 47, 0.4);
-        text-decoration: none;
+        border-radius: 8px; /* Más redondeado */
+        padding: 8px 18px;
+        font-size: 0.85rem;
+        transition: all 0.2s ease;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
-    .btn-anular:hover {
-        background: linear-gradient(90deg, #d32f2f, #aa0066);
-        color: #fff;
-        box-shadow: 0 0 20px rgba(211, 47, 47, 0.6);
-        transform: translateY(-2px) scale(1.05);
-    }
-    .btn-detalle {
-        background-color: #007bff;
+
+    .btn-bonita-detalle {
+        background-color: var(--color-magenta-principal); 
         color: white;
-        border-radius: 20px;
-        padding: 7px 15px;
-        font-weight: 600;
-        font-size: 0.9rem;
-        transition: all 0.3s ease;
-        margin-right: 8px;
-    }
-    .btn-detalle:hover {
-        background-color: #0056b3;
-    }
-    .table-responsive {
-        margin-top: 30px;
-        animation: fadeIn 0.8s ease-in-out;
-    }
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-    .alert-danger {
-        background: linear-gradient(90deg, #aa0066, #9c0277);
         border: none;
+        box-shadow: 0 4px 10px rgba(255, 64, 129, 0.3);
+    }
+    .btn-bonita-detalle:hover {
+        background-color: var(--color-magenta-oscuro); /* Magenta más oscuro */
         color: white;
-        font-weight: 600;
-        border-radius: 15px;
-        box-shadow: 0 0 15px rgba(156, 2, 119, 0.3);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(173, 20, 87, 0.4);
     }
-    .modal-content-custom {
-        border-radius: 15px;
-        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+    
+    .btn-bonita-anular {
+        background-color: transparent; 
+        color: var(--color-anular); /* Rojo de anulación */
+        border: 1px solid var(--color-anular);
     }
-    .modal-header-custom {
-        background: linear-gradient(90deg, #9c0277, #aa0066);
+    .btn-bonita-anular:hover {
+        background-color: var(--color-anular);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(220, 53, 69, 0.3);
+    }
+    
+    /* Paginación */
+    .pagination .page-item a {
+        color: var(--color-magenta-principal);
+        border: 1px solid var(--color-magenta-suave);
+        border-radius: 8px;
+        margin: 0 3px;
+        padding: 8px 15px;
+        transition: all 0.2s ease;
+    }
+    .pagination .page-item.active a {
+        background-color: var(--color-magenta-principal);
+        border-color: var(--color-magenta-principal);
+        color: white;
+        box-shadow: 0 4px 10px rgba(255, 64, 129, 0.3);
+    }
+    .pagination .page-item a:hover {
+        background-color: var(--color-magenta-suave);
+        color: var(--color-magenta-oscuro);
+        transform: translateY(-1px);
+    }
+    .pagination-info-bonita {
+        font-size: 0.85rem;
+        color: var(--color-texto-claro);
+    }
+    
+    /* Modales */
+    .modal-content-custom-bonita {
+        border-radius: 15px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+        border: none;
+    }
+    .modal-header-custom-bonita {
+        background-color: var(--color-magenta-principal); 
         color: white;
         border-radius: 15px 15px 0 0;
         border-bottom: none;
+        padding: 20px;
+        text-align: center;
     }
+    .modal-header-custom-bonita .modal-title {
+        width: 100%;
+        font-weight: 600;
+    }
+    .btn-close-white-bonita {
+        filter: invert(1); /* Hace el ícono blanco */
+        opacity: 0.8;
+    }
+    .btn-close-white-bonita:hover {
+        opacity: 1;
+    }
+    
+    /* Estilos dentro del modal */
+    .modal-body h4 {
+        color: var(--color-magenta-principal);
+        font-weight: 600;
+        margin-bottom: 20px;
+        border-bottom: 2px solid var(--color-magenta-suave);
+        padding-bottom: 10px;
+    }
+    .modal-body label {
+        font-weight: 500;
+        color: var(--color-texto-oscuro);
+        margin-bottom: 5px;
+    }
+    .form-control, .form-select {
+        border-radius: 8px;
+        border-color: var(--color-borde-suave);
+        padding: 10px 15px;
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: var(--color-magenta-principal);
+        box-shadow: 0 0 0 0.25rem rgba(255, 64, 129, 0.25);
+    }
+
+    #modal-total-venta.fs-4 {
+        font-size: 1.8rem !important; /* Aumenta el tamaño del total */
+    }
+    #modal-total-venta {
+        color: var(--color-magenta-oscuro) !important;
+        font-weight: 700;
+    }
+
+    /* Detalle de Pagos */
+    .metodo-pago-editable {
+        background-color: #fff;
+        border: 1px solid var(--color-borde-suave);
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    .metodo-pago-editable label {
+        font-weight: 600;
+        color: var(--color-magenta-principal);
+        display: block; /* Para que el input vaya abajo */
+        margin-bottom: 8px;
+    }
+
+    .alert-bonita-custom {
+        border-left: 5px solid var(--color-magenta-principal);
+        background-color: var(--color-magenta-suave);
+        color: var(--color-texto-oscuro);
+        border-radius: 8px;
+    }
+
+    /* Estilos para el select2 */
+    .select2-container--bootstrap-5 .select2-selection {
+        border-radius: 8px !important;
+        border-color: var(--color-borde-suave) !important;
+        padding: 0.6rem 1.1rem !important;
+    }
+    .select2-container--bootstrap-5.select2-container--focus .select2-selection {
+        border-color: var(--color-magenta-principal) !important;
+        box-shadow: 0 0 0 0.25rem rgba(255, 64, 129, 0.25) !important;
+    }
+    .select2-container--bootstrap-5 .select2-dropdown {
+        border-radius: 8px !important;
+        border-color: var(--color-borde-suave) !important;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    }
+    .select2-container--bootstrap-5 .select2-results__option--selected {
+        background-color: var(--color-magenta-suave) !important;
+        color: var(--color-magenta-oscuro) !important;
+    }
+    .select2-container--bootstrap-5 .select2-results__option--highlighted {
+        background-color: var(--color-magenta-principal) !important;
+        color: white !important;
+    }
+
 </style>
 
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+
 {% if current_user.rol.lower() == 'administrador' %}
-<div class="table-responsive">
-    <table class="table table-striped table-hover text-center tabla-ventas">
-        <thead>
-            <tr>
-                <th>N° Venta</th>
-                <th>Fecha</th>
-                <th>Total</th>
-                <th>Vendedora</th>
-                <th>Cliente</th>
-                <th>Acción</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for venta in VentasRecientes %}
-            <tr>
-                <td>{{ venta.id }}</td>
-                <td>{{ (venta.fecha - timedelta(hours=5)).strftime('%d/%m/%Y %I:%M %p') }}</td>
-                <td>${{ venta.total | format_number }}</td>
-                <td>{{ venta.vendedor.username if venta.vendedor else 'N/A' }}</td>
-                <td>{{ venta.comprador.nombre if venta.comprador else 'Contado / Genérico' }}</td>
-                <td>
-                    <button type="button" class="btn-detalle btn" data-bs-toggle="modal" data-bs-target="#detalleModal" data-venta-id="{{ venta.id }}">
-                        <i class="fas fa-eye me-1"></i> Ver/Editar
-                    </button>
-                    <a href="{{ url_for('eliminar_venta', venta_id=venta.id) }}" 
-                        onclick="return confirm('¿Estás segura de que quieres ANULAR la Venta N° {{ venta.id }}? Esta acción es irreversible y devolverá el stock.');" 
-                        class="btn-anular"><i class="fas fa-undo me-1"></i> Anular</a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<div class="tabla-container-bonita container">
+    <div class="table-responsive">
+        <table class="table table-striped table-hover text-center tabla-ventas-bonita">
+            <thead>
+                <tr>
+                    <th><i class="fas fa-receipt"></i> N° Venta</th>
+                    <th><i class="fas fa-calendar-alt"></i> Fecha</th>
+                    <th><i class="fas fa-money-bill-wave"></i> Total</th>
+                    <th><i class="fas fa-user-tag"></i> Vendedor</th>
+                    <th><i class="fas fa-user-circle"></i> Cliente</th>
+                    <th><i class="fas fa-cog"></i> Gestión</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for venta in ventas_paginadas.items %}
+                <tr>
+                    <td>{{ venta.id }}</td>
+                    <td data-fecha-iso="{{ venta.fecha }}">{{ venta.fecha | fecha_co }}</td>
+                    <td class="text-magenta-fuerte-bonita">${{ venta.total | format_number }}</td>
+                    <td>{{ venta.vendedor.username if venta.vendedor else 'N/A' }}</td>
+                    <td>{{ venta.comprador.nombre if venta.comprador else 'Contado / Genérico' }}</td>
+                    <td>
+                        <button type="button" class="btn-bonita-detalle btn me-2" data-bs-toggle="modal" data-bs-target="#detalleModal" data-venta-id="{{ venta.id }}" data-venta-fecha="{{ venta.fecha | fecha_co }}">
+                            <i class="fas fa-eye me-1"></i> Detalle
+                        </button>
+                        <a href="{{ url_for('eliminar_venta', venta_id=venta.id) }}" 
+                            data-confirm="¿Estás segura de que quieres ANULAR la Venta N° {{ venta.id }}? Esta acción es irreversible y devolverá el stock." 
+                            class="btn-bonita-anular"><i class="fas fa-undo-alt me-1"></i> Anular</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
 
+<nav aria-label="Paginación de Ventas">
+    <ul class="pagination justify-content-center mt-4">
+        <li class="page-item {% if not ventas_paginadas.has_prev %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('gestion_ventas', page=ventas_paginadas.prev_num) }}" aria-label="Anterior">
+                <span aria-hidden="true">&laquo;</span>
+            </a>
+        </li>
+        
+        {% for page_num in ventas_paginadas.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+            {% if page_num %}
+                {% if ventas_paginadas.page == page_num %}
+                    <li class="page-item active" aria-current="page"><a class="page-link" href="#">{{ page_num }}</a></li>
+                {% else %}
+                    <li class="page-item"><a class="page-link" href="{{ url_for('gestion_ventas', page=page_num) }}">{{ page_num }}</a></li>
+                {% endif %}
+            {% else %}
+                <li class="page-item disabled"><a class="page-link" href="#">...</a></li>
+            {% endif %}
+        {% endfor %}
+
+        <li class="page-item {% if not ventas_paginadas.has_next %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('gestion_ventas', page=ventas_paginadas.next_num) }}" aria-label="Siguiente">
+                <span aria-hidden="true">&raquo;</span>
+            </a>
+        </li>
+    </ul>
+</nav>
+<div class="text-center mt-2">
+    <span class="pagination-info-bonita">Página {{ ventas_paginadas.page }} de {{ ventas_paginadas.pages }}. Total de ventas: {{ ventas_paginadas.total }}.</span>
+</div>
+<hr class="mb-5">
+
+<!-- Modal de Detalle/Edición Bonito -->
 <div class="modal fade" id="detalleModal" tabindex="-1" aria-labelledby="detalleModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl">
-        <div class="modal-content modal-content-custom">
-            <div class="modal-header modal-header-custom">
-                <h5 class="modal-title" id="detalleModalLabel">Detalle de Venta N° <span id="modal-venta-id"></span></h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="modal-content modal-content-custom-bonita">
+            <div class="modal-header modal-header-custom-bonita">
+                <h5 class="modal-title" id="detalleModalLabel"><i class="fas fa-file-invoice-dollar me-2"></i> Detalle de Venta N° <span id="modal-venta-id"></span></h5>
+                <button type="button" class="btn-close btn-close-white-bonita" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <form id="form-editar-info-basica" method="POST" action="">
-                    <input type="hidden" name="venta_id" id="input-venta-id">
+                    <!-- Hidden input para el total editado, usado por el JS para la validación de pagos -->
+                    <input type="hidden" name="venta_id" id="input-venta-id"> 
+                    
                     <div class="row">
                         <div class="col-md-7">
-                            <h4><i class="fas fa-shopping-cart me-2"></i> Productos Vendidos <button type="button" class="btn btn-sm btn-outline-success ms-3" id="btn-agregar-producto-modal"><i class="fas fa-plus"></i> Agregar Producto</button></h4>
+                            <h4 class="text-secondary"><i class="fas fa-boxes me-2"></i> Artículos Vendidos
+                                <button type="button" class="btn btn-sm btn-outline-success ms-3" id="btn-agregar-producto-modal">
+                                    <i class="fas fa-plus"></i> Añadir Artículo
+                                </button>
+                            </h4>
                             
-                            <div class="alert alert-info mt-2" role="alert">
-                                ⚠️ **Edición de Productos:** Haz clic en la cantidad para modificarla o en el botón de la derecha para anular la línea y devolver el stock. ¡Recuerda Guardar Cambios al Detalle!
+                            <div class="alert alert-warning mt-2 alert-bonita-custom" role="alert">
+                                ⚠️ <strong>Atención:</strong> Modificar cantidades recalcula el <strong>Total</strong>. Se valida el stock. <strong>Guarde Cambios al Detalle</strong> antes de actualizar la sección de pagos.
                             </div>
 
-                            <table class="table table-striped table-bordered mt-3">
-                                <thead>
-                                    <tr>
-                                        <th style="width: 45%;">Producto y Descripción</th>
-                                        <th style="width: 15%;">Cant.</th>
-                                        <th style="width: 20%;">Precio Unitario</th>
-                                        <th style="width: 20%;">Subtotal / **Anular**</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="productos-vendidos-body">
+                            <div class="table-responsive">
+                                <table class="table table-striped table-bordered mt-3">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 40%;">Producto y Detalle</th>
+                                            <th style="width: 12%;">Cant.</th>
+                                            <th style="width: 18%;">Precio Unit.</th>
+                                            <th style="width: 30%;">Subtotal / Anular</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="productos-vendidos-body">
+                                        <!-- Contenido cargado por JS -->
                                     </tbody>
-                            </table>
-                            <div class="text-end mt-3">
-                                <button type="button" class="btn btn-lg btn-danger" id="btn-guardar-detalle-venta"><i class="fas fa-magic me-2"></i> Guardar Cambios al Detalle</button>
-                                <strong class="ms-3">Total Venta: </strong> $ <span id="modal-total-venta" class="fs-4 text-danger fw-bold"></span>
-                                <input type="hidden" name="total_venta_editado" id="input-total-venta-editado">
+                                </table>
+                            </div>
+                            
+                            <div class="text-end mt-3 p-3 border rounded" style="background-color: var(--color-magenta-suave);">
+                                <button type="button" class="btn btn-lg btn-bonita-detalle" id="btn-guardar-detalle-venta">
+                                    <i class="fas fa-save me-2"></i> Guardar Cambios al Detalle
+                                </button>
+                                <strong class="ms-3">TOTAL VENTA: </strong> $<span id="modal-total-venta" class="fs-4 text-magenta-fuerte-bonita"></span>
                             </div>
                         </div>
 
                         <div class="col-md-5 border-start ps-4">
-                            <h4><i class="fas fa-info-circle me-2"></i> Información Básica</h4>
+                            <h4 class="text-secondary"><i class="fas fa-info-circle me-2"></i> Información de Transacción</h4>
                             <div class="mb-3">
-                                <label for="modal-fecha">Fecha y Hora</label>
+                                <label for="modal-fecha" class="text-magenta-fuerte-bonita">Fecha y Hora</label>
                                 <input type="text" id="modal-fecha" class="form-control" readonly>
                             </div>
                             <div class="mb-3">
-                                <label for="modal-vendedor">Vendedor</label>
-                                <select name="vendedor_id" id="modal-vendedor" class="form-select">
+                                <label for="modal-vendedor" class="text-magenta-fuerte-bonita">Vendedor</label>
+                                <select name="vendedor_id" id="modal-vendedor" class="form-select" data-bs-theme="bootstrap-5">
                                     {% for user in vendedores_full %}
                                         <option value="{{ user.id }}">{{ user.username }}</option>
                                     {% endfor %}
                                 </select>
                             </div>
                             <div class="mb-3">
-                                <label for="modal-cliente">Cliente</label>
-                                <select name="cliente_id" id="modal-cliente" class="form-select">
+                                <label for="modal-cliente" class="text-magenta-fuerte-bonita">Cliente</label>
+                                <select name="cliente_id" id="modal-cliente" class="form-select" data-bs-theme="bootstrap-5">
+                                    <option value="">Contado / Genérico</option>
                                     {% for cliente in clientes_full %}
                                         <option value="{{ cliente.id }}">{{ cliente.nombre }}</option>
                                     {% endfor %}
                                 </select>
                             </div>
                             <hr>
-                            <h4><i class="fas fa-credit-card me-2"></i> Detalle de Pagos</h4>
-                            <div id="modal-detalle-pagos" class="mb-3"></div>
+                            
+                            <h4 class="text-secondary"><i class="fas fa-credit-card me-2"></i> Formas de Pago</h4>
+                            <div id="modal-detalle-pagos">
+                                <div class="metodo-pago-editable">
+                                    <label for="input-pago-efectivo">💵 Efectivo</label>
+                                    <input type="number" name="pago_efectivo" id="input-pago-efectivo" class="form-control" step="0.01" min="0" value="0">
+                                </div>
+                                <div class="metodo-pago-editable">
+                                    <label for="input-pago-nequi">📱 Nequi</label>
+                                    <input type="number" name="pago_nequi" id="input-pago-nequi" class="form-control" step="0.01" min="0" value="0">
+                                </div>
+                                <div class="metodo-pago-editable">
+                                    <label for="input-pago-daviplata">🟠 Daviplata</label>
+                                    <input type="number" name="pago_daviplata" id="input-pago-daviplata" class="form-control" step="0.01" min="0" value="0">
+                                </div>
+                                <div class="metodo-pago-editable">
+                                    <label for="input-pago-transferencia">🏦 Transferencia</label>
+                                    <input type="number" name="pago_transferencia" id="input-pago-transferencia" class="form-control" step="0.01" min="0" value="0">
+                                </div>
+                                <div class="metodo-pago-editable">
+                                    <label for="input-pago-tarjeta">💳 Tarjeta/Bold</label>
+                                    <input type="number" name="pago_tarjeta" id="input-pago-tarjeta" class="form-control" step="0.01" min="0" value="0">
+                                </div>
+                                <div class="metodo-pago-editable">
+                                    <label for="input-codigo-transaccion">🔖 Código/Referencia</label>
+                                    <input type="text" name="codigo_transaccion" id="input-codigo-transaccion" class="form-control" placeholder="Ej: REF123456">
+                                </div>
+                                <div class="metodo-pago-editable">
+                                    <label for="input-fecha-transaccion">📅 Fecha Transacción</label>
+                                    <input type="date" name="fecha_transaccion" id="input-fecha-transaccion" class="form-control">
+                                </div>
+                            </div>
+                            
                             <div class="mt-4 text-center">
-                                <button type="submit" class="btn btn-success btn-lg"><i class="fas fa-save me-2"></i> Guardar Cambios Básicos</button>
+                                <button type="submit" class="btn btn-lg btn-bonita-detalle">
+                                    <i class="fas fa-save me-2"></i> Guardar Info y Pagos
+                                </button>
                             </div>
                         </div>
                     </div>
                 </form>
             </div>
         </div>
+        
     </div>
 </div>
 
+<!-- Modal para agregar producto (Bonito) -->
 <div class="modal fade" id="agregarProductoModal" tabindex="-1" aria-labelledby="agregarProductoModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-success text-white">
-                <h5 class="modal-title" id="agregarProductoModalLabel"><i class="fas fa-box-open me-2"></i> Agregar Producto a Venta N° <span id="modal-agregar-venta-id"></span></h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="modal-content modal-content-custom-bonita">
+            <div class="modal-header modal-header-custom-bonita">
+                <h5 class="modal-title" id="agregarProductoModalLabel"><i class="fas fa-plus-circle me-2"></i> Añadir Artículo a Venta N° <span id="modal-agregar-venta-id-title"></span></h5>
+                <button type="button" class="btn-close btn-close-white-bonita" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <div class="mb-3">
                     <label for="select-producto-agregar" class="form-label">Buscar Producto (por nombre o descripción)</label>
-                    <select id="select-producto-agregar" class="form-select w-100"></select>
+                    <select id="select-producto-agregar" class="form-select w-100" data-bs-theme="bootstrap-5"></select>
                 </div>
-                <div id="info-producto-seleccionado" class="mt-3 p-3 border rounded" style="display:none;">
+                <div id="info-producto-seleccionado" class="mt-3 p-3 border rounded" style="display:none; background-color: var(--color-magenta-suave);">
+                    <p><strong>Marca:</strong> <span id="info-marca"></span></p>
                     <p><strong>Precio Venta:</strong> $<span id="info-precio-venta"></span></p>
                     <p><strong>Stock Disponible:</strong> <span id="info-stock"></span> unidades</p>
                     <div class="d-flex align-items-center">
                         <label for="input-cantidad-agregar" class="me-3">Cantidad a Añadir:</label>
                         <input type="number" id="input-cantidad-agregar" class="form-control w-25 me-3" value="1" min="1">
-                        <button type="button" class="btn btn-primary" id="btn-confirmar-agregar"><i class="fas fa-plus-circle me-2"></i> Añadir a Venta</button>
+                        <button type="button" class="btn-bonita-detalle btn" id="btn-confirmar-agregar">
+                            <i class="fas fa-cart-plus me-2"></i> Añadir Artículo
+                        </button>
                     </div>
                 </div>
             </div>
@@ -247,7 +509,7 @@
 </div>
 
 {% else %}
-<div class="alert alert-danger text-center">Solo los administradores pueden acceder a la gestión de ventas.</div>
+<div class="alert alert-danger text-center">Solo las administradoras pueden acceder a la gestión de ventas.</div>
 {% endif %}
 {% endblock %}
 
@@ -256,28 +518,25 @@
 <script>
     let productosEnVenta = [];
     let productosInventario = []; 
+    // Variable CLAVE para la sincronización del total
+    let nuevoTotalDetalle = 0; 
 
     function formatCurrency(value) {
-        if (typeof value === 'string') {
-            value = parseFloat(value);
-        }
+        if (typeof value === 'string') value = parseFloat(value);
+        // Usamos Intl.NumberFormat para un formato de moneda correcto (Colombia usa punto como separador de miles)
         return value.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
     }
 
-    // Función para mostrar mensajes de alerta (requiere el div #flash-container)
     function flashMessage(message, category = 'success') {
         const container = $('#flash-container');
-        if (!container.length) {
-            console.warn("Contenedor de flash no encontrado.");
-            return;
-        }
-
-        const alertHtml = `<div class="alert alert-${category === 'danger' ? 'danger' : (category === 'warning' ? 'warning' : 'success')} alert-dismissible fade show" role="alert">${message}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>`;
+        if (!container.length) return;
+        // Mapeamos las categorías a las clases de Bootstrap
+        const bsCategory = category === 'danger' ? 'danger' : (category === 'warning' ? 'warning' : 'success');
+        const alertHtml = `<div class="alert alert-${bsCategory} alert-dismissible fade show" role="alert">${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
         container.html(alertHtml);
-        setTimeout(() => container.empty(), 5000);
+        setTimeout(() => container.empty(), 7000); 
     }
 
-    // Recalcula el total y actualiza la UI
     function recalcularTotales() {
         let total = 0;
         productosEnVenta.forEach(p => {
@@ -289,12 +548,11 @@
                 p.subtotal = 0;
             }
         });
-
+        // Sincronizar la variable clave
+        nuevoTotalDetalle = total; 
         $('#modal-total-venta').text(formatCurrency(total));
-        $('#input-total-venta-editado').val(total.toFixed(2));
     }
 
-    // Renderiza la tabla de productos
     function renderProductos() {
         const $tbody = $('#productos-vendidos-body');
         $tbody.empty();
@@ -302,28 +560,37 @@
         const productosVisibles = productosEnVenta.filter(p => p.cantidad > 0);
 
         if (productosVisibles.length === 0) {
-            $tbody.html('<tr><td colspan="4" class="text-muted">No hay productos activos en esta venta.</td></tr>');
+            $tbody.html('<tr><td colspan="4" class="text-muted">No hay artículos vendidos en este pedido.</td></tr>');
             recalcularTotales();
             return;
         }
 
-        productosEnVenta.forEach((p, index) => {
-            if (p.cantidad <= 0) return;
+        productosVisibles.forEach((p) => {
+            const productoInventario = productosInventario.find(inv => inv.id === p.id);
+            // Stock disponible para la edición (Stock actual + lo que ya está en esta venta)
+            const stockActual = productoInventario ? productoInventario.cantidad_stock + p.cantidad : 'N/A';
+            const descripcion_display = p.descripcion || (productoInventario ? productoInventario.descripcion : 'Sin descripción');
+            const marca_display = p.marca || 'Sin marca';
+            
+            const realIndex = productosEnVenta.indexOf(p); 
+            const subtotal = p.cantidad * p.precio_unitario;
 
             const row = `
-                <tr data-index="${index}" data-id="${p.id}" data-precio="${p.precio_unitario}">
+                <tr data-index="${realIndex}" data-id="${p.id}" data-precio="${p.precio_unitario}">
                     <td class="text-start">
-                        <strong>${p.nombre}</strong><br>
-                        <small class="text-muted">${p.descripcion || 'Sin descripción'}</small>
+                        <strong>${p.nombre}</strong>
+                        <br><small class="text-secondary"><i class="fas fa-tag"></i> ${marca_display}</small>
+                        <br><small class="text-muted">${descripcion_display}</small>
+                        <br><small class="text-info">(Stock máx. editable: ${stockActual})</small>
                     </td>
                     <td>
                         <input type="number" class="form-control form-control-sm text-center input-cantidad-producto" 
-                               value="${p.cantidad}" min="1" data-index="${index}" style="width: 80px; display: inline-block;">
+                                value="${p.cantidad}" min="1" data-index="${realIndex}" style="width: 80px; display: inline-block;">
                     </td>
                     <td>$${formatCurrency(p.precio_unitario)}</td>
                     <td>
-                        <span class="fw-bold">$${formatCurrency(p.subtotal)}</span>
-                        <button type="button" class="btn btn-sm btn-danger btn-anular-producto ms-2" data-index="${index}" title="Anular este producto y devolver stock">
+                        <span class="fw-bold text-magenta-fuerte-bonita">$${formatCurrency(subtotal)}</span>
+                        <button type="button" class="btn btn-sm btn-outline-danger btn-anular-producto ms-2" data-index="${realIndex}" title="Anular este producto y devolver stock">
                             <i class="fas fa-undo-alt"></i>
                         </button>
                     </td>
@@ -335,145 +602,181 @@
     }
 
     $(document).ready(function() {
-        // Inicializar Select2 para info básica (Solo estos dos en ready)
-        $('#modal-vendedor').select2({ dropdownParent: $('#detalleModal') });
-        $('#modal-cliente').select2({ dropdownParent: $('#detalleModal') });
+        // Inicialización de Select2 para modales
+        $('#modal-vendedor').select2({ theme: 'bootstrap-5', dropdownParent: $('#detalleModal') });
+        $('#modal-cliente').select2({ theme: 'bootstrap-5', dropdownParent: $('#detalleModal') });
     });
     
-    // Función de Inicialización del Modal Principal
     $('#detalleModal').on('show.bs.modal', function (event) {
         const button = $(event.relatedTarget);
         const ventaId = button.data('venta-id');
+        const ventaFecha = button.data('venta-fecha'); 
         const modal = $(this);
 
         modal.find('.modal-title #modal-venta-id').text(ventaId);
         modal.find('#input-venta-id').val(ventaId);
-        $('#modal-agregar-venta-id').text(ventaId);
-        
-        // Asignar action dinámico para la información básica
+        $('#modal-agregar-venta-id-title').text(ventaId); 
+        modal.find('#modal-fecha').val(ventaFecha); 
         modal.find('#form-editar-info-basica').attr('action', `/ventas/editar_info/${ventaId}`);
-        
-        // CORRECCIÓN: Destruir el Select2 de productos antes de inicializarlo con nuevos datos
-        if ($('#select-producto-agregar').data('select2')) {
-            $('#select-producto-agregar').select2('destroy');
-        }
+        $('#info-producto-seleccionado').hide(); 
 
+        // Cargar datos de la venta y del inventario en paralelo
         $.when(
             $.getJSON(`/api/ventas/detalle/${ventaId}`),
             $.getJSON(`{{ url_for('api_todos_los_productos') }}`)
         ).done(function(ventaResponse, productosResponse) {
+
             const data = ventaResponse[0];
-            productosInventario = productosResponse[0].productos;
+            // Aseguramos que la respuesta de productos sea el array dentro de la propiedad 'productos'
+            productosInventario = productosResponse[0].productos || [];
+            
+            if (!data || !data.productos) {
+                flashMessage('Error interno al cargar datos.', 'danger'); 
+                modal.modal('hide');
+                return; 
+            }
+            
+            productosEnVenta = data.productos.map(p => {
+                const inv = productosInventario.find(inv => inv.id === p.id);
+                p.nombre = p.nombre || (inv ? inv.nombre : 'Producto Desconocido');
+                p.descripcion = p.descripcion || (inv ? inv.descripcion : 'Sin descripción'); 
+                p.marca = p.marca || (inv ? inv.marca : 'Sin marca');
+                p.subtotal = p.cantidad * p.precio_unitario;
+                return p;
+            });
 
-            // Cargar datos de la venta y renderizar tabla
-            productosEnVenta = data.productos;
-            renderProductos();
-
-            $('#modal-fecha').val(data.fecha);
-            $('#modal-cliente').val(data.cliente_id).trigger('change');
+            renderProductos(); 
+            
+            // Cargar datos de info básica y pagos
+            $('#modal-cliente').val(data.cliente_id || '').trigger('change'); 
             $('#modal-vendedor').val(data.vendedor_id).trigger('change');
 
-            // Cargar detalle de pagos
             const pagos = data.pagos || {};
-            let pagosHtml = '';
-            const metodosPago = ['Efectivo', 'Nequi', 'Daviplata', 'Transferencia', 'Tarjeta/Bold'];
-
-            metodosPago.forEach(metodo => {
-                const monto = pagos[metodo] || 0;
-                if (monto > 0) {
-                    pagosHtml += `<div class="mb-2 p-2 border rounded" style="background-color: #f7f7f7;"><strong>${metodo}:</strong> $${formatCurrency(monto)}</div>`;
-                }
-            });
-            $('#modal-detalle-pagos').html(pagosHtml || '<p class="text-muted">No se registraron detalles de pago.</p>');
+            $('#input-pago-efectivo').val(pagos['Efectivo'] || 0);
+            $('#input-pago-nequi').val(pagos['Nequi'] || 0);
+            $('#input-pago-daviplata').val(pagos['Daviplata'] || 0);
+            $('#input-pago-transferencia').val(pagos['Transferencia'] || 0);
+            $('#input-pago-tarjeta').val(pagos['Tarjeta/Bold'] || 0);
+            $('#input-codigo-transaccion').val(pagos['Ref_Codigo'] || '');
+            $('#input-fecha-transaccion').val(pagos['Ref_Fecha'] || '');
             
-            // Re-inicializar Select2 del buscador (CORRECCIÓN)
-            const select2Data = productosInventario.map(p => ({
-                id: p.id,
-                text: `${p.nombre} (${p.descripcion.substring(0, 30)}...) [Stock: ${p.cantidad_stock}]`,
-                data: p
-            }));
-            $('#select-producto-agregar').empty().select2({
-                dropdownParent: $('#agregarProductoModal'),
-                data: select2Data,
-                placeholder: "Buscar o seleccionar producto",
-                allowClear: true,
-                width: '100%',
-                templateResult: function(data) {
-                    if (!data.id) { return data.text; }
-                    return $('<span>' + data.text + '</span>');
-                }
-            });
-            $('#select-producto-agregar').val(null).trigger('change');
-            $('#info-producto-seleccionado').hide();
-
-        }).fail(function(jqXHR, textStatus, errorThrown) {
-            console.error('Error cargando datos:', errorThrown);
-            flashMessage('Error al cargar los detalles de la venta.', 'danger');
+        }).fail(function() {
+            flashMessage('Error al cargar los detalles de la venta.', 'danger'); 
+            modal.modal('hide'); 
         });
     });
 
-    // GESTIÓN DE EVENTOS DE EDICIÓN DE DETALLE
+    $('#agregarProductoModal').on('show.bs.modal', function() {
+        const select2Data = productosInventario
+            .filter(p => p.cantidad_stock > 0) 
+            .map(p => ({
+                id: p.id,
+                text: `${p.nombre} ${p.marca ? '- ' + p.marca : ''} (${p.descripcion ? p.descripcion.substring(0, 30) + (p.descripcion.length > 30 ? '...' : '') : 'Sin descripción'}) [Stock: ${p.cantidad_stock}]`,
+                data: p
+            }));
+        
+        if ($('#select-producto-agregar').data('select2')) {
+            $('#select-producto-agregar').select2('destroy');
+        }
+
+        $('#select-producto-agregar').empty().select2({
+            theme: 'bootstrap-5',
+            dropdownParent: $('#agregarProductoModal'),
+            data: select2Data,
+            placeholder: "Buscar o seleccionar artículo",
+            allowClear: true,
+            width: '100%'
+        });
+        
+        $('#select-producto-agregar').val(null).trigger('change');
+        $('#input-cantidad-agregar').val(1);
+        $('#info-producto-seleccionado').hide();
+    }).on('hidden.bs.modal', function() {
+        $('#detalleModal').modal('show');
+    });
+
+    $('#select-producto-agregar').on('change', function() {
+        const selectedOption = $(this).select2('data')[0];
+        if (!selectedOption || !selectedOption.data) {
+            $('#info-producto-seleccionado').hide();
+            return;
+        }
+        const producto = selectedOption.data;
+        $('#info-marca').text(producto.marca || 'Sin marca');
+        $('#info-precio-venta').text(formatCurrency(producto.valor_venta));
+        $('#info-stock').text(producto.cantidad_stock);
+        $('#info-producto-seleccionado').data('producto', producto).show();
+    });
+
     $('#productos-vendidos-body')
         .on('change', '.input-cantidad-producto', function() {
             const index = $(this).data('index');
             let nuevaCantidad = parseInt($(this).val()) || 0;
+            
+            const productoId = productosEnVenta[index].id;
+            const itemInSale = productosEnVenta[index];
+
+            const productoInventario = productosInventario.find(inv => inv.id === productoId);
+            // Stock disponible real (inventario + cantidad que ya estaba en esta venta)
+            const stockDisponible = productoInventario ? productoInventario.cantidad_stock + itemInSale.cantidad : Infinity; 
+            
             if (nuevaCantidad < 1) {
+                // Usamos la función flashMessage para notificaciones
+                flashMessage(`La cantidad mínima es 1.`, 'warning');
                 nuevaCantidad = 1; 
                 $(this).val(1);
             }
+            if (nuevaCantidad > stockDisponible) {
+                flashMessage(`La cantidad máxima disponible (incluyendo la cantidad original) es ${stockDisponible}.`, 'warning');
+                nuevaCantidad = stockDisponible;
+                $(this).val(stockDisponible);
+            }
+
             productosEnVenta[index].cantidad = nuevaCantidad;
             renderProductos();
         })
         .on('click', '.btn-anular-producto', function() {
-            if (!confirm('¿Estás segura de que quieres ANULAR este producto?')) return;
             const index = $(this).data('index');
-            productosEnVenta[index].cantidad = 0; 
+            // Reemplazamos confirm() con flashMessage + un modal custom si fuera necesario. Por simplicidad, mantenemos confirm() por ahora.
+            if (!confirm('¿Anular este artículo? Se devolverá el stock al guardar. Continuar?')) return;
+            productosEnVenta[index].cantidad = 0;
             renderProductos();
-            flashMessage('Producto marcado para anulación.', 'warning');
+            flashMessage('Artículo marcado para anulación. ¡Guarda los cambios al detalle!', 'warning');
         });
 
-    // Evento para abrir el modal de agregar producto
     $('#btn-agregar-producto-modal').on('click', function() {
+        $('#modal-agregar-venta-id-title').text($('#modal-venta-id').text());
         $('#agregarProductoModal').modal('show');
         $('#detalleModal').modal('hide');
     });
     
-    // Evento para seleccionar un producto en el modal de adición
-    $('#select-producto-agregar').on('select2:select', function(e) {
-        const producto = e.params.data.data;
-        if (producto) {
-            $('#info-precio-venta').text(formatCurrency(producto.valor_venta));
-            $('#info-stock').text(producto.cantidad_stock);
-            $('#input-cantidad-agregar').val(1).attr('max', producto.cantidad_stock);
-            $('#info-producto-seleccionado').data('producto', producto).show();
-        } else {
-            $('#info-producto-seleccionado').hide();
-        }
-    });
-
-    // Evento para confirmar la adición del producto
     $('#btn-confirmar-agregar').on('click', function() {
         const productoData = $('#info-producto-seleccionado').data('producto');
         let cantidad = parseInt($('#input-cantidad-agregar').val());
-        const stock = productoData.cantidad_stock;
         
         if (!productoData || cantidad <= 0 || isNaN(cantidad)) {
-            alert('Selecciona un producto y cantidad válida.');
+            flashMessage('Selecciona un artículo y cantidad válida.', 'danger');
             return;
         }
+        
+        const existingItemIndex = productosEnVenta.findIndex(p => p.id === productoData.id);
+        const currentInSale = existingItemIndex !== -1 ? productosEnVenta[existingItemIndex].cantidad : 0;
+        // Stock real + cantidad actual en la venta (para no exceder el total disponible)
+        const stock = productoData.cantidad_stock + currentInSale; 
+        
         if (cantidad > stock) {
-            alert(`Error: La cantidad disponible es ${stock}.`);
+            flashMessage(`Error: Solo hay ${stock} en stock.`, 'danger');
             return;
         }
 
-        const existingIndex = productosEnVenta.findIndex(p => p.id === productoData.id);
-        if (existingIndex !== -1) {
-            productosEnVenta[existingIndex].cantidad += cantidad;
+        if (existingItemIndex !== -1) {
+            productosEnVenta[existingItemIndex].cantidad += cantidad;
         } else {
             productosEnVenta.push({
                 id: productoData.id,
                 nombre: productoData.nombre,
                 descripcion: productoData.descripcion,
+                marca: productoData.marca,
                 cantidad: cantidad,
                 precio_unitario: productoData.valor_venta,
                 subtotal: 0
@@ -482,12 +785,10 @@
         
         renderProductos();
         $('#agregarProductoModal').modal('hide');
-        $('#detalleModal').modal('show');
-        flashMessage(`Producto añadido. ¡Guarda los cambios al detalle!`, 'info');
+        flashMessage(`Artículo añadido. ¡Guarda los cambios al detalle!`, 'info');
     });
 
-    // LÓGICA DE GUARDAR EL DETALLE DE LA VENTA (AJAX)
-    $('#btn-guardar-detalle-venta').on('click', function() {
+    $('#btn-guardar-detalle-venta').on('click', async function() {
         const ventaId = $('#input-venta-id').val();
         const url = `/api/ventas/detalle/editar/${ventaId}`;
 
@@ -498,11 +799,11 @@
         }));
         
         if (productosAEnviar.length === 0) {
-                if (!confirm('Advertencia: La venta quedará sin productos. ¿Continuar?')) return;
+            if (!confirm('La venta quedará sin artículos (Total $0). ¿Continuar?')) return;
         }
 
         const $btn = $(this);
-        $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-2"></i> Guardando Detalle...');
+        $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-2"></i> Guardando...');
 
         $.ajax({
             url: url,
@@ -510,23 +811,60 @@
             contentType: 'application/json',
             data: JSON.stringify({ productos: productosAEnviar }),
             success: function(response) {
-                $btn.prop('disabled', false).html('<i class="fas fa-magic me-2"></i> Guardar Cambios al Detalle');
+                $btn.prop('disabled', false).html('<i class="fas fa-save me-2"></i> Guardar Cambios al Detalle');
                 if (response.success) {
-                    flashMessage(`✅ Detalle de venta N° ${ventaId} actualizado. Nuevo Total: $${formatCurrency(response.nuevo_total)}.`, 'success');
+                    flashMessage(`✅ Detalle actualizado. Nuevo Total: $${formatCurrency(response.nuevo_total)}. Recargando...`, 'success');
+                    
+                    // CLAVE: Sincronizar el total global para la validación de pagos en el frontend
+                    nuevoTotalDetalle = response.nuevo_total; 
                     $('#modal-total-venta').text(formatCurrency(response.nuevo_total));
-                    $('#input-total-venta-editado').val(response.nuevo_total);
+
+                    // Forzar recarga para actualizar la tabla principal y el stock visible
                     setTimeout(() => location.reload(), 1500); 
                 } else {
-                    flashMessage(`❌ Error al guardar detalle: ${response.message}`, 'danger');
+                    flashMessage(`❌ Error: ${response.message}`, 'danger');
                     renderProductos(); 
                 }
             },
             error: function(jqXHR) {
-                $btn.prop('disabled', false).html('<i class="fas fa-magic me-2"></i> Guardar Cambios al Detalle');
-                const errorMsg = jqXHR.responseJSON && jqXHR.responseJSON.message ? jqXHR.responseJSON.message : 'Error de comunicación con el servidor.';
+                $btn.prop('disabled', false).html('<i class="fas fa-save me-2"></i> Guardar Cambios al Detalle');
+                const errorMsg = jqXHR.responseJSON && jqXHR.responseJSON.message ? jqXHR.responseJSON.message : 'Error de comunicación o stock insuficiente.';
                 flashMessage(`❌ Error: ${errorMsg}`, 'danger');
             }
         });
+    });
+
+    // CLAVE: Lógica de validación del formulario de pagos
+    $('#form-editar-info-basica').on('submit', function(e) {
+        // Usamos el total guardado del último detalle editado o el total inicial de la venta
+        const totalVentaBackend = nuevoTotalDetalle; 
+        
+        let totalPagos = 0;
+        totalPagos += parseFloat($('#input-pago-efectivo').val() || 0);
+        totalPagos += parseFloat($('#input-pago-nequi').val() || 0);
+        totalPagos += parseFloat($('#input-pago-daviplata').val() || 0);
+        totalPagos += parseFloat($('#input-pago-transferencia').val() || 0);
+        totalPagos += parseFloat($('#input-pago-tarjeta').val() || 0);
+        
+        // Usamos una pequeña tolerancia para errores de punto flotante
+        if (Math.abs(totalVentaBackend - totalPagos) > 0.01) {
+            e.preventDefault(); // Detener el envío
+            const diff = totalVentaBackend - totalPagos;
+            flashMessage(`❌ Error de Descuadre: La suma de pagos ($${formatCurrency(totalPagos)}) no coincide con el Total de Venta ($${formatCurrency(totalVentaBackend)}). Faltan/Sobran: $${formatCurrency(diff)}.`, 'danger');
+            return;
+        }
+
+        // Si la validación es exitosa, el formulario se envía (this.submit() implícito)
+    });
+
+    // Lógica para el botón de anular en la tabla principal (con confirmación)
+    $('.btn-bonita-anular').on('click', function(e) {
+        e.preventDefault();
+        const confirmMsg = $(this).data('confirm');
+        // Reemplazamos confirm() con un modal custom si fuera necesario, pero mantenemos la lógica de la URL.
+        if (confirm(confirmMsg)) {
+            window.location.href = $(this).attr('href');
+        }
     });
 </script>
 {% endblock %}

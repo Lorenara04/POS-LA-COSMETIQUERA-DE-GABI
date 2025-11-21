@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}Cierre de Caja{% endblock %}
+
+{% block content %}
+
+<div class="container mt-4">
+    <h2 class="mb-4 text-center">💰 Cierre de Caja Diario</h2>
+
+    {# Verificación de seguridad: Aseguramos que rol exista antes de usar lower() #}
+    {% if current_user.is_authenticated and current_user.rol and current_user.rol.lower() in ["administrador", "vendedora"] %}
+
+    <div class="card shadow p-4 mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                {# Formato de fecha día/mes/año #}
+                <h4>📅 Fecha: {{ caja.fecha.strftime('%d/%m/%Y') if caja.fecha else 'Hoy' }}</h4>
+                <p class="mb-1">
+                    <strong>Estado:</strong>
+                    {% if caja.estado == "abierta" %}
+                        <span class="badge bg-success">Abierta</span>
+                    {% else %}
+                        <span class="badge bg-danger">Cerrada</span>
+                    {% endif %}
+                </p>
+            </div>
+            <div class="text-end">
+                <h3 class="text-success">Total: ${{ "{:,.0f}".format(total_ventas) }}</h3>
+            </div>
+        </div>
+
+        {% if caja.estado == "abierta" %}
+        <hr>
+        <form action="{{ url_for('ejecutar_cierre_caja') }}" method="POST" data-confirm="¿Estás segura de que deseas cerrar la caja? No podrás registrar más ventas hoy.">
+            <button type="submit" class="btn btn-danger w-100 fw-bold">
+                🔒 Cerrar Caja Ahora
+            </button>
+        </form>
+        {% endif %}
+    </div>
+
+    <h4 class="mt-4">📄 Detalle de Ventas</h4>
+
+    <div class="table-responsive shadow-sm rounded">
+        <table class="table table-striped table-hover align-middle mb-0">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Producto</th>
+                    <th class="text-center">Cant.</th>
+                    <th>Total</th>
+                    <th>Hora</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for v in ventas %}
+                <tr>
+                    <td>#{{ v.id }}</td>
+                    <td>
+                        {# Si 'producto' es un objeto en tu BD, usa v.producto.nombre. Si es texto, déjalo así #}
+                        {{ v.producto }}
+                    </td>
+                    <td class="text-center">{{ v.cantidad }}</td>
+                    <td class="fw-bold text-success">${{ "{:,.0f}".format(v.total) }}</td>
+                    {# Formato de hora: 12 horas con AM/PM #}
+                    <td>{{ v.hora.strftime('%I:%M %p') if v.hora else '--' }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" class="text-center text-muted py-3">
+                        No hay ventas registradas en este turno.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% else %}
+    <div class="alert alert-danger text-center mt-5 shadow" role="alert">
+        <h4>⛔ Acceso Denegado</h4>
+        <p>No tienes permisos para ver el cierre de caja.</p>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}

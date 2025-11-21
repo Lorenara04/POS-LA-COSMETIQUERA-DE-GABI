@@ -13,18 +13,28 @@
 
     <div class="dashboard-buttons">
         
+        {# ---------- BOTONES PARA ADMIN ----------- #}
         {% if current_user.rol.lower() in ['administradora', 'administrador'] %}
         <a href="{{ url_for('reportes') }}" class="btn-dashboard reports">
-            <i class="bi bi-bar-chart-fill"></i> **Ver Informes**
+            <i class="bi bi-bar-chart-fill"></i> Ver Informes
         </a>
         <a href="{{ url_for('gestion_ventas') }}" class="btn-dashboard manage-sales">
-            <i class="bi bi-collection-fill"></i> **Gestión Ventas**
+            <i class="bi bi-collection-fill"></i> Gestión Ventas
         </a>
         {% endif %}
 
+        {# ---------- BOTÓN SIEMPRE VISIBLE ----------- #}
         <a href="{{ url_for('nueva_venta') }}" class="btn-dashboard new-sale">
             <i class="bi bi-cart-check-fill"></i> Nueva Venta
         </a>
+
+        {# ---------- BOTÓN DE CIERRE DE CAJA SOLO VENDEDORA ----------- #}
+        {% if current_user.rol.lower() == 'vendedora' %}
+        <a href="{{ url_for('reportes') }}" class="btn-dashboard" 
+           style="background: linear-gradient(135deg, #E040FB, #ff43d0);">
+            <i class="bi bi-cash-stack"></i> Cierre de Caja
+        </a>
+        {% endif %}
     </div>
 
     <div class="stats-section">
@@ -87,7 +97,7 @@
     background-color: #fff0f5;
 }
 
-/* ---------------- WELCOME CARD (Altura ajustada) ---------------- */
+/* ---------------- WELCOME CARD ---------------- */
 .welcome-card {
     background: linear-gradient(135deg, #ffb6e1, #ff69b4, #ff1493);
     color: #fff;
@@ -119,7 +129,7 @@
     100%{background-position:0% 50%;}
 }
 
-/* ---------------- BOTONES KIUT ---------------- */
+/* ---------------- BOTONES ---------------- */
 .dashboard-buttons {
     display: flex;
     flex-wrap: wrap;
@@ -166,7 +176,6 @@
     transform: rotate(-15deg) scale(1.1);
 }
 
-/* Colores de botones principales */
 .btn-dashboard.reports { 
     background: linear-gradient(135deg, #FF4081, #FF8A80);
 }
@@ -177,7 +186,7 @@
     background: linear-gradient(135deg, #4CAF50, #8BC34A); 
 }
 
-/* ---------------- ESTADÍSTICAS RÁPIDAS ---------------- */
+/* ---------------- STATS ---------------- */
 .stats-section {
     display: flex;
     flex-wrap: wrap;
@@ -217,18 +226,15 @@
     font-weight: 900;
 }
 
-/* Colores para diferenciar las tarjetas */
 .stat-card.sales-today {
     border-bottom: 5px solid #ff1493;
 }
 .stat-card.new-clients {
     border-bottom: 5px solid #00BCD4; 
 }
-/* Estilo para el nuevo Total Inventario */
 .stat-card.total-inventory {
     border-bottom: 5px solid #9C27B0;
 }
-
 
 /* ---------------- RESPONSIVE ---------------- */
 @media (max-width: 768px) {
@@ -253,10 +259,10 @@
 </style>
 
 <script>
-/* ---------------- GENERAR PARTICULAS FLOTANTES ---------------- */
+/* ---------------- GENERAR PARTICULAS ---------------- */
 const fondo = document.querySelector('.fondo-particulas');
-const emojis = ['💄','💅','✨','💖','👁️','🪞'];
-const cantidad = 30; // número de iconos
+const emojis = ['💄','💅','✨','💖','🎀','🪞','🍄'];
+const cantidad = 30;
 
 for (let i = 0; i < cantidad; i++) {
     const span = document.createElement('span');

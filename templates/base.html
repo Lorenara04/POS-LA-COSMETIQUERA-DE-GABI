@@ -34,6 +34,7 @@
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
       padding: 0.6rem 1.5rem;
     }
+
     /* Logo y título */
     .logo-barra {
       height: 65px;
@@ -56,11 +57,11 @@
       letter-spacing: 0.5px;
     }
 
-    /* Estilo para los emojis en el menú */
+    /* Estilo emojis */
     .nav-emoji {
-      font-size: 1.1em; /* Asegura un buen tamaño para el emoji */
+      font-size: 1.1em;
       margin-right: 5px;
-      vertical-align: middle; 
+      vertical-align: middle;
     }
 
     .navbar-nav .nav-link {
@@ -100,7 +101,7 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
-    /* Footer negro elegante */
+    /* Footer */
     footer {
       background-color: #000;
       color: #fff;
@@ -133,10 +134,12 @@
   {% if current_user.is_authenticated %}
   <nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
     <div class="container-fluid">
+
       <a class="navbar-brand d-flex align-items-center" href="{{ url_for('dashboard') }}">
         <img src="{{ url_for('static', filename='img/LOGO.png') }}" alt="Logo" class="logo-barra">
         <span class="titulo-logo ms-2">LA COSMETIQUERA DE GABI</span>
       </a>
+
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
         aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
@@ -144,52 +147,58 @@
 
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
-          
-          {# EMOJIS IMPLEMENTADOS PARA CADA SECCIÓN #}
-          
+
+          <!-- Inventario -->
           <li class="nav-item">
             <a class="nav-link" href="{{ url_for('inventario') }}">
-              <span class="nav-emoji">📦</span> 
-              Inventario
+              <span class="nav-emoji">📦</span>Inventario
             </a>
           </li>
-          
+
+          <!-- Clientes -->
           <li class="nav-item">
             <a class="nav-link" href="{{ url_for('clientes') }}">
-              <span class="nav-emoji">👥</span> 
-              Clientes
+              <span class="nav-emoji">👥</span>Clientes
             </a>
           </li>
-          
+
+          <!-- Ventas -->
           <li class="nav-item">
             <a class="nav-link" href="{{ url_for('nueva_venta') }}">
-              <span class="nav-emoji">💸</span> 
-              Ventas Diarias
-            </a>
-          </li> 
-          
-          {% if current_user.rol.lower() == 'administrador' %}
-          
-          <li class="nav-item">
-            <a class="nav-link" href="{{ url_for('gestion_ventas') }}">
-              <span class="nav-emoji">📈</span> 
-              Gestión de Ventas
-            </a>
-          </li> 
-          
-          <li class="nav-item">
-            <a class="nav-link" href="{{ url_for('reportes') }}">
-              <span class="nav-emoji">📑</span> 
-              Cierre / Informes
-            </a>
-          </li> 
-          
-          <li class="nav-item">
-            <a class="nav-link" href="{{ url_for('usuarios') }}">
-              <span class="nav-emoji">🔑</span> 
-              Gestión de Usuarios
+              <span class="nav-emoji">💸</span>Ventas Diarias
             </a>
           </li>
+
+          <!-- Cierre de Caja (ADMIN y VENDEDORA) -->
+          {% if current_user.rol.lower() in ['administrador', 'vendedora'] %}
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('ejecutar_cierre_caja') }}">
+              <span class="nav-emoji">🧾</span>Cierre de Caja
+            </a>
+          </li>
+          {% endif %}
+
+          <!-- Opciones solo ADMIN -->
+          {% if current_user.rol.lower() == 'administrador' %}
+
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('gestion_ventas') }}">
+              <span class="nav-emoji">📈</span>Gestión de Ventas
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('reportes') }}">
+              <span class="nav-emoji">📑</span>Cierre / Informes
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('usuarios') }}">
+              <span class="nav-emoji">🔑</span>Gestión de Usuarios
+            </a>
+          </li>
+
           {% endif %}
         </ul>
 
@@ -217,6 +226,7 @@
 
   <div class="content-wrapper container mt-3 fade-in">
     <div class="main-card">
+
       {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
           {% for category, message in messages %}
@@ -240,5 +250,74 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   {% block scripts %}{% endblock %}
+  <!-- Confirm modal (global) -->
+  <div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header bg-dark text-white">
+          <h5 class="modal-title">Confirmar acción</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p id="confirmModalMessage">¿Confirmar?</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="confirmCancelBtn">Cancelar</button>
+          <button type="button" class="btn btn-primary" id="confirmOkBtn">Confirmar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // confirmAction: muestra un modal global con mensaje y devuelve una Promise<boolean>
+    (function(){
+      const confirmModalEl = document.getElementById('confirmModal');
+      if (!confirmModalEl) return;
+      const bsModal = new bootstrap.Modal(confirmModalEl);
+      const msgEl = document.getElementById('confirmModalMessage');
+      const okBtn = document.getElementById('confirmOkBtn');
+      const cancelBtn = document.getElementById('confirmCancelBtn');
+
+      window.confirmAction = function(message){
+        return new Promise(resolve => {
+          msgEl.textContent = message || '¿Confirmar?';
+          const handleOk = () => { cleanup(); resolve(true); };
+          const handleCancel = () => { cleanup(); resolve(false); };
+          function cleanup(){
+            okBtn.removeEventListener('click', handleOk);
+            cancelBtn.removeEventListener('click', handleCancel);
+            confirmModalEl.removeEventListener('hidden.bs.modal', handleCancel);
+            try{ bsModal.hide(); }catch(e){}
+          }
+          okBtn.addEventListener('click', handleOk);
+          cancelBtn.addEventListener('click', handleCancel);
+          confirmModalEl.addEventListener('hidden.bs.modal', handleCancel);
+          bsModal.show();
+        });
+      };
+
+      // Intercept elements with data-confirm for links and forms
+      document.addEventListener('click', function(e){
+        const el = e.target.closest && e.target.closest('[data-confirm]');
+        if (!el) return;
+        // Links
+        if (el.tagName === 'A' && el.href){
+          e.preventDefault();
+          const msg = el.getAttribute('data-confirm');
+          confirmAction(msg).then(ok => { if (ok) window.location = el.href; });
+        }
+      });
+      document.addEventListener('submit', function(e){
+        const form = e.target;
+        if (form && form.getAttribute('data-confirm')){
+          e.preventDefault();
+          const msg = form.getAttribute('data-confirm');
+          confirmAction(msg).then(ok => { if (ok) form.submit(); });
+        }
+      });
+
+    })();
+  </script>
 </body>
 </html>
