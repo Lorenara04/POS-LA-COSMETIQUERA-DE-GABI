@@ -16,6 +16,7 @@ import base64
 import locale
 import pytz
 import traceback # Importamos traceback para capturar errores detallados
+from app import db, app
 
 # =================================================================
 # CONFIGURACIÓN Y BASE DE DATOS
@@ -1296,5 +1297,9 @@ if __name__ == '__main__':
             print(f"✅ Venta de prueba N° {venta_prueba.id} creada para depuración.")
 
         # ----------------------------------------------------
-            
+if __name__ == "__main__":           
     app.run(debug=True, port=5000)
+
+with app.app_context():
+    db.create_all()
+    print("✅ Tablas creadas correctamente en Render")
