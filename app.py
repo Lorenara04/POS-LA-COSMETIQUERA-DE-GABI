@@ -23,7 +23,13 @@ import traceback # Importamos traceback para capturar errores detallados
 app = Flask(__name__)
 
 # Configuración de Base de Datos
-DATABASE_URL = os.environ.get('DATABASE_URL', 'sqlite:///pos_cosmetiqueria.db')
+# -----------------------------------------------------------------
+# Toma la URL de la base de datos de Render desde las variables de entorno
+DATABASE_URL = os.environ.get('DATABASE_URL')
+if not DATABASE_URL:
+    raise RuntimeError("Debes definir DATABASE_URL en las variables de entorno de Render.")
+
+# Ajuste para compatibilidad con SQLAlchemy
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
