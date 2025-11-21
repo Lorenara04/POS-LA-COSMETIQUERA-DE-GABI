@@ -16,10 +16,7 @@ import base64
 import locale
 import pytz
 import traceback 
-
-# Importamos para uso interno y evitar errores de 'app' y 'db' si se corre localmente
-# Si ya están definidos al inicio, elimine la línea de abajo o comente:
-# from app import db, app # <--- COMENTAR O ELIMINAR ESTA LÍNEA SI LE DA ERROR 'ImportError'
+import pandas as pd # Importado para manejo de Excel
 
 # =================================================================
 # CONFIGURACIÓN Y BASE DE DATOS
@@ -261,7 +258,7 @@ def login():
             flash('Usuario o contraseña incorrectos.', 'danger')
         
         except OperationalError as e:
-            flash(f'Error de conexión a la base de datos o tabla faltante. Ejecute `db.create_all()`. Detalle: {e}', 'danger')
+            flash(f'Error de conexión a la base de datos o tabla faltante. Detalle: {e}', 'danger')
         except Exception as e:
             flash(f'Error inesperado al intentar iniciar sesión: {e}', 'danger')
     
@@ -1199,6 +1196,89 @@ def api_editar_detalle_venta(venta_id):
         return jsonify({'success': False, 'message': str(e)}), 500
 
 # =================================================================
+# LÓGICA DE IMPORTACIÓN DESDE EXCEL (NUEVA RUTA ADMINISTRATIVA)
+# =================================================================
+
+@app.route('/importar')
+@login_required
+def vista_importar():
+    """Ruta para mostrar la interfaz de subida de Excel."""
+    if current_user.rol.lower() != 'administrador':
+        flash('Acceso denegado.', 'danger')
+        return redirect(url_for('dashboard'))
+    return render_template('importar_datos.html')
+
+
+@app.route('/admin/importar_productos', methods=['POST'])
+@login_required
+def importar_productos_excel():
+    """
+    Ruta que permite a los administradores subir un archivo Excel (.xlsx) 
+    y volcar los datos de la hoja 'Producto' a la base de datos, 
+    sobrescribiendo los datos existentes para una limpieza masiva.
+    """
+    if current_user.rol.lower() != 'administrador':
+        flash('Permiso denegado. Solo administradores pueden importar datos.', 'danger')
+        return redirect(url_for('inventario'))
+
+    if 'excel_file' not in request.files:
+        flash('Error: No se encontró el archivo en la solicitud.', 'danger')
+        return redirect(url_for('vista_importar'))
+
+    file = request.files['excel_file']
+    if file.filename == '':
+        flash('Error: Archivo no seleccionado.', 'danger')
+        return redirect(url_for('vista_importar'))
+
+    if file and file.filename.endswith('.xlsx'):
+        try:
+            # Leer el archivo Excel directamente desde la memoria (BytesIO)
+            excel_data = BytesIO(file.read())
+            
+            # Usar pandas para leer la hoja 'Producto'
+            df_productos = pd.read_excel(excel_data, sheet_name='Producto')
+            
+            # Comienza la transacción de base de datos
+            db.session.begin_nested() 
+            
+            # OPCIONAL: Eliminar productos existentes para evitar IDs duplicados
+            db.session.query(Producto).delete() 
+            db.session.commit() # Commit para el DELETE
+
+            filas_importadas = 0
+            for index, row in df_productos.iterrows():
+                # Validación básica de campos obligatorios
+                if pd.isna(row['nombre']) or pd.isna(row['valor_venta']):
+                    continue
+                
+                nuevo_producto = Producto(
+                    codigo=str(row['codigo']) if pd.notna(row['codigo']) else None,
+                    nombre=str(row['nombre']),
+                    descripcion=str(row['descripcion']) if pd.notna(row['descripcion']) else None,
+                    marca=str(row['marca']) if pd.notna(row['marca']) else None,
+                    cantidad=int(row['cantidad'] if pd.notna(row['cantidad']) else 0),
+                    valor_venta=float(row['valor_venta']),
+                    valor_interno=float(row['valor_interno'] if pd.notna(row['valor_interno']) else 0),
+                    stock_minimo=int(row['stock_minimo'] if pd.notna(row['stock_minimo']) else 5)
+                )
+                db.session.add(nuevo_producto)
+                filas_importadas += 1
+            
+            db.session.commit()
+            flash(f'✅ ¡Éxito! {filas_importadas} productos importados desde Excel (Hoja Producto).', 'success')
+            
+        except KeyError:
+            db.session.rollback()
+            flash('Error: El Excel debe contener una hoja llamada "Producto" con las columnas correctas.', 'danger')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error grave al procesar el Excel: {e}', 'danger')
+    else:
+        flash('Error: El archivo debe ser un Excel (.xlsx).', 'danger')
+
+    return redirect(url_for('inventario'))
+
+# =================================================================
 # EJECUCIÓN E INICIALIZACIÓN PARA PRODUCCIÓN (RENDER)
 # =================================================================
 
@@ -1239,6 +1319,7 @@ with app.app_context():
 
         # 4. Inicialización de Datos de Prueba (Opcional)
         if Producto.query.count() == 0:
+            # Para evitar errores si el usuario va a importar datos desde Excel.
             prod_labial = Producto(
                 codigo='LBL001', 
                 nombre='Labial Rojo Mate', 
@@ -1294,6 +1375,7 @@ with app.app_context():
         db.session.commit()
         
     except Exception as e:
+        # Este bloque te ayudará a diagnosticar si Render no puede conectar con la DB
         print(f"❌ ¡ERROR CRÍTICO DURANTE LA INICIALIZACIÓN DE DB!: {e}")
         print("Asegúrese de que la URL de la base de datos sea accesible.")
         db.session.rollback()
@@ -1301,4 +1383,5 @@ with app.app_context():
 
 # Bloque para ejecución local de desarrollo (opcional, puede quedar vacío)
 if __name__ == "__main__":
-    app.run(debug=True, port=5000) 
+    # La indentación AQUÍ ha sido corregida.
+    app.run(debug=True, port=5000)
