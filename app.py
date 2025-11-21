@@ -1241,25 +1241,55 @@ def importar_productos_excel():
             # Comienza la transacción de base de datos
             db.session.begin_nested() 
             
-            # OPCIONAL: Eliminar productos existentes para evitar IDs duplicados
+            # --- BORRADO EN CASCADA PARA EVITAR FOREIGN KEY VIOLATION (CORRECCIÓN) ---
+            # 1. Borrar todos los detalles de venta (para liberar los productos)
+            db.session.query(VentaDetalle).delete()
+            # 2. Borrar todas las ventas (para liberar a los clientes/vendedores de esas ventas)
+            db.session.query(Venta).delete()
+            # 3. Borrar todos los cierres de caja (son registros de ventas ya borradas)
+            db.session.query(CierreCaja).delete()
+            
+            # 4. Eliminar productos existentes (esto ahora funciona porque ya no hay referencias)
             db.session.query(Producto).delete() 
-            db.session.commit() # Commit para el DELETE
+            db.session.commit() # Commit para los DELETEs
 
             filas_importadas = 0
             for index, row in df_productos.iterrows():
-                # Validación básica de campos obligatorios
-                if pd.isna(row['nombre']) or pd.isna(row['valor_venta']):
+                
+                # Convertir todas las claves de la fila a minúsculas
+                row_lower = {str(k).lower(): v for k, v in row.items()}
+                
+                # Validación básica de campos obligatorios, usando claves en minúsculas
+                if pd.isna(row_lower.get('nombre')) or pd.isna(row_lower.get('valor_venta')):
                     continue
                 
+                # Asegura que las columnas opcionales que faltan usen None/0
+                
+                # Valor de venta y costo interno deben ser números. Usar .get() con valores por defecto.
+                valor_venta_limpio = row_lower.get('valor_venta')
+                valor_interno_limpio = row_lower.get('valor_interno')
+
+                # Si el valor de venta es una cadena o NaN, intenta convertirlo a float.
+                try:
+                    valor_venta_final = float(valor_venta_limpio)
+                except (ValueError, TypeError):
+                    valor_venta_final = 0.0
+                
+                try:
+                    valor_interno_final = float(valor_interno_limpio)
+                except (ValueError, TypeError):
+                    valor_interno_final = 0.0
+
+                
                 nuevo_producto = Producto(
-                    codigo=str(row['codigo']) if pd.notna(row['codigo']) else None,
-                    nombre=str(row['nombre']),
-                    descripcion=str(row['descripcion']) if pd.notna(row['descripcion']) else None,
-                    marca=str(row['marca']) if pd.notna(row['marca']) else None,
-                    cantidad=int(row['cantidad'] if pd.notna(row['cantidad']) else 0),
-                    valor_venta=float(row['valor_venta']),
-                    valor_interno=float(row['valor_interno'] if pd.notna(row['valor_interno']) else 0),
-                    stock_minimo=int(row['stock_minimo'] if pd.notna(row['stock_minimo']) else 5)
+                    codigo=str(row_lower.get('codigo')) if pd.notna(row_lower.get('codigo')) else None,
+                    nombre=str(row_lower.get('nombre')),
+                    descripcion=str(row_lower.get('descripcion')) if pd.notna(row_lower.get('descripcion')) else None,
+                    marca=str(row_lower.get('marca')) if pd.notna(row_lower.get('marca')) else None,
+                    cantidad=int(row_lower.get('cantidad') if pd.notna(row_lower.get('cantidad')) else 0),
+                    valor_venta=valor_venta_final,
+                    valor_interno=valor_interno_final,
+                    stock_minimo=int(row_lower.get('stock_minimo') if pd.notna(row_lower.get('stock_minimo')) else 5)
                 )
                 db.session.add(nuevo_producto)
                 filas_importadas += 1
@@ -1267,9 +1297,10 @@ def importar_productos_excel():
             db.session.commit()
             flash(f'✅ ¡Éxito! {filas_importadas} productos importados desde Excel (Hoja Producto).', 'success')
             
-        except KeyError:
+        except KeyError as e:
             db.session.rollback()
-            flash('Error: El Excel debe contener una hoja llamada "Producto" con las columnas correctas.', 'danger')
+            # Este error indica que faltó alguna columna en minúsculas (ej: 'codigo' en lugar de 'Codigo')
+            flash(f'Error en el Excel: Columna "{e.args[0]}" no encontrada. Asegúrese de que el nombre de la hoja sea "Producto" y las columnas estén en minúsculas (ej: codigo, nombre, valor_venta).', 'danger')
         except Exception as e:
             db.session.rollback()
             flash(f'Error grave al procesar el Excel: {e}', 'danger')
