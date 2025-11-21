@@ -15,8 +15,11 @@ from collections import defaultdict
 import base64
 import locale
 import pytz
-import traceback # Importamos traceback para capturar errores detallados
-from app import db, app
+import traceback 
+
+# Importamos para uso interno y evitar errores de 'app' y 'db' si se corre localmente
+# Si ya están definidos al inicio, elimine la línea de abajo o comente:
+# from app import db, app # <--- COMENTAR O ELIMINAR ESTA LÍNEA SI LE DA ERROR 'ImportError'
 
 # =================================================================
 # CONFIGURACIÓN Y BASE DE DATOS
@@ -26,14 +29,13 @@ app = Flask(__name__)
 # Configuración de Base de Datos
 # -----------------------------------------------------------------
 # Toma la URL de la base de datos de Render desde las variables de entorno
-app = Flask(__name__)
-
-# Configuración de la base de datos en Render
+# IMPORTANTE: Asegúrese de que esta URL sea correcta en Render
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
     'DATABASE_URL',
     'postgresql://la_cosmetiquera_de_gabi_user:z8vuwVK8rfm5S8CpZHZ3RITphvEolaqK@dpg-d48vb0i4d50c7391iap0-a.oregon-postgres.render.com/la_cosmetiquera_de_gabi'
 )
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.secret_key = os.environ.get('SECRET_KEY', 'una_clave_secreta_por_defecto') # Añadir clave secreta
 
 db = SQLAlchemy(app)
 
@@ -248,13 +250,20 @@ def login():
         username = request.form.get('username')
         password = request.form.get('password')
         
-        user = Usuario.query.filter_by(username=username).first()
-        
-        if user and user.check_password(password): 
-            login_user(user)
-            return redirect(url_for('dashboard'))
+        try:
+            # Esta línea fue la que causó el error UndefinedTable
+            user = Usuario.query.filter_by(username=username).first()
             
-        flash('Usuario o contraseña incorrectos.', 'danger')
+            if user and user.check_password(password): 
+                login_user(user)
+                return redirect(url_for('dashboard'))
+                
+            flash('Usuario o contraseña incorrectos.', 'danger')
+        
+        except OperationalError as e:
+            flash(f'Error de conexión a la base de datos o tabla faltante. Ejecute `db.create_all()`. Detalle: {e}', 'danger')
+        except Exception as e:
+            flash(f'Error inesperado al intentar iniciar sesión: {e}', 'danger')
     
     return render_template('login.html')
 
@@ -408,7 +417,7 @@ def inventario():
         productos_paginados = query.paginate(page=page, per_page=per_page, error_out=False)
     except OperationalError as e:
         # Mensaje de error si la tabla no existe o es inaccesible
-        flash(f'❌ Error de Base de Datos: La tabla de productos es inaccesible. Por favor, borra el archivo pos_cosmetiqueria.db y reinicia el servidor. Detalle: {e}', 'danger')
+        flash(f'❌ Error de Base de Datos: La tabla de productos es inaccesible. Detalle: {e}', 'danger')
         productos_paginados = EmptyPagination()
     except Exception as e:
         flash(f'❌ Error de paginación o consulta de inventario: {e}', 'danger')
@@ -1027,7 +1036,7 @@ def editar_informacion_venta(venta_id):
         }
         
         tipos_pagos = [k for k, v in detalle_pago_dict.items() 
-                      if k not in ['Ref_Codigo', 'Ref_Fecha'] and float(v or 0) > 0]
+                        if k not in ['Ref_Codigo', 'Ref_Fecha'] and float(v or 0) > 0]
         tipo_pago_general = "Mixto" if len(tipos_pagos) > 1 else (tipos_pagos[0] if tipos_pagos else "Sin Pago")
         
         v.tipo_pago = tipo_pago_general
@@ -1190,14 +1199,17 @@ def api_editar_detalle_venta(venta_id):
         return jsonify({'success': False, 'message': str(e)}), 500
 
 # =================================================================
-# INICIALIZACIÓN
+# EJECUCIÓN E INICIALIZACIÓN PARA PRODUCCIÓN (RENDER)
 # =================================================================
-if __name__ == '__main__':
-    with app.app_context():
-        # Ejecutar db.create_all() crea las tablas si no existen.
+
+# Este bloque es CRUCIAL para que Render cree las tablas usando la URL de PostgreSQL.
+with app.app_context():
+    try:
+        # 1. Crear todas las tablas: SOLUCIÓN AL ERROR UndefinedTable
         db.create_all() 
+        print("✅ Tablas creadas (o verificadas) correctamente en PostgreSQL de Render.")
         
-        # Inicialización de Usuario y Cliente Genérico
+        # 2. Inicialización de Usuario Admin
         admin = Usuario.query.filter_by(username='admin').first()
         if not admin:
             admin = Usuario(
@@ -1209,12 +1221,12 @@ if __name__ == '__main__':
             )
             admin.set_password('admin123')
             db.session.add(admin)
-            db.session.commit()
             print("✅ Usuario admin creado: admin / admin123")
         
+        # 3. Inicialización de Cliente Genérico
         generico = Cliente.query.get(1)
         if not generico:
-            # Creamos el cliente genérico de forma explícita
+            # Creamos el cliente genérico con ID=1
             generico = Cliente(
                 id=1, 
                 nombre='Contado / Genérico', 
@@ -1223,23 +1235,9 @@ if __name__ == '__main__':
                 email='N/A'
             )
             db.session.add(generico)
-            db.session.commit() # Commitamos la creación para asegurar el ID=1
-            print("✅ Cliente genérico creado")
+            print("✅ Cliente genérico creado.")
 
-            # Ahora, actualizamos la secuencia de forma segura para evitar el error de 'Engine'
-            if db.engine.dialect.name == 'sqlite':
-                from sqlalchemy import text
-                try:
-                    with db.engine.begin() as connection:
-                        # Usa text() para una instrucción SQL cruda, compatible con SQLAlchemy 2.0+
-                        connection.execute(text("UPDATE sqlite_sequence SET seq = 1 WHERE name = 'cliente'"))
-                    print("Advertencia anterior de secuencia corregida (si aplica).")
-                except Exception as e:
-                    print(f"Advertencia: No se pudo actualizar la secuencia SQLite (Ignorable si usa una versión moderna de Flask-SQLAlchemy). Detalle: {e}")
-            
-        # ----------------------------------------------------
-        # INICIALIZACIÓN DE DATOS DE PRUEBA (Para depuración)
-        # ----------------------------------------------------
+        # 4. Inicialización de Datos de Prueba (Opcional)
         if Producto.query.count() == 0:
             prod_labial = Producto(
                 codigo='LBL001', 
@@ -1260,13 +1258,12 @@ if __name__ == '__main__':
                 valor_interno=25000.00
             )
             db.session.add_all([prod_labial, prod_polvo])
-            db.session.flush()
             print("✅ Productos de prueba creados.")
 
-            # Crear una venta de prueba para que la tabla no esté vacía
+            # Crear una venta de prueba
             venta_prueba = Venta(
                 fecha=datetime.utcnow(),
-                total=85000.00, # 35000 + 50000
+                total=85000.00, 
                 usuario_id=admin.id,
                 cliente_id=generico.id,
                 detalle_pago=json.dumps({'Efectivo': 85000.00, 'Nequi': 0, 'Transferencia': 0, 'Daviplata': 0, 'Tarjeta/Bold': 0, 'Ref_Codigo': '', 'Ref_Fecha': ''})
@@ -1289,17 +1286,19 @@ if __name__ == '__main__':
                 subtotal=50000.00
             ))
             
-            # Restar stock
             prod_labial.cantidad -= 1
             prod_polvo.cantidad -= 1
-            
-            db.session.commit()
             print(f"✅ Venta de prueba N° {venta_prueba.id} creada para depuración.")
 
-        # ----------------------------------------------------
-if __name__ == "__main__":           
-    app.run(debug=True, port=5000)
+        # Commit final para guardar todas las inicializaciones
+        db.session.commit()
+        
+    except Exception as e:
+        print(f"❌ ¡ERROR CRÍTICO DURANTE LA INICIALIZACIÓN DE DB!: {e}")
+        print("Asegúrese de que la URL de la base de datos sea accesible.")
+        db.session.rollback()
 
-with app.app_context():
-    db.create_all()
-    print("✅ Tablas creadas correctamente en Render")
+
+if __name__ == "__main__":
+    # Solo ejecutar si se lanza con 'python app.py' para desarrollo local
+app.run(debug=True, port=5000)
