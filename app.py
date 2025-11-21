@@ -1284,6 +1284,17 @@ def importar_productos_excel():
 
 # Este bloque es CRUCIAL para que Render cree las tablas usando la URL de PostgreSQL.
 with app.app_context():
+    # Parche de estabilidad para el locale, crucial en algunos servidores Linux como Render
+    try:
+        # Intenta establecer el locale de Colombia
+        locale.setlocale(locale.LC_ALL, 'es_CO.UTF-8')
+    except locale.Error as le:
+        # Si falla, intenta con un locale más genérico que soporte UTF-8
+        try:
+            locale.setlocale(locale.LC_ALL, 'C.UTF-8')
+        except locale.Error:
+            print(f"❌ Advertencia: Fallo al establecer el locale, usando el predeterminado. Error: {le}")
+    
     try:
         # 1. Crear todas las tablas: SOLUCIÓN AL ERROR UndefinedTable
         db.create_all() 
