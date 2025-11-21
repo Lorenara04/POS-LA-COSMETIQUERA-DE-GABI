@@ -848,7 +848,7 @@ def historial_cierres():
 @app.route('/reportes')
 @login_required
 def reportes():
-    if current_user.rol.lower() != ['administrador', 'vendedora']:
+    if current_user.rol.lower() != 'administrador':
         flash('Permiso denegado.', 'danger')
         return redirect(url_for('dashboard'))
 
