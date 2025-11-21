@@ -19,23 +19,22 @@
     <style>
         /* ------------------ PALETA COQUETTE MAGENTA Y NEÓN ------------------ */
         :root {
-            --color-magenta-oscuro-degrade: #880E4F; /* Magenta muy oscuro para inicio de degrade */
-            --color-magenta-principal: #E91E63; /* Magenta profundo para acentos y fin de degrade */
-            --color-magenta-degrade: #FF4081; /* Rosa vibrante (no se usa en degrade de header, pero sí en total) */
-            --color-magenta-suave: #FCE4EC; /* Rosa muy claro para fondos */
-            --color-magenta-texto: #AD1457; /* Magenta para texto de etiquetas */
-            --color-neon-line: #FF80AB; /* Rosa brillante para líneas de neón/foco */
-            --color-navbar: #000000; /* Fondo de barra negro */
+            --color-magenta-oscuro-degrade: #880E4F;
+            --color-magenta-principal: #E91E63;
+            --color-magenta-degrade: #FF4081;
+            --color-magenta-suave: #FCE4EC;
+            --color-magenta-texto: #AD1457;
+            --color-neon-line: #FF80AB;
+            --color-navbar: #000000;
             --color-fondo-pagina: #f9fbfd;
             --color-card-fondo: #FFFFFF;
             --color-texto-oscuro: #333333;
             --color-borde-suave: #e0e0e0;
             --color-sombra: rgba(0, 0, 0, 0.1);
             --color-rojo: #dc3545;
-            --color-vuelto-positivo: #FFD1DC; /* Rosa Pastel Brillante */
+            --color-vuelto-positivo: #FFD1DC;
         }
 
-        /* Reset y tipografía */
         html { height: 100%; }
         body {
             font-family: 'Poppins', sans-serif;
@@ -46,7 +45,6 @@
             min-height: 100%; 
         }
 
-        /* Layout */
         .container-venta {
             display: flex;
             flex-wrap: wrap;
@@ -59,8 +57,6 @@
         .columna-izquierda {
             flex: 1.5; min-width: 300px; display: flex; flex-direction: column; gap: 20px;
         }
-        
-        /* Ajuste clave para el Carrito como Rectángulo */
         .columna-derecha {
             flex: 1; 
             min-width: 300px; 
@@ -69,12 +65,10 @@
             gap: 20px;
         }
 
-        /* Navbar BLACK */
         .navbar-custom {
             background-color: var(--color-navbar); 
         }
         
-        /* Tarjetas (Cards) */
         .card {
             background-color: var(--color-card-fondo);
             border-radius: 15px; 
@@ -83,9 +77,7 @@
             border: 1px solid var(--color-borde-suave);
         }
         
-        /* Degradado Magenta en Encabezados */
         .card-header {
-            /* Degradado de Magenta Oscuro a Principal */
             background: linear-gradient(90deg, var(--color-magenta-oscuro-degrade) 0%, var(--color-magenta-principal) 100%);
             color: white;
             padding: 15px 20px;
@@ -96,7 +88,6 @@
             align-items: center;
         }
 
-        /* Inputs y Selects con efecto NEÓN en foco */
         .form-control, .form-select, .select2-container--bootstrap-5 .select2-selection {
             padding: 12px;
             border: 1px solid var(--color-borde-suave);
@@ -107,18 +98,15 @@
         .form-control:focus, .form-select:focus, .select2-container--bootstrap-5.select2-container--focus .select2-selection {
             outline: none;
             border-color: var(--color-neon-line) !important;
-            /* Sombra neón suave */
             box-shadow: 0 0 8px 1px rgba(255, 128, 171, 0.7) !important; 
         }
         
-        /* Etiquetas y elementos del formulario */
         .form-grupo label {
             color: var(--color-magenta-texto); 
-            font-weight: 600; /* Hacemos las etiquetas más fuertes */
+            font-weight: 600;
             margin-bottom: 5px;
         }
 
-        /* Botones Principales (Magenta) */
         .btn-primario {
             background-color: var(--color-magenta-principal);
             color: white;
@@ -134,12 +122,11 @@
         }
 
         .btn-primario:hover {
-            background-color: var(--color-magenta-oscuro);
+            background-color: var(--color-magenta-oscuro-degrade);
             box-shadow: 0 6px 20px rgba(233, 30, 99, 0.8);
             transform: translateY(-1px);
         }
         
-        /* Resumen Total (Magenta) */
         .resumen-total {
             text-align: right;
             font-size: 2rem;
@@ -154,11 +141,10 @@
             padding: 15px;
         }
         
-        /* Elemento de Vuelto (Fondo Gris Oscuro) */
         #contenedor-vuelto {
             margin-top: 25px;
             padding: 15px;
-            background-color: #37474F; /* Gris oscuro para contraste */
+            background-color: #37474F;
             color: white;
             border-radius: 10px;
             text-align: center;
@@ -172,11 +158,9 @@
             margin-top: 5px;
         }
         
-        /* Estilo del cuerpo del carrito (Ajustado para rectángulo) */
         #carrito-card-body {
-            /* Min-height asegura que el rectángulo sea alto incluso con pocos ítems */
             min-height: 250px; 
-            max-height: 40vh; /* Máximo 40% del viewport */
+            max-height: 40vh;
             overflow-y: auto; 
             padding-bottom: 0;
             padding-top: 0;
@@ -184,9 +168,7 @@
             padding-right: 20px;
         }
         
-        /* Ajuste para que la barra de total y el botón de finalizar no se desplacen */
         #form_venta > .card:first-child {
-            /* Permitir que la tarjeta de carrito crezca */
             flex-grow: 1; 
         }
 
@@ -205,7 +187,22 @@
             width: 55%; 
         }
 
-        /* Footer */
+        /* 🔥 NUEVO: bloque de códigos electrónicos */
+        #detalles_pago_electronico {
+            margin-top: 18px;
+            padding: 14px;
+            border-radius: 10px;
+            background: #fff7fb;
+            border: 1px dashed var(--color-neon-line);
+        }
+        #detalles_pago_electronico strong {
+            color: var(--color-magenta-oscuro-degrade);
+        }
+        .codigo-metodo {
+            display: none;
+            margin-top: 10px;
+        }
+
         footer {
             background-color: var(--color-navbar); 
             color: white; 
@@ -223,7 +220,6 @@
 <nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
     <div class="container-fluid">
         <a class="navbar-brand d-flex align-items-center" href="{{ url_for('dashboard') or url_for('clientes') }}">
-            <!-- Placeholder para Logo -->
             <i class="fas fa-gem me-2"></i> 
             LA COSMETIQUERA DE GABI
         </a>
@@ -287,8 +283,8 @@
                     <select name="producto" id="manual_producto" class="form-select" data-bs-theme="bootstrap-5">
                         <option value="">-- Seleccionar Producto --</option>
                         {% for p in productos %}
-                        <option value="{{ p.id }}">
-                            {{ p.nombre }} - {{ p.descripcion }} | (${{ "%.0f"|format(p.valor_venta) }}) - Stock: {{ p.cantidad }}
+                        <option value="{{ p.id }}" data-precio-venta="{{ p.valor_venta }}">
+                            {{ p.nombre }} - {{ p.descripcion }} | (${{ p.valor_venta|format_number }}) - Stock: {{ p.cantidad }}
                         </option>
                         {% endfor %}
                     </select>
@@ -307,7 +303,6 @@
             <div class="card-header"><i class="fas fa-user-tag me-2"></i> Selección de Cliente</div>
             <div class="card-body">
                 <div class="form-grupo">
-                    <!-- Mejora en la etiqueta del Select2 -->
                     <label for="cliente_id">Cliente para la Venta</label>
                     <select name="cliente_id" id="cliente_id" class="form-select" form="form_venta" data-bs-theme="bootstrap-5"> 
                         {% for cliente in clientes %}
@@ -327,7 +322,6 @@
             <div class="card" style="flex-grow: 1;">
                 <div class="card-header"><i class="fas fa-shopping-cart me-2"></i> Resumen de Carrito</div>
                 
-                <!-- Cuerpo con scroll y min-height para el efecto rectangular -->
                 <div class="card-body" id="carrito-card-body">
                     <div class="table-responsive">
                         <table class="table table-hover tabla">
@@ -343,7 +337,6 @@
                         </table>
                     </div>
                 </div>
-                <!-- Total siempre visible al final de la tarjeta de carrito -->
                 <div class="p-3">
                     <div class="resumen-total">
                         TOTAL A PAGAR: $ <span id="total-final" data-raw-total="0">0</span>
@@ -356,7 +349,6 @@
                 <div class="card-header"><i class="fas fa-cash-register me-2"></i> Pagos y Vuelto</div>
                 <div class="card-body">
                     <div class="pagos-grid">
-                        <!-- Pagos -->
                         <div class="form-grupo">
                             <label for="pago_efectivo"><i class="fas fa-money-bill-wave me-1"></i> Efectivo</label>
                             <input type="number" step="100" min="0" value="0" name="pago_efectivo" id="pago_efectivo" class="form-control pago-input">
@@ -385,20 +377,46 @@
                         <span id="vuelto-monto">$ 0</span>
                     </div>
 
-                    <div id="detalles_pago_electronico" class="detalles-pago" style="display:none;">
-                        <strong><i class="fas fa-qrcode me-1"></i> Referencia de Pago (Obligatoria para Electrónicos)</strong>
+                    <!-- 🔥 OPCIÓN C: Códigos por método -->
+                    <div id="detalles_pago_electronico" style="display:none;">
+                        <strong><i class="fas fa-qrcode me-1"></i> Referencias obligatorias por método electrónico</strong>
                         <p class="text-muted small mt-2">
-                            * Si hay pagos electrónicos (Nequi, Davi, Transf/Tarjeta), debe ingresar el código antes de finalizar la venta.
+                            * Si usas Nequi/Davi/Transferencia/Tarjeta, debes ingresar su código correspondiente.
                         </p>
-                        <div class="form-grupo">
-                            <label for="codigo_transaccion">Código de Referencia</label>
-                            <input type="text" name="codigo_transaccion" id="codigo_transaccion" class="form-control" placeholder="Ingresa el código alfanumérico aquí" oninput="this.value = this.value.toUpperCase()">
+
+                        <div class="form-grupo codigo-metodo" id="codigo-nequi-box">
+                            <label for="codigo_nequi">📱 Código Nequi</label>
+                            <input type="text" id="codigo_nequi" class="form-control codigo-input"
+                                   placeholder="Ej: NEQ123ABC" oninput="this.value = this.value.toUpperCase()">
                         </div>
-                        <div class="form-grupo">
-                            <label for="fecha_transaccion">Fecha/Hora de la Transacción (Opcional)</label>
+
+                        <div class="form-grupo codigo-metodo" id="codigo-daviplata-box">
+                            <label for="codigo_daviplata">🟠 Código Daviplata</label>
+                            <input type="text" id="codigo_daviplata" class="form-control codigo-input"
+                                   placeholder="Ej: DAV456XYZ" oninput="this.value = this.value.toUpperCase()">
+                        </div>
+
+                        <div class="form-grupo codigo-metodo" id="codigo-transferencia-box">
+                            <label for="codigo_transferencia">🏦 Código Transferencia</label>
+                            <input type="text" id="codigo_transferencia" class="form-control codigo-input"
+                                   placeholder="Ej: TRF789KLM" oninput="this.value = this.value.toUpperCase()">
+                        </div>
+
+                        <div class="form-grupo codigo-metodo" id="codigo-tarjeta-box">
+                            <label for="codigo_tarjeta">💳 Código Tarjeta/Bold</label>
+                            <input type="text" id="codigo_tarjeta" class="form-control codigo-input"
+                                   placeholder="Ej: BOLD001QWE" oninput="this.value = this.value.toUpperCase()">
+                        </div>
+
+                        <div class="form-grupo mt-2">
+                            <label for="fecha_transaccion">Fecha/Hora Transacción (Opcional)</label>
                             <input type="datetime-local" name="fecha_transaccion" id="fecha_transaccion" class="form-control">
                         </div>
                     </div>
+
+                    <!-- Hidden para backend (compatibilidad + JSON referencias) -->
+                    <input type="hidden" name="codigo_transaccion" id="codigo_transaccion">
+                    <input type="hidden" name="referencias_pago_json" id="referencias_pago_json">
                 </div>
             </div>
 
@@ -414,104 +432,97 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     // ---------------------- FUNCIONES DE UTILIDAD Y CORE ----------------------
-    
-    // 1. Carga de datos de productos y carrito
     const productData = JSON.parse(document.getElementById('product-data').textContent);
     let carrito = {}; 
 
     function formatCurrency(value) {
-        // Redondea a cero decimales ya que los montos en la cosméticera son enteros
         if (typeof value === 'string') value = parseFloat(value);
         return value.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
     }
 
-    // Función para mostrar/ocultar el campo de referencia y calcular el vuelto
+    // ✅ Mostrar/ocultar campos por método + cálculo de vuelto
     function toggleDetallesPago() {
         let mostrarReferencia = false;
         let totalPagado = 0;
-        
-        // Pagos electrónicos para referencia y total
-        const pagosElectronicos = ['pago_nequi', 'pago_daviplata', 'pago_transferencia', 'pago_tarjeta'];
-        
-        pagosElectronicos.forEach(id => {
-            const monto = parseFloat(document.getElementById(id).value) || 0;
+
+        const pagosElectronicos = [
+            { id: 'pago_nequi', box: 'codigo-nequi-box', input: 'codigo_nequi', label: 'Nequi' },
+            { id: 'pago_daviplata', box: 'codigo-daviplata-box', input: 'codigo_daviplata', label: 'Daviplata' },
+            { id: 'pago_transferencia', box: 'codigo-transferencia-box', input: 'codigo_transferencia', label: 'Transferencia' },
+            { id: 'pago_tarjeta', box: 'codigo-tarjeta-box', input: 'codigo_tarjeta', label: 'Tarjeta/Bold' },
+        ];
+
+        pagosElectronicos.forEach(m => {
+            const monto = parseFloat(document.getElementById(m.id).value) || 0;
             totalPagado += monto;
+
+            const box = document.getElementById(m.box);
+            const inp = document.getElementById(m.input);
+
             if (monto > 0) {
                 mostrarReferencia = true;
+                box.style.display = 'block';
+                inp.setAttribute('required', 'required');
+            } else {
+                box.style.display = 'none';
+                inp.removeAttribute('required');
+                inp.value = '';
             }
         });
-        
-        // Pago en efectivo solo para total pagado
+
         const pagoEfectivo = parseFloat(document.getElementById('pago_efectivo').value) || 0;
         totalPagado += pagoEfectivo;
-        
-        // 🚨 CALCULO DE VUELTO (Lee el valor numérico RAW del total del carrito)
+
         const totalCarrito = parseFloat(document.getElementById('total-final').dataset.rawTotal) || 0;
-        const efectivoParaVuelto = (parseFloat(document.getElementById('pago_efectivo').value) || 0);
-        
+        const efectivoParaVuelto = pagoEfectivo;
+
         let vuelto = 0;
-        
-        // 1. Calcular pagos NO en efectivo
         const pagosNoEfectivo = totalPagado - efectivoParaVuelto;
-        
-        // 2. Determinar cuánto del total queda por cubrir con el efectivo
         const restantePorCubrirEnEfectivo = totalCarrito - pagosNoEfectivo;
-        
-        // 3. Solo si hay un restante positivo Y el efectivo cubre ese restante, calcular vuelto
+
         if (restantePorCubrirEnEfectivo > 0 && efectivoParaVuelto >= restantePorCubrirEnEfectivo) {
             vuelto = efectivoParaVuelto - restantePorCubrirEnEfectivo;
         } else if (restantePorCubrirEnEfectivo <= 0 && totalPagado > totalCarrito) {
-            // Caso: Pagos electrónicos ya cubrieron el total o más. Todo el efectivo es "extra"
-            // El vuelto es simplemente lo que se pagó de más en total.
             vuelto = totalPagado - totalCarrito;
         }
 
-        // Si el total pagado es menor al carrito, el vuelto es 0 (y mostramos el faltante)
         if (totalPagado < totalCarrito) {
             vuelto = 0;
         }
 
-        // Actualizar el display de Vuelto
         const $vueltoMonto = $('#vuelto-monto');
         $vueltoMonto.text(`$ ${formatCurrency(vuelto)}`);
-        
-        // LÓGICA COQUETTE DE COLORES
+
         if (vuelto > 0) {
-            // Vuelto positivo (Cambio) -> Rosa Pastel Brillante
-            $vueltoMonto.css('color', 'var(--color-vuelto-positivo)'); 
-            $vueltoMonto.css('text-shadow', '0 0 5px rgba(255, 209, 220, 0.8)'); /* Pequeño efecto neón */
+            $vueltoMonto.css('color', 'var(--color-vuelto-positivo)');
+            $vueltoMonto.css('text-shadow', '0 0 5px rgba(255, 209, 220, 0.8)');
         } else if (totalPagado < totalCarrito) {
-            // Falta dinero (Advertencia) -> Magenta Principal Oscuro (para que resalte como error)
             $vueltoMonto.text(`$ 0 (Faltan $${formatCurrency(totalCarrito - totalPagado)})`);
-            $vueltoMonto.css('color', 'var(--color-magenta-principal)'); 
+            $vueltoMonto.css('color', 'var(--color-magenta-principal)');
             $vueltoMonto.css('text-shadow', 'none');
-        } 
-         else {
-            // Vuelto exacto (Completo) -> Blanco (sobre el fondo gris oscuro)
-            $vueltoMonto.css('color', 'white'); 
-            $vueltoMonto.css('text-shadow', '0 0 3px rgba(255, 255, 255, 0.4)');
+        } else {
+            $vueltoMonto.css('color', 'white');
+            $vueltoMonto.css('text-shadow', '0 0 3px rgba(255,255,255,0.4)');
         }
 
-        // Mostrar u ocultar referencia electrónica
-        const detallesDiv = document.getElementById('detalles_pago_electronico');
-        detallesDiv.style.display = mostrarReferencia ? 'block' : 'none';
-        
+        document.getElementById('detalles_pago_electronico').style.display = mostrarReferencia ? 'block' : 'none';
         return { totalPagado, totalCarrito, vuelto };
     }
 
-    // Función para agregar un producto del menú desplegable
     function agregarManual() {
         const select = document.getElementById('manual_producto');
         const cantidad = parseInt(document.getElementById('manual_cantidad').value) || 1;
         const productoId = parseInt(select.value);
-        
+
         if (!productoId) return alert('Seleccione un producto.');
         if (cantidad <= 0) return alert('La cantidad debe ser mayor a cero.');
+
+        const selectedOption = select.options[select.selectedIndex];
+        const precioPuro = parseFloat(selectedOption.dataset.precioVenta) || 0;
 
         const producto = productData.find(p => p.id === productoId);
         if (!producto) return;
 
-        // Validar Stock
         const stockActual = producto.stock;
         const cantidadActualEnCarrito = carrito[productoId] ? carrito[productoId].cantidad : 0;
         const cantidadTotalSolicitada = cantidadActualEnCarrito + cantidad;
@@ -519,27 +530,26 @@
         if (cantidadTotalSolicitada > stockActual) {
             return alert(`Stock insuficiente. Disponible: ${stockActual}, Solicitado: ${cantidadTotalSolicitada}.`);
         }
-        
+
         if (carrito[productoId]) {
             const nuevaCantidad = carrito[productoId].cantidad + cantidad;
             carrito[productoId].cantidad = nuevaCantidad;
-            carrito[productoId].subtotal = producto.precio * nuevaCantidad;
+            carrito[productoId].subtotal = precioPuro * nuevaCantidad;
         } else {
-            const subtotal = producto.precio * cantidad;
+            const subtotal = precioPuro * cantidad;
             carrito[productoId] = {
                 id: producto.id,
                 nombre: producto.nombre,
-                precio: producto.precio,
+                precio: precioPuro,
                 cantidad: cantidad,
                 subtotal: subtotal
             };
         }
 
         document.getElementById('manual_cantidad').value = 1;
-        renderizarCarrito(); // Usar la función de renderizado central
+        renderizarCarrito();
     }
-    
-    // Función para eliminar producto
+
     function eliminarFila(element) {
         const tr = element.closest('tr');
         const productoId = parseInt(tr.dataset.productoId);
@@ -547,7 +557,6 @@
         renderizarCarrito();
     }
 
-    // Función principal para renderizar el carrito y recalcular el total
     function renderizarCarrito() {
         const tbody = document.getElementById('carrito-body');
         tbody.innerHTML = '';
@@ -558,8 +567,7 @@
             const producto = productData.find(p => p.id === item.id);
             if (!producto) continue;
 
-            // Recalcular subtotal
-            item.subtotal = producto.precio * item.cantidad;
+            item.subtotal = item.precio * item.cantidad;
             total += item.subtotal;
 
             const tr = document.createElement('tr');
@@ -567,7 +575,8 @@
             tr.innerHTML = `
                 <td>${item.nombre}</td>
                 <td>
-                    <input type="number" value="${item.cantidad}" min="1" max="${producto.stock}" class="form-control form-control-sm cantidad-input" 
+                    <input type="number" value="${item.cantidad}" min="1" max="${producto.stock}"
+                           class="form-control form-control-sm cantidad-input"
                            style="width: 70px; display: inline-block; text-align: center;">
                 </td>
                 <td style="text-align: right;" class="fw-bold text-success">$${formatCurrency(item.subtotal)}</td>
@@ -580,17 +589,14 @@
             tbody.appendChild(tr);
         }
 
-        // Almacenar el valor raw (sin formato) en un data attribute y mostrar el valor formateado
         document.getElementById('total-final').textContent = formatCurrency(total);
         document.getElementById('total-final').dataset.rawTotal = total;
-        
-        toggleDetallesPago(); // Actualiza el vuelto y la referencia
+
+        toggleDetallesPago();
     }
 
-    // ---------------------- LÓGICA DE EVENTOS ----------------------
-    
+    // ---------------------- EVENTOS ----------------------
     $(document).ready(function() {
-        // Inicialización de Select2 con tema Bootstrap 5
         $('#manual_producto').select2({ theme: 'bootstrap-5' });
         $('#cliente_id').select2({
             theme: 'bootstrap-5',
@@ -598,18 +604,16 @@
             allowClear: true
         });
 
-        // Eventos para inputs de pago y vuelto
         document.querySelectorAll('.pago-input').forEach(input => {
             input.addEventListener('input', toggleDetallesPago);
         });
-        
-        // Evento principal para actualizar cantidad en el carrito
+
         document.getElementById('carrito-body').addEventListener('input', function(event) {
             if (event.target.classList.contains('cantidad-input')) {
                 const tr = event.target.closest('tr');
                 const productoId = parseInt(tr.dataset.productoId);
                 let newQuantity = parseInt(event.target.value) || 0;
-                
+
                 const producto = productData.find(p => p.id === productoId);
                 const maxStock = producto ? producto.stock : 0;
 
@@ -618,37 +622,37 @@
                     newQuantity = maxStock;
                     event.target.value = maxStock;
                 }
-                
+
                 if (newQuantity <= 0) {
                     eliminarFila(event.target);
                     return;
                 }
-                
+
                 if (producto) {
                     carrito[productoId].cantidad = newQuantity;
                 }
                 renderizarCarrito();
             }
         });
-        
-        // Al cargar, asegurarse de que los campos de pago estén a 0 si están vacíos
+
         document.querySelectorAll('.pago-input').forEach(input => {
             if (!input.value) input.value = 0;
         });
-        renderizarCarrito(); 
+
+        renderizarCarrito();
     });
-    
-    // Lógica de Escáner
+
+    // Escáner
     document.getElementById('escaner_codigo').addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
             e.preventDefault();
             const codigo = this.value.trim();
-            this.value = ''; // Limpiar el campo del escáner
+            this.value = '';
             if (!codigo) return;
-            
+
             const producto = productData.find(p => p.codigo === codigo);
             if (!producto) return alert(`Producto con código ${codigo} no encontrado.`);
-            
+
             const productoId = producto.id;
             const cantidad = 1;
 
@@ -668,55 +672,59 @@
                     nombre: producto.nombre,
                     precio: producto.precio,
                     cantidad: cantidad,
-                    subtotal: 0 // Se recalcula en renderizarCarrito
+                    subtotal: 0
                 };
             }
-            
+
             renderizarCarrito();
         }
     });
 
-    // Función Final de Validación y Envío
+    // ✅ Validación final
     function validarYEnviar(e) {
         e.preventDefault();
-        
+
         const { totalPagado, totalCarrito, vuelto } = toggleDetallesPago();
-        
+
         if (totalCarrito <= 0 || Object.keys(carrito).length === 0) {
             return alert('Error: El carrito está vacío o el total es cero.');
         }
 
-        // Validación de pago cubierto
-        // Usamos Math.round * 100 para evitar problemas de punto flotante en la comparación
         if (Math.round(totalPagado * 100) < Math.round(totalCarrito * 100)) {
             return alert(`Error: El total pagado ($${formatCurrency(totalPagado)}) es menor al total de la venta ($${formatCurrency(totalCarrito)}).`);
         }
-        
-        // 🚨 Validación de Referencia Electrónica
-        const tienePagoElectronico = (parseFloat(document.getElementById('pago_nequi').value) || 0) > 0 || 
-                                     (parseFloat(document.getElementById('pago_daviplata').value) || 0) > 0 || 
-                                     (parseFloat(document.getElementById('pago_transferencia').value) || 0) > 0 || 
-                                     (parseFloat(document.getElementById('pago_tarjeta').value) || 0) > 0;
-        
-        const codTransaccionInput = document.getElementById('codigo_transaccion');
-        const codigoManual = codTransaccionInput.value.trim();
-        
-        if (tienePagoElectronico && !codigoManual) {
-            codTransaccionInput.focus();
-            return alert('⚠️ ERROR: Los pagos electrónicos requieren obligatoriamente el Código Alfanumérico o Número de Referencia.');
-        }
 
-        // Si hay vuelto a devolver, se notifica y se pide confirmación.
-        if (vuelto > 0) {
-            if (!confirm(`Confirmar: La venta es de $${formatCurrency(totalCarrito)} y el vuelto a devolver es de $${formatCurrency(vuelto)}. ¿Finalizar Venta?`)) {
-                return;
+        // ✅ Validar códigos POR MÉTODO ELECTRÓNICO
+        const referencias = {};
+        const metodos = [
+            { pagoId: 'pago_nequi', codeId: 'codigo_nequi', name: 'Nequi' },
+            { pagoId: 'pago_daviplata', codeId: 'codigo_daviplata', name: 'Daviplata' },
+            { pagoId: 'pago_transferencia', codeId: 'codigo_transferencia', name: 'Transferencia' },
+            { pagoId: 'pago_tarjeta', codeId: 'codigo_tarjeta', name: 'Tarjeta/Bold' },
+        ];
+
+        for (const m of metodos) {
+            const monto = parseFloat(document.getElementById(m.pagoId).value) || 0;
+            if (monto > 0) {
+                const codeVal = (document.getElementById(m.codeId).value || '').trim();
+                if (!codeVal) {
+                    document.getElementById(m.codeId).focus();
+                    return alert(`⚠️ ERROR: Debes ingresar el código para ${m.name}.`);
+                }
+                referencias[m.name] = codeVal.toUpperCase();
             }
         }
-        
+
+        // Guardar referencias en hidden JSON para backend
+        document.getElementById('referencias_pago_json').value = JSON.stringify(referencias);
+
+        // Compatibilidad: un solo campo concatenado
+        const concatenado = Object.entries(referencias).map(([k,v]) => `${k}:${v}`).join(" | ");
+        document.getElementById('codigo_transaccion').value = concatenado;
+
         // Adjuntar campos ocultos al formulario
         const form = document.getElementById('form_venta');
-        
-        // 1. JSON de productos vendidos
+
         const carritoJson = JSON.stringify(Object.values(carrito).filter(item => item.cantidad > 0));
         let inputHiddenJson = form.querySelector('input[name="productos_vendidos_json"]');
         if (!inputHiddenJson) {
@@ -726,8 +734,7 @@
              form.appendChild(inputHiddenJson);
         }
         inputHiddenJson.value = carritoJson;
-        
-        // 2. Total de la venta
+
         let totalInput = form.querySelector('input[name="total_venta"]');
         if (!totalInput) {
              totalInput = document.createElement('input');
@@ -736,6 +743,9 @@
              form.appendChild(totalInput);
         }
         totalInput.value = totalCarrito;
+
+        // ✅ Si hay vuelto, se registra igual sin confirmación
+        console.log("Venta con vuelto permitido:", vuelto);
 
         e.target.submit();
     }

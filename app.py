@@ -132,7 +132,6 @@ def fecha_colombia_filter(value):
         value = pytz.utc.localize(value)
         
     return value.astimezone(TIMEZONE_CO).strftime('%d/%m/%Y %I:%M %p')
-
 # =================================================================
 # MODELOS
 # =================================================================
@@ -151,6 +150,7 @@ class Usuario(UserMixin, db.Model):
     def check_password(self, password_texto):
         return check_password_hash(self.password, password_texto)
 
+
 class Cliente(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(100), nullable=False)
@@ -160,8 +160,8 @@ class Cliente(db.Model):
     fecha_registro = db.Column(db.DateTime, default=datetime.utcnow)
     ventas = db.relationship('Venta', backref='comprador', lazy=True)
 
+
 class Producto(db.Model):
-    # La columna 'marca' está correctamente definida aquí.
     id = db.Column(db.Integer, primary_key=True)
     codigo = db.Column(db.String(100), unique=True, nullable=True)
     nombre = db.Column(db.String(100), nullable=False)
@@ -172,6 +172,7 @@ class Producto(db.Model):
     valor_interno = db.Column(db.Float)
     stock_minimo = db.Column(db.Integer, default=5)
 
+
 class Venta(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     fecha = db.Column(db.DateTime, default=datetime.utcnow)
@@ -180,7 +181,9 @@ class Venta(db.Model):
     cliente_id = db.Column(db.Integer, db.ForeignKey('cliente.id'))
     tipo_pago = db.Column(db.String(50))
     detalle_pago = db.Column(db.Text)
+    
     vendedor = db.relationship('Usuario', backref='ventas_realizadas', lazy=True)
+
 
 class VentaDetalle(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -189,8 +192,9 @@ class VentaDetalle(db.Model):
     cantidad = db.Column(db.Integer)
     precio_unitario = db.Column(db.Float)
     subtotal = db.Column(db.Float)
+
     producto = db.relationship('Producto', backref='detalles_venta', lazy=True)
-    venta = db.relationship('Venta', backref='detalle_venta', lazy=True)
+
 
 class CierreCaja(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -201,30 +205,8 @@ class CierreCaja(db.Model):
     total_efectivo = db.Column(db.Float)
     total_electronico = db.Column(db.Float)
     detalles_json = db.Column(db.Text)
-    usuario = db.relationship('Usuario', backref='cierres_caja', lazy=True)
 
-# =================================================================
-# FUNCIONES DE UTILIDAD
-# =================================================================
-def generar_barcode_base64(codigo):
-    try:
-        codigo_str = str(codigo)
-        code128 = barcode.get_barcode_class('code128')
-        instance = code128(codigo_str, writer=ImageWriter())
-        buffer = BytesIO()
-        instance.write(buffer)
-        base64_img = base64.b64encode(buffer.getvalue()).decode('utf-8')
-        return f"data:image/png;base64,{base64_img}"
-    except Exception as e:
-        print(f"Error al generar barcode: {e}")
-        return None
-
-def enviar_informe_ventas(periodo):
-    """Función placeholder para informes por correo"""
-    with app.app_context():
-        hoy = date.today()
-        pass
-
+    usuario = db.relationship('Usuario', backref='cierres_caja', lazy=True) 
 # =================================================================
 # RUTAS Y LÓGICA
 # =================================================================
@@ -256,7 +238,7 @@ def login():
                 return redirect(url_for('dashboard'))
                 
             flash('Usuario o contraseña incorrectos.', 'danger')
-        
+
         except OperationalError as e:
             flash(f'Error de conexión a la base de datos o tabla faltante. Detalle: {e}', 'danger')
         except Exception as e:
@@ -304,15 +286,26 @@ def dashboard():
     except Exception:
         clientes_nuevos_mes = 0
 
-    return render_template(
-        'dashboard.html',
-        current_user=current_user,
-        productos_stock_bajo=productos_bajos,
-        total_inventario=total_inventario,
-        ventas_hoy=ventas_hoy,
-        clientes_nuevos_mes=clientes_nuevos_mes
-    )
+            # ===================== VALOR TOTAL DEL INVENTARIO =====================
+    try:
+        productos_lista = Producto.query.all()
+        valor_interno_total = sum((p.valor_interno or 0) * (p.cantidad or 0) for p in productos_lista)
+        valor_venta_total = sum((p.valor_venta or 0) * (p.cantidad or 0) for p in productos_lista)
+    except Exception:
+        valor_interno_total = 0
+        valor_venta_total = 0
 
+
+    return render_template(
+    'dashboard.html',
+    current_user=current_user,
+    productos_stock_bajo=productos_bajos,
+    total_inventario=total_inventario,
+    ventas_hoy=ventas_hoy,
+    clientes_nuevos_mes=clientes_nuevos_mes,
+    valor_interno_total=valor_interno_total,
+    valor_venta_total=valor_venta_total
+)
 # -------------------- RUTAS CLIENTES --------------------
 @app.route('/clientes')
 @login_required
@@ -439,8 +432,8 @@ def agregar_producto():
 
         # Validación básica de datos
         if not request.form.get('nombre') or float(valor_venta_val) <= 0:
-             flash('Error: El nombre y el valor de venta son obligatorios y deben ser positivos.', 'danger')
-             return redirect(url_for('inventario'))
+              flash('Error: El nombre y el valor de venta son obligatorios y deben ser positivos.', 'danger')
+              return redirect(url_for('inventario'))
 
         # Llama al constructor de Producto(..., marca=...)
         nuevo_producto = Producto(
@@ -507,8 +500,8 @@ def editar_producto(producto_id):
             # Validación de código no vacío si no es None
             codigo_editado = request.form.get('codigo', '').strip() or None 
             if codigo_editado is None and producto.codigo:
-                 flash('Error: No puedes dejar el código de barras en blanco si ya tiene uno.', 'danger')
-                 return redirect(url_for('editar_producto', producto_id=producto_id))
+                  flash('Error: No puedes dejar el código de barras en blanco si ya tiene uno.', 'danger')
+                  return redirect(url_for('editar_producto', producto_id=producto_id))
 
             producto.codigo = codigo_editado
             producto.nombre = request.form.get('nombre')
@@ -566,6 +559,37 @@ def agregar_stock_por_codigo():
         flash(f'Error al agregar stock: {e}', 'danger')
 
     return redirect(url_for('inventario'))
+# -------------------- GENERAR BARRA POR ID --------------------
+@app.route('/barcode/<int:producto_id>')
+@login_required
+def generar_barcode_api(producto_id):
+    try:
+        producto = Producto.query.get(producto_id)
+        if not producto:
+            return jsonify({"error": "Producto no encontrado"}), 404
+
+        codigo = producto.codigo or str(producto.id)
+
+        # Generar código de barras
+        code128 = barcode.get_barcode_class('code128')
+        instance = code128(codigo, writer=ImageWriter())
+
+        buffer = BytesIO()
+        instance.write(buffer)
+        img64 = base64.b64encode(buffer.getvalue()).decode()
+
+        return jsonify({
+            "id": producto.id,
+            "nombre": producto.nombre,
+            "marca": producto.marca or "Sin marca",
+            "codigo": codigo,
+            "precio": producto.valor_venta,
+            "barcode": img64
+        })
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 # -------------------- RUTAS VENTAS --------------------
 @app.route('/ventas/nueva', methods=['GET', 'POST'])
@@ -582,23 +606,49 @@ def nueva_venta():
             total_venta = float(request.form.get('total_venta', 0) or 0)
             
             # --- Proceso de Pago ---
+            pago_efectivo_recibido = float(request.form.get('pago_efectivo', 0) or 0)
+            pago_nequi = float(request.form.get('pago_nequi', 0) or 0)
+            pago_transferencia = float(request.form.get('pago_transferencia', 0) or 0)
+            pago_daviplata = float(request.form.get('pago_daviplata', 0) or 0)
+            pago_tarjeta = float(request.form.get('pago_tarjeta', 0) or 0)
+
+            total_electronico_pagado = pago_nequi + pago_transferencia + pago_daviplata + pago_tarjeta
+            total_pagado = pago_efectivo_recibido + total_electronico_pagado
+
+            # Validación: no permitir venta si no está completa
+            if total_pagado + 0.0001 < total_venta:
+                flash(
+                    f'Error: El total pagado (${total_pagado:,.0f}) es menor al total de la venta (${total_venta:,.0f}).',
+                    'danger'
+                )
+                return redirect(url_for('nueva_venta'))
+
+            # Calcular vuelto SOLO si hay exceso de pago (normalmente por efectivo)
+            vuelto = max(0.0, total_pagado - total_venta)
+            efectivo_neto = max(0.0, pago_efectivo_recibido - vuelto)
+
             detalle_pago_dict = {
-                'Efectivo': float(request.form.get('pago_efectivo', 0) or 0),
-                'Nequi': float(request.form.get('pago_nequi', 0) or 0),
-                'Transferencia': float(request.form.get('pago_transferencia', 0) or 0),
-                'Daviplata': float(request.form.get('pago_daviplata', 0) or 0),
-                'Tarjeta/Bold': float(request.form.get('pago_tarjeta', 0) or 0),
+                # Guardamos efectivo neto para informes/cierres
+                'Efectivo': efectivo_neto,
+                # Guardamos lo recibido y el vuelto por transparencia
+                'Efectivo_Recibido': pago_efectivo_recibido,
+                'Vuelto': vuelto,
+
+                'Nequi': pago_nequi,
+                'Transferencia': pago_transferencia,
+                'Daviplata': pago_daviplata,
+                'Tarjeta/Bold': pago_tarjeta,
+
                 'Ref_Codigo': request.form.get('codigo_transaccion', '').strip(),
                 'Ref_Fecha': request.form.get('fecha_transaccion', '')
             }
 
-            total_pagado = sum([v for k,v in detalle_pago_dict.items() if k not in ['Ref_Codigo', 'Ref_Fecha'] and isinstance(v, (int, float))])
-
-            if abs(total_venta - total_pagado) > 0.01:
-                flash(f'Error: El total de la venta (${total_venta:,.0f}) no coincide con el total pagado (${total_pagado:,.0f}).', 'danger')
-                return redirect(url_for('nueva_venta'))
-                
-            tipos_pagos = [k for k, v in detalle_pago_dict.items() if k not in ['Ref_Codigo', 'Ref_Fecha'] and float(v or 0) > 0]
+            # Tipos de pago según montos que realmente aplican a la venta:
+            tipos_pagos = [
+                k for k, v in detalle_pago_dict.items()
+                if k not in ['Ref_Codigo', 'Ref_Fecha', 'Efectivo_Recibido', 'Vuelto']
+                and float(v or 0) > 0
+            ]
             tipo_pago_general = "Mixto" if len(tipos_pagos) > 1 else (tipos_pagos[0] if tipos_pagos else "Sin Pago")
 
             nueva_venta = Venta(
@@ -682,7 +732,7 @@ def imprimir_comprobante(venta_id):
         ref_fecha = detalle_pago_dict.get('Ref_Fecha', '')
 
         for k, v in detalle_pago_dict.items():
-            if k not in ['Ref_Codigo', 'Ref_Fecha'] and (isinstance(v, (int, float)) and v > 0):
+            if k not in ['Ref_Codigo', 'Ref_Fecha', 'Efectivo_Recibido', 'Vuelto'] and (isinstance(v, (int, float)) and v > 0):
                 if k in ['Nequi', 'Transferencia', 'Daviplata', 'Tarjeta/Bold']:
                     pagos_normalizados[k] = {'monto': v, 'cod': ref_cod, 'fecha': ref_fecha}
                 else:
@@ -735,7 +785,7 @@ def ejecutar_cierre_caja():
                 
                 # Desglose de todos los métodos
                 for metodo, monto in pagos.items():
-                    if metodo not in ['Ref_Codigo', 'Ref_Fecha'] and isinstance(monto, (int, float)):
+                    if metodo not in ['Ref_Codigo', 'Ref_Fecha', 'Efectivo_Recibido', 'Vuelto'] and isinstance(monto, (int, float)):
                         detalle_metodos[metodo] += float(monto or 0)
                 
                 # Desglose por vendedor
@@ -813,7 +863,7 @@ def reportes():
         try:
             pagos = json.loads(v.detalle_pago)
             for metodo, valor in pagos.items():
-                if metodo not in ['Ref_Codigo', 'Ref_Fecha', 'change'] and isinstance(valor, (int, float)):
+                if metodo not in ['Ref_Codigo', 'Ref_Fecha', 'change', 'Efectivo_Recibido', 'Vuelto'] and isinstance(valor, (int, float)):
                     desglose_temp[metodo] += float(valor or 0)
         except:
             pass
@@ -1033,7 +1083,7 @@ def editar_informacion_venta(venta_id):
         }
         
         tipos_pagos = [k for k, v in detalle_pago_dict.items() 
-                        if k not in ['Ref_Codigo', 'Ref_Fecha'] and float(v or 0) > 0]
+                        if k not in ['Ref_Codigo', 'Ref_Fecha', 'Efectivo_Recibido', 'Vuelto'] and float(v or 0) > 0]
         tipo_pago_general = "Mixto" if len(tipos_pagos) > 1 else (tipos_pagos[0] if tipos_pagos else "Sin Pago")
         
         v.tipo_pago = tipo_pago_general

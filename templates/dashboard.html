@@ -2,33 +2,35 @@
 {% block title %}Dashboard - POS Cosmetiquería{% endblock %}
 
 {% block content %}
+
 <div class="dashboard-container">
 
+    <!-- FONDO DE PARTÍCULAS -->
     <div class="fondo-particulas"></div>
 
+    <!-- TARJETA DE BIENVENIDA -->
     <div class="welcome-card">
         <h2>¡Bienvenido/a, {{ current_user.username }}!</h2>
         <p>Rol: <span>{{ current_user.rol | capitalize }}</span></p>
     </div>
 
+    <!-- BOTONES PRINCIPALES -->
     <div class="dashboard-buttons">
         
-        {# ---------- BOTONES PARA ADMIN ----------- #}
         {% if current_user.rol.lower() in ['administradora', 'administrador'] %}
         <a href="{{ url_for('reportes') }}" class="btn-dashboard reports">
             <i class="bi bi-bar-chart-fill"></i> Ver Informes
         </a>
+
         <a href="{{ url_for('gestion_ventas') }}" class="btn-dashboard manage-sales">
             <i class="bi bi-collection-fill"></i> Gestión Ventas
         </a>
         {% endif %}
 
-        {# ---------- BOTÓN SIEMPRE VISIBLE ----------- #}
         <a href="{{ url_for('nueva_venta') }}" class="btn-dashboard new-sale">
             <i class="bi bi-cart-check-fill"></i> Nueva Venta
         </a>
 
-        {# ---------- BOTÓN DE CIERRE DE CAJA SOLO VENDEDORA ----------- #}
         {% if current_user.rol.lower() == 'vendedora' %}
         <a href="{{ url_for('reportes') }}" class="btn-dashboard" 
            style="background: linear-gradient(135deg, #E040FB, #ff43d0);">
@@ -37,8 +39,10 @@
         {% endif %}
     </div>
 
+   
+    <!-- TARJETAS ESTADÍSTICAS -->
     <div class="stats-section">
-        
+
         <div class="stat-card sales-today">
             <h3>Ventas de Hoy</h3>
             <p class="stat-value">${{ ventas_hoy | default(0.00) | format_number }}</p> 
@@ -54,91 +58,90 @@
         
         <div class="stat-card new-clients">
             <h3>Clientes Nuevos</h3>
-            <p class="stat-value">{{ clientes_nuevos_mes | default(0) }} Este Mes</p>
+            <p class="stat-value">{{ clientes_nuevos_mes | default(0) }}</p>
         </div>
-    </div>
-    </div>
 
+        {% if current_user.rol.lower() == 'administrador' %}
+        <div class="stat-card inventory-value">
+            <h3>Valor Interno Total</h3>
+            <p class="stat-value">${{ valor_interno_total | format_number }}</p>
+        </div>
+
+        <div class="stat-card inventory-value2">
+            <h3>Valor Total a la Venta</h3>
+            <p class="stat-value">${{ valor_venta_total | format_number }}</p>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+
+<!-- ===================== ESTILOS ===================== -->
 <style>
-/* ---------------- FONDO DE PARTICULAS ---------------- */
-.fondo-particulas {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100vh;
-    z-index: 0;
-    pointer-events: none;
-    overflow: hidden;
-}
 
-.fondo-particulas span {
-    position: absolute;
-    animation: flotar 20s linear infinite;
-    user-select: none;
-}
-
-@keyframes flotar {
-    0%{ transform: translateY(0) rotate(0deg); }
-    50%{ transform: translateY(-100px) rotate(180deg); }
-    100%{ transform: translateY(0) rotate(360deg); }
-}
-
-/* ---------------- DASHBOARD CONTAINER ---------------- */
+/* Fondo general */
 .dashboard-container {
     position: relative;
     z-index: 1;
     min-height: 100vh;
+    padding: 40px 20px;
+    background: #fff0f7;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 40px;
-    padding: 50px 20px;
-    background-color: #fff0f5;
+    gap: 45px;
 }
 
-/* ---------------- WELCOME CARD ---------------- */
+/* Fondo partículas */
+.fondo-particulas {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.fondo-particulas span {
+    position: absolute;
+    animation: flotar 18s linear infinite;
+    opacity: 0.2;
+    user-select: none;
+}
+
+@keyframes flotar {
+    0% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-120px) rotate(180deg); }
+    100% { transform: translateY(0) rotate(360deg); }
+}
+
+/* Bienvenida */
 .welcome-card {
-    background: linear-gradient(135deg, #ffb6e1, #ff69b4, #ff1493);
+    background: linear-gradient(135deg, #ffb6e1, #ffb6e1, #ff1493);
     color: #fff;
-    border-radius: 25px;
     padding: 25px 35px;
-    box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+    border-radius: 25px;
     text-align: center;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.2);
     max-width: 600px;
     width: 100%;
-    font-family: 'Playfair Display', serif;
-    background-size: 400% 400%;
     animation: gradientMove 10s ease infinite;
-    z-index: 2;
-}
-
-.welcome-card h2 {
-    font-size: 2.2rem;
-    font-weight: 900;
-    margin-bottom: 12px;
-}
-
-.welcome-card p span {
-    font-weight: 700;
 }
 
 @keyframes gradientMove {
-    0%{background-position:0% 50%;}
-    50%{background-position:100% 50%;}
-    100%{background-position:0% 50%;}
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
 }
 
-/* ---------------- BOTONES ---------------- */
+/* Botones */
 .dashboard-buttons {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 25px;
-    max-width: 750px;
+    gap: 22px;
+    max-width: 780px;
     width: 100%;
-    position: relative;
-    z-index: 2;
 }
 
 .btn-dashboard {
@@ -146,132 +149,87 @@
     align-items: center;
     justify-content: center;
     gap: 12px;
-    padding: 20px 35px;
-    font-size: 1.25rem;
-    font-weight: 700;
+    padding: 18px 32px;
     border-radius: 25px;
+    font-weight: 700;
     text-decoration: none;
     color: #fff;
-    transition: all 0.4s ease;
-    background: linear-gradient(135deg, #d63384, #e754a3); 
-    box-shadow: 8px 8px 25px rgba(0,0,0,0.2),
-                -8px -8px 25px rgba(255,255,255,0.6);
-    position: relative;
-    flex-grow: 1;
     min-width: 250px;
-}
-
-.btn-dashboard i {
-    font-size: 1.5rem;
-    transition: transform 0.3s ease;
+    background: linear-gradient(135deg, #d63384, #e754a3);
+    transition: .3s ease;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.2);
 }
 
 .btn-dashboard:hover {
-    transform: translateY(-5px) scale(1.05);
-    box-shadow: 12px 12px 30px rgba(0,0,0,0.3),
-                -12px -12px 30px rgba(255,255,255,0.7);
+    transform: translateY(-6px) scale(1.05);
 }
 
-.btn-dashboard:hover i {
-    transform: rotate(-15deg) scale(1.1);
-}
-
-.btn-dashboard.reports { 
-    background: linear-gradient(135deg, #FF4081, #FF8A80);
-}
-.btn-dashboard.manage-sales { 
-    background: linear-gradient(135deg, #9C27B0, #E040FB);
-}
-.btn-dashboard.new-sale { 
-    background: linear-gradient(135deg, #4CAF50, #8BC34A); 
-}
-
-/* ---------------- STATS ---------------- */
+/* Stats */
 .stats-section {
     display: flex;
     flex-wrap: wrap;
-    justify-content: center;
     gap: 25px;
-    margin-top: 70px; 
-    max-width: 900px;
-    width: 100%;
-    z-index: 2;
+    justify-content: center;
+    max-width: 1000px;
 }
 
 .stat-card {
     background: #fff;
-    border-radius: 20px;
     padding: 20px;
-    text-align: center;
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
-    min-width: 200px;
+    border-radius: 22px;
+    min-width: 210px;
     flex: 1;
-    transition: transform 0.3s ease;
+    text-align: center;
+    box-shadow: 0 5px 18px rgba(0,0,0,0.12);
+    transition: .3s ease;
 }
 
 .stat-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
 }
 
 .stat-card h3 {
-    font-size: 1.1rem;
-    color: #d63384; 
-    margin-bottom: 10px;
-    font-weight: 600;
+    font-size: 1.05rem;
+    color: #d63384;
+    font-weight: 700;
 }
 
 .stat-value {
+    margin-top: 6px;
     font-size: 2rem;
     font-weight: 900;
 }
 
-.stat-card.sales-today {
-    border-bottom: 5px solid #ff1493;
-}
-.stat-card.new-clients {
-    border-bottom: 5px solid #00BCD4; 
-}
-.stat-card.total-inventory {
-    border-bottom: 5px solid #9C27B0;
+.inventory-value {
+    border-bottom: 5px solid #6a1b9a;
 }
 
-/* ---------------- RESPONSIVE ---------------- */
-@media (max-width: 768px) {
-    .stats-section {
-        flex-direction: column;
-    }
-    .stat-card {
-        min-width: unset;
-        width: 100%;
-    }
+.inventory-value2 {
+    border-bottom: 5px solid #c71585;
 }
-@media (max-width: 600px) {
-    .dashboard-buttons {
-        flex-direction: column;
-        gap: 15px;
-    }
-    .btn-dashboard {
-        width: 100%;
-        min-width: unset;
-    }
+
+/* Responsive */
+@media (max-width: 780px) {
+    .dashboard-buttons { flex-direction: column; }
+    .btn-dashboard { width: 100%; }
 }
+
 </style>
 
+
+<!-- ===================== SCRIPT PARTÍCULAS ===================== -->
 <script>
-/* ---------------- GENERAR PARTICULAS ---------------- */
 const fondo = document.querySelector('.fondo-particulas');
-const emojis = ['💄','💅','✨','💖','🎀','🪞','🍄'];
-const cantidad = 30;
+const emojis = ['💄','💅','✨','💖','🎀','🦋','🌸','⭐'];
+const cantidad = 35;
 
 for (let i = 0; i < cantidad; i++) {
     const span = document.createElement('span');
     span.innerText = emojis[Math.floor(Math.random() * emojis.length)];
     span.style.top = Math.random() * 100 + 'vh';
     span.style.left = Math.random() * 100 + 'vw';
-    span.style.animationDuration = 15 + Math.random() * 20 + 's';
-    span.style.fontSize = 30 + Math.random() * 40 + 'px';
-    span.style.opacity = 0.1 + Math.random() * 0.2;
+    span.style.animationDuration = 12 + Math.random() * 15 + 's';
+    span.style.fontSize = 20 + Math.random() * 38 + 'px';
     fondo.appendChild(span);
 }
 </script>

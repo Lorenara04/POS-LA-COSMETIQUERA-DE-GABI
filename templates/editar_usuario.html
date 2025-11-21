@@ -2,33 +2,65 @@
 {% block title %}Editar Usuario{% endblock %}
 
 {% block content %}
-<h2>Editar Usuario</h2>
 
-<form method="POST">
-  <div class="mb-3">
-    <label>Usuario</label>
-    <input type="text" name="username" class="form-control" value="{{ usuario.username }}" required>
-  </div>
-  <div class="mb-3">
-    <label>Nombre</label>
-    <input type="text" name="nombre" class="form-control" value="{{ usuario.nombre }}" required>
-  </div>
-  <div class="mb-3">
-    <label>Apellido</label>
-    <input type="text" name="apellido" class="form-control" value="{{ usuario.apellido }}" required>
-  </div>
-  <div class="mb-3">
-    <label>Rol</label>
-    <select name="rol" class="form-control" required>
-      <option value="Administrador" {% if usuario.rol=='Administrador' %}selected{% endif %}>Administrador</option>
-      <option value="Vendedora" {% if usuario.rol=='Vendedora' %}selected{% endif %}>Vendedora</option>
-    </select>
-  </div>
-  <div class="mb-3">
-    <label>Nueva Contraseña (opcional)</label>
-    <input type="password" name="password" class="form-control" placeholder="Dejar vacío si no cambia">
-  </div>
-  <button type="submit" class="btn btn-primary">Actualizar Usuario</button>
-  <a href="{{ url_for('usuarios') }}" class="btn btn-secondary">Cancelar</a>
-</form>
+<h2 class="text-center fw-bold mb-4" style="color:#c71585;">
+    ✿ Editar Usuario ✿
+</h2>
+
+<div class="card shadow-lg p-4 mx-auto"
+     style="max-width:600px; border-radius:20px; background:#fff7fc; border-left:6px solid #c71585;">
+
+    <form method="POST">
+
+        <div class="mb-3">
+            <label class="form-label fw-bold">Usuario</label>
+            <input type="text" name="username" class="form-control shadow-sm"
+                   value="{{ usuario.username }}" required>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label fw-bold">Nombre</label>
+            <input type="text" name="nombre" class="form-control shadow-sm"
+                   value="{{ usuario.nombre }}" required>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label fw-bold">Apellido</label>
+            <input type="text" name="apellido" class="form-control shadow-sm"
+                   value="{{ usuario.apellido }}" required>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label fw-bold">Rol</label>
+            <select name="rol" class="form-control shadow-sm" required>
+                <option value="Administrador" {% if usuario.rol=='Administrador' %}selected{% endif %}>
+                    Administrador
+                </option>
+                <option value="Vendedora" {% if usuario.rol=='Vendedora' %}selected{% endif %}>
+                    Vendedora
+                </option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label fw-bold">Nueva Contraseña (opcional)</label>
+            <input type="password" name="password" class="form-control shadow-sm"
+                   placeholder="Dejar vacío si no cambia">
+        </div>
+
+        <button type="submit"
+                class="btn w-100 fw-bold"
+                style="background:#c71585; color:white; border-radius:12px;">
+            💾 Actualizar Usuario
+        </button>
+
+        <a href="{{ url_for('usuarios') }}"
+           class="btn btn-secondary w-100 mt-3 fw-bold"
+           style="border-radius:12px;">
+            ↩ Cancelar
+        </a>
+
+    </form>
+</div>
+
 {% endblock %}

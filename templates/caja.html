@@ -4,17 +4,96 @@
 
 {% block content %}
 
-<div class="container mt-4">
-    <h2 class="mb-4 text-center">💰 Cierre de Caja Diario</h2>
+<style>
 
-    {# Verificación de seguridad: Aseguramos que rol exista antes de usar lower() #}
+/* TARJETA PRINCIPAL */
+.caja-card {
+    background: linear-gradient(135deg, #fde8f1, #f7e4ff);
+    border: 2px solid #f8c6dd;
+    padding: 25px;
+    border-radius: 20px;
+    box-shadow: 0 8px 18px rgba(255,180,210,0.35);
+}
+
+/* TÍTULO */
+.caja-title {
+    font-family: 'Playfair Display', serif;
+    font-weight: 900;
+    color: #aa0066;
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+/* TOTAL */
+.caja-total {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: #28a745;
+}
+
+/* BOTÓN OPCIÓN A */
+.btn-coquette {
+    background: linear-gradient(135deg, #ff9ce1, #c71585);
+    border: none;
+    padding: 12px 20px;
+    color: #fff !important;
+    font-weight: 700;
+    border-radius: 25px;
+    width: 100%;
+    box-shadow: 6px 6px 15px rgba(0,0,0,0.15),
+                -6px -6px 15px rgba(255,255,255,0.5);
+    transition: 0.2s ease;
+}
+.btn-coquette:hover {
+    transform: translateY(-3px) scale(1.03);
+}
+
+/* TABLA */
+.table {
+    background: #ffffff !important;
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 6px 18px rgba(255,180,210,0.4);
+}
+
+.table thead {
+    background: linear-gradient(135deg, #c2185b, #ad1457);
+}
+.table thead th {
+    color: white !important;
+    text-align: center;
+    font-weight: 600;
+}
+
+.table tbody tr:hover {
+    background: #ffe6f3 !important;
+    transform: scale(1.01);
+}
+
+.icon-xl { font-size: 1.3rem; }
+
+</style>
+
+
+
+<div class="container mt-4">
+
+    <h2 class="caja-title">
+        <i class="fas fa-cash-register icon-xl me-2"></i>
+        Cierre de Caja Diario
+    </h2>
+
     {% if current_user.is_authenticated and current_user.rol and current_user.rol.lower() in ["administrador", "vendedora"] %}
 
-    <div class="card shadow p-4 mb-4">
+    <!-- TARJETA COQUETTE -->
+    <div class="caja-card mb-4">
+
         <div class="d-flex justify-content-between align-items-center">
             <div>
-                {# Formato de fecha día/mes/año #}
-                <h4>📅 Fecha: {{ caja.fecha.strftime('%d/%m/%Y') if caja.fecha else 'Hoy' }}</h4>
+                <h4 class="fw-bold">
+                    📅 Fecha: {{ caja.fecha.strftime('%d/%m/%Y') if caja.fecha else 'Hoy' }}
+                </h4>
+
                 <p class="mb-1">
                     <strong>Estado:</strong>
                     {% if caja.estado == "abierta" %}
@@ -24,26 +103,35 @@
                     {% endif %}
                 </p>
             </div>
+
             <div class="text-end">
-                <h3 class="text-success">Total: ${{ "{:,.0f}".format(total_ventas) }}</h3>
+                <div class="caja-total">
+                    Total: ${{ "{:,.0f}".format(total_ventas) }}
+                </div>
             </div>
         </div>
 
         {% if caja.estado == "abierta" %}
         <hr>
-        <form action="{{ url_for('ejecutar_cierre_caja') }}" method="POST" data-confirm="¿Estás segura de que deseas cerrar la caja? No podrás registrar más ventas hoy.">
-            <button type="submit" class="btn btn-danger w-100 fw-bold">
+
+        <form action="{{ url_for('ejecutar_cierre_caja') }}" method="POST"
+              data-confirm="¿Quieres cerrar la caja? Esta acción es irreversible.">
+            <button type="submit" class="btn-coquette mt-3">
                 🔒 Cerrar Caja Ahora
             </button>
         </form>
         {% endif %}
     </div>
 
-    <h4 class="mt-4">📄 Detalle de Ventas</h4>
+
+    <!-- TABLA DE VENTAS -->
+    <h4 class="mb-3" style="color:#aa0066; font-weight:700;">
+        📄 Detalle de Ventas
+    </h4>
 
     <div class="table-responsive shadow-sm rounded">
-        <table class="table table-striped table-hover align-middle mb-0">
-            <thead class="table-dark">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
                 <tr>
                     <th>ID</th>
                     <th>Producto</th>
@@ -52,17 +140,14 @@
                     <th>Hora</th>
                 </tr>
             </thead>
+
             <tbody>
                 {% for v in ventas %}
                 <tr>
                     <td>#{{ v.id }}</td>
-                    <td>
-                        {# Si 'producto' es un objeto en tu BD, usa v.producto.nombre. Si es texto, déjalo así #}
-                        {{ v.producto }}
-                    </td>
+                    <td>{{ v.producto }}</td>
                     <td class="text-center">{{ v.cantidad }}</td>
                     <td class="fw-bold text-success">${{ "{:,.0f}".format(v.total) }}</td>
-                    {# Formato de hora: 12 horas con AM/PM #}
                     <td>{{ v.hora.strftime('%I:%M %p') if v.hora else '--' }}</td>
                 </tr>
                 {% else %}
@@ -73,12 +158,14 @@
                 </tr>
                 {% endfor %}
             </tbody>
+
         </table>
     </div>
 
+
     {% else %}
     <div class="alert alert-danger text-center mt-5 shadow" role="alert">
-        <h4>⛔ Acceso Denegado</h4>
+        <h4 class="fw-bold">⛔ Acceso Denegado</h4>
         <p>No tienes permisos para ver el cierre de caja.</p>
     </div>
     {% endif %}

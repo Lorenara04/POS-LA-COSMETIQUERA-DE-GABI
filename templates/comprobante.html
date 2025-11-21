@@ -59,6 +59,12 @@
             text-shadow: 0 0 6px rgba(199, 21, 133, 0.4);
         }
 
+        .mariposas {
+            font-size: 24px;
+            letter-spacing: 12px;
+            margin-bottom: 10px;
+        }
+
         /* --- DIVISOR GLAM ---- */
         .divider {
             height: 3px;
@@ -85,10 +91,6 @@
             text-align: center;
         }
 
-        .info-details p {
-            margin: 4px 0;
-        }
-
         .info-details-title {
             font-size: 20px;
             color: var(--magenta-dark);
@@ -96,7 +98,6 @@
             text-shadow: 0 0 3px var(--sombra-magenta);
         }
 
-        /* ----- TABLA ----- */
         table {
             width: 100%;
             border-collapse: collapse;
@@ -116,7 +117,6 @@
             border-bottom: 1px dashed var(--magenta-light);
         }
 
-        /* ----- TOTAL ----- */
         .summary {
             margin-top: 20px;
             text-align: right;
@@ -133,7 +133,6 @@
             box-shadow: 0 0 8px rgba(199,21,133,0.2) inset;
         }
 
-        /* ----- PAGO ----- */
         .payment-details {
             background: var(--fondo-recibo);
             border-radius: 12px;
@@ -170,11 +169,12 @@
             margin-top: 35px;
         }
 
-        .footer p:first-child {
-            font-size: 22px;
-            color: var(--magenta);
+        .sello {
+            margin-top: 15px;
+            font-size: 16px;
+            color: var(--magenta-dark);
             font-weight: 900;
-            text-shadow: 0 0 4px rgba(199,21,133,0.4);
+            text-shadow: 0 0 4px rgba(199,21,133,0.3);
         }
 
         /* ----- BOTONES ----- */
@@ -217,7 +217,6 @@
             transform: scale(1.05);
         }
 
-        /* -------- IMPRESIÓN -------- */
         @media print {
             body { background: white; }
             .main-wrapper {
@@ -234,6 +233,10 @@
 <body>
 
 <div class="main-wrapper">
+
+    <!-- MARIPOSAS ARRIBA -->
+    <div class="mariposas">🦋 🦋 🦋</div>
+
     <div class="header">
         <h3>LA COSMETIQUERA DE GABI</h3>
         <p>NIT: 1007135662-2<br>Tel: 3208245828<br>Dirección: Calle 145 128 40 local 19</p>
@@ -298,11 +301,7 @@
 
                 {% if detalle.cod %}
                     <p class="pago-ref">
-                        Ref: {{ detalle.cod }}<br>
-                        Productos:
-                        {% for item in venta.detalles %}
-                            {{ item.producto.nombre }} - {{ item.producto.descripcion }}{% if not loop.last %}, {% endif %}
-                        {% endfor %}
+                        Ref: {{ detalle.cod }}
                     </p>
                 {% endif %}
             {% endif %}
@@ -313,8 +312,10 @@
 
     <div class="divider"></div>
 
+    <!-- SELLO OFICIAL ABAJO -->
     <div class="footer">
         <p>¡GRACIAS POR SU COMPRA!</p>
+        <p class="sello">🦋 ★ LA COSMETIQUERA DE GABI ★ SELLO OFICIAL</p>
         <p style="font-size:13px;">Software POS - Lorena Rodriguez<br>Tel 3222823687</p>
     </div>
 

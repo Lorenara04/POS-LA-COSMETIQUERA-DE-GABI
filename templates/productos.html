@@ -1,466 +1,773 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inventario - La Cosmetiquera de Gabi</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f4f7f9; }
-        .card { border-left: 5px solid #E91E63; }
-        .header-bg { background-color: #E91E63; color: white; }
-        .btn-primary { background-color: #E91E63; border-color: #E91E63; }
-        .btn-primary:hover { background-color: #C2185B; border-color: #C2185B; }
-        .pagination a.active { background-color: #E91E63; color: white; }
-        .input-focus:focus { border-color: #E91E63; box-shadow: 0 0 0 3px rgba(233, 30, 99, 0.5); }
-        .search-container { position: relative; }
-        .search-results {
-            position: absolute;
-            z-index: 10;
-            width: 100%;
-            max-height: 300px;
-            overflow-y: auto;
-            background-color: white;
-            border: 1px solid #ccc;
-            border-top: none;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        .search-item { padding: 8px; cursor: pointer; }
-        .search-item:hover { background-color: #f0f0f0; }
-        .table-responsive { overflow-x: auto; }
-        @media (max-width: 768px) {
-            .table-responsive { border: 1px solid #e5e7eb; border-radius: 0.5rem; }
-            .table-responsive table { width: 100%; border-collapse: collapse; }
-            .table-responsive thead { display: none; }
-            .table-responsive tr { 
-                display: block; 
-                margin-bottom: 0.75rem; 
-                border: 1px solid #e5e7eb; 
-                border-radius: 0.5rem;
-            }
-            .table-responsive td { 
-                display: flex; 
-                justify-content: space-between; 
-                padding: 0.5rem 1rem; 
-                border-bottom: 1px solid #e5e7eb;
-            }
-            .table-responsive td:last-child { border-bottom: none; }
-            .table-responsive td:before { 
-                content: attr(data-label); 
-                font-weight: 600; 
-                text-transform: uppercase; 
-                margin-right: 0.5rem; 
-                color: #555;
-            }
-        }
-    </style>
-</head>
-<body class="min-h-screen flex flex-col">
+{% extends "base.html" %}
+{% block title %}Gestión de Inventario{% endblock %}
+{% block page %}Inventario{% endblock %}
 
-    {% include 'navbar.html' %}
+{% block content %}
 
-    <!-- Modal para Agregar Producto -->
-    <div id="addProductModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
-        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <h3 class="text-xl font-semibold mb-4 border-b pb-2 text-gray-800">Agregar Nuevo Producto</h3>
-            <form action="{{ url_for('agregar_producto') }}" method="POST">
-                <!-- Campos del formulario -->
-                <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="nombre">Nombre</label>
-                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-pink-500" id="nombre" type="text" name="nombre" required>
-                </div>
-                <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="codigo">Código (Opcional)</label>
-                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-pink-500" id="codigo" type="text" name="codigo">
-                </div>
-                <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="descripcion">Descripción</label>
-                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-pink-500" id="descripcion" type="text" name="descripcion">
-                </div>
-                <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="marca">Marca (Opcional)</label>
-                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-pink-500" id="marca" type="text" name="marca">
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="mb-4">
-                        <label class="block text-gray-700 text-sm font-bold mb-2" for="cantidad">Cantidad</label>
-                        <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-pink-500" id="cantidad" type="number" name="cantidad" min="0" value="0" required>
-                    </div>
-                    <div class="mb-4">
-                        <label class="block text-gray-700 text-sm font-bold mb-2" for="valor_venta">Valor Venta ($)</label>
-                        <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-pink-500" id="valor_venta" type="number" name="valor_venta" step="0.01" min="0.01" required>
-                    </div>
-                </div>
-                <div class="mb-6">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="valor_interno">Valor Interno ($)</label>
-                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-pink-500" id="valor_interno" type="number" name="valor_interno" step="0.01" min="0" value="0">
-                </div>
-                
-                <div class="flex items-center justify-between">
-                    <button class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="button" onclick="closeModal('addProductModal')">
-                        Cancelar
-                    </button>
-                    <button class="btn-primary text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-150 ease-in-out" type="submit">
-                        Guardar Producto
-                    </button>
-                </div>
-            </form>
+<style>
+  /* =========================
+     COQUETTE / ROCOCÓ INVENTARIO
+     ========================= */
+
+  /* Iconos más grandes */
+  .icon-xl { font-size: 1.4rem !important; }
+
+  /* Card contenedora suave */
+  .card-coquette{
+    background: #fff;
+    border-radius: 18px;
+    border: 2px solid #f8c6dd;
+    box-shadow: 0 6px 16px rgba(255, 170, 200, 0.25);
+  }
+
+  /* Contenedor tabla */
+  .table-responsive{
+    padding: 8px;
+    background: #fff7fb;
+    border-radius: 14px;
+    border: 2px solid #f8c6dd;
+    box-shadow: 0 4px 12px rgba(255, 170, 200, 0.25);
+  }
+
+  /* Tabla bonita tipo tarjetas */
+  .tabla-inventario{
+    width:100%;
+    border-collapse: separate !important;
+    border-spacing: 0 7px !important;
+    font-size: .88rem;
+  }
+
+  .tabla-inventario thead th{
+    background: linear-gradient(145deg, #000000, #111111) !important;
+    color:#fff;
+    padding:10px 8px;
+    font-weight:700;
+    border-radius: 10px;
+    text-align:center;
+  }
+
+  .tabla-inventario tbody tr{
+    background:#fff;
+    border-radius:12px;
+    box-shadow: 0 3px 8px rgba(255,170,200,.35);
+    transition:.2s ease;
+  }
+  .tabla-inventario tbody tr:nth-child(even){
+    background:#fde6f0 !important;
+  }
+  .tabla-inventario tbody tr:hover{
+    background:#f7e0ff !important;
+    transform: scale(1.01);
+  }
+
+  .tabla-inventario td{
+    padding:8px 8px !important;
+    vertical-align: middle !important;
+    border-right:1px solid rgba(255, 200, 220, 0.45);
+  }
+  .tabla-inventario td:last-child{ border-right:none; }
+
+  /* Badge stock */
+  .badge-stock{
+    padding:4px 8px !important;
+    font-size:.75rem;
+    border-radius:8px;
+    box-shadow:0 2px 4px rgba(255,170,200,.4);
+  }
+
+  /* Acciones (opción A) */
+  .action-container{
+    display:flex;
+    justify-content:center;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .btn-action-base{
+    width:40px; height:40px;
+    border-radius:50%;
+    font-size:1.2rem;
+    display:flex; align-items:center; justify-content:center;
+    border:none;
+    transition:.2s ease;
+  }
+  .btn-action-edit{
+    background:#76c2ff !important;
+    color:#fff !important;
+    box-shadow:0 3px 6px rgba(120,190,255,.5);
+  }
+  .btn-action-edit:hover{ transform:scale(1.12); background:#42a5f5 !important; }
+  .btn-action-delete{
+    background:#ff82b2 !important;
+    color:#fff !important;
+    box-shadow:0 3px 6px rgba(255,150,200,.5);
+  }
+  .btn-action-delete:hover{ transform:scale(1.12); background:#ec407a !important; }
+  .btn-action-barcode{
+    background: linear-gradient(135deg, var(--color-principal-light), var(--color-principal)) !important;
+    color:#fff !important;
+    box-shadow:0 3px 6px rgba(156,2,119,.35);
+  }
+  .btn-action-barcode:hover{ transform:scale(1.12); filter:brightness(1.05); }
+
+  /* Card recepción rápida */
+  .card-recepcion-rapida{
+    border-radius:16px;
+    border:2px solid #f8c6dd;
+    background: linear-gradient(135deg, #fde8f1, #f7e4ff);
+    box-shadow: 0 6px 15px rgba(255, 180, 210, 0.35);
+  }
+
+  .btn-submit-stock{
+    background-color:#e91e63;
+    color:#fff;
+    border-radius:999px;
+    padding:8px 14px;
+    font-weight:700;
+    border:none;
+    transition:.2s ease;
+    box-shadow:0 4px 10px rgba(233,30,99,.35);
+  }
+  .btn-submit-stock:hover{
+    background-color:#d81b60;
+    transform:translateY(-2px);
+  }
+
+  .btn-manual-add{
+    background-color:#f48fb1;
+    color:#fff;
+    border-radius:999px;
+    padding:7px 12px;
+    font-weight:700;
+    border:none;
+    box-shadow:0 3px 6px rgba(244,143,177,.4);
+    transition:.2s ease;
+  }
+  .btn-manual-add:hover{ background:#ec407a; transform:translateY(-2px); }
+
+  /* Autocomplete */
+  .search-results{
+    position:absolute; z-index:20; width:100%;
+    max-height:280px; overflow-y:auto;
+    background:#fff; border:1px solid #ddd; border-top:none;
+    box-shadow:0 6px 14px rgba(0,0,0,.08);
+    border-radius:0 0 10px 10px;
+  }
+  .search-item{ padding:8px 10px; cursor:pointer; }
+  .search-item:hover{ background:#f7f7f7; }
+
+  /* ===== Paginación florcitas ===== */
+  .pagination-flower{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-top:14px;
+  }
+
+  .page-flower{
+    width:44px; height:44px;
+    display:flex; align-items:center; justify-content:center;
+    font-weight:800;
+    color:#8a005a;
+    text-decoration:none;
+    position:relative;
+    border:none;
+    background:
+      radial-gradient(circle at 50% 0%, #ffd6ea 0 45%, transparent 46%),
+      radial-gradient(circle at 100% 50%, #ffd6ea 0 45%, transparent 46%),
+      radial-gradient(circle at 50% 100%, #ffd6ea 0 45%, transparent 46%),
+      radial-gradient(circle at 0% 50%, #ffd6ea 0 45%, transparent 46%),
+      radial-gradient(circle at 50% 50%, #ffffff 0 42%, #ffb6e1 43% 100%);
+    border-radius:50%;
+    box-shadow:0 4px 10px rgba(156,2,119,.25);
+    transition:.2s ease;
+  }
+  .page-flower:hover{
+    transform:translateY(-2px) scale(1.06);
+    filter:brightness(1.03);
+  }
+  .page-flower.active{
+    color:#fff;
+    background:
+      radial-gradient(circle at 50% 0%, #ff7fc8 0 45%, transparent 46%),
+      radial-gradient(circle at 100% 50%, #ff7fc8 0 45%, transparent 46%),
+      radial-gradient(circle at 50% 100%, #ff7fc8 0 45%, transparent 46%),
+      radial-gradient(circle at 0% 50%, #ff7fc8 0 45%, transparent 46%),
+      radial-gradient(circle at 50% 50%, #9c0277 0 48%, #b60086 49% 100%);
+  }
+
+  .page-arrow{
+    width:42px; height:42px;
+    display:flex; align-items:center; justify-content:center;
+    border-radius:999px;
+    background:#fff;
+    border:2px solid #f8c6dd;
+    color:#9c0277;
+    text-decoration:none;
+    font-size:1.2rem;
+    box-shadow:0 3px 8px rgba(255,170,200,.25);
+    transition:.2s ease;
+  }
+  .page-arrow:hover{ transform:translateY(-2px); background:#fff1fa; }
+
+  .page-ellipsis{
+    font-weight:800; color:#9c0277;
+    padding:0 2px;
+  }
+
+  /* Responsive tabla tarjeta */
+  @media (max-width: 768px){
+    .tabla-inventario thead{ display:none; }
+    .tabla-inventario, .tabla-inventario tbody, .tabla-inventario tr, .tabla-inventario td{
+      display:block; width:100%;
+    }
+    .tabla-inventario tr{ margin-bottom:12px; }
+    .tabla-inventario td{
+      border-right:none !important;
+      border-bottom:1px solid rgba(240,220,230,.6);
+      padding:10px 12px !important;
+    }
+    .tabla-inventario td::before{
+      content: attr(data-label) ": ";
+      font-weight:800;
+      display:inline-block;
+      width:45%;
+      color:#6a1b9a;
+    }
+  }
+
+  /* ===== Modal Etiqueta Boutique ===== */
+  .etiqueta-container {
+    width: 360px;
+    padding: 20px;
+    border-radius: 18px;
+    background: #ffffff;
+    border: 3px solid var(--color-principal);
+    box-shadow: 0 0 15px rgba(0,0,0,0.15);
+    text-align: center;
+    margin: auto;
+  }
+  .etiqueta-titulo {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--color-principal);
+    margin-bottom: 6px;
+  }
+  .etiqueta-precio {
+    font-size: 1.4rem;
+    font-weight: bold;
+    color: var(--color-secundario);
+    background: #fff1fa;
+    padding: 6px 12px;
+    border-radius: 10px;
+    margin-top: 6px;
+    display: inline-block;
+  }
+  #barcodeImage { max-width: 260px; margin: 12px 0; }
+</style>
+
+<!-- =========================
+     MODAL: AGREGAR PRODUCTO
+     ========================= -->
+<div class="modal fade" id="addProductModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-dark text-white">
+        <h5 class="modal-title">Agregar Nuevo Producto</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <form action="{{ url_for('agregar_producto') }}" method="POST">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label fw-bold">Nombre</label>
+            <input class="form-control" type="text" name="nombre" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-bold">Código (Opcional)</label>
+            <input class="form-control" type="text" name="codigo">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-bold">Descripción</label>
+            <input class="form-control" type="text" name="descripcion">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-bold">Marca (Opcional)</label>
+            <input class="form-control" type="text" name="marca">
+          </div>
+
+          <div class="row g-2">
+            <div class="col-6">
+              <label class="form-label fw-bold">Cantidad</label>
+              <input class="form-control" type="number" name="cantidad" min="0" value="0" required>
+            </div>
+            <div class="col-6">
+              <label class="form-label fw-bold">Valor Venta ($)</label>
+              <input class="form-control" type="number" name="valor_venta" step="0.01" min="0.01" required>
+            </div>
+          </div>
+
+          <div class="mt-3">
+            <label class="form-label fw-bold">Valor Interno ($)</label>
+            <input class="form-control" type="number" name="valor_interno" step="0.01" min="0" value="0">
+          </div>
         </div>
-    </div>
-    
-    <!-- Modal para Editar Producto (Se llena con JS) -->
-    <div id="editProductModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
-        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <h3 class="text-xl font-semibold mb-4 border-b pb-2 text-gray-800">Editar Producto <span id="edit-product-id"></span></h3>
-            <form id="editForm" method="POST">
-                <input type="hidden" name="_method" value="POST">
-                <!-- Campos de edición (ID se establecerá en JS) -->
-                <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="edit-nombre">Nombre</label>
-                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-pink-500" id="edit-nombre" type="text" name="nombre" required>
-                </div>
-                <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="edit-codigo">Código</label>
-                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-pink-500" id="edit-codigo" type="text" name="codigo">
-                </div>
-                <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="edit-descripcion">Descripción</label>
-                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-pink-500" id="edit-descripcion" type="text" name="descripcion">
-                </div>
-                <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="edit-marca">Marca</label>
-                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-pink-500" id="edit-marca" type="text" name="marca">
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="mb-4">
-                        <label class="block text-gray-700 text-sm font-bold mb-2" for="edit-cantidad">Cantidad</label>
-                        <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-pink-500" id="edit-cantidad" type="number" name="cantidad" min="0" required>
-                    </div>
-                    <div class="mb-4">
-                        <label class="block text-gray-700 text-sm font-bold mb-2" for="edit-valor_venta">Valor Venta ($)</label>
-                        <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-pink-500" id="edit-valor_venta" type="number" name="valor_venta" step="0.01" min="0.01" required>
-                    </div>
-                </div>
-                <div class="mb-6">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="edit-valor_interno">Valor Interno ($)</label>
-                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-pink-500" id="edit-valor_interno" type="number" name="valor_interno" step="0.01" min="0">
-                </div>
-                
-                <div class="flex items-center justify-between">
-                    <button class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="button" onclick="closeModal('editProductModal')">
-                        Cancelar
-                    </button>
-                    <button class="btn-primary text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-150 ease-in-out" type="submit">
-                        Guardar Cambios
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-    
-    <main class="flex-grow container mx-auto p-4 md:p-8">
-        <h1 class="text-3xl font-bold text-gray-800 mb-6 border-b pb-2">
-            <i class="fas fa-boxes-stacked text-pink-600"></i> Gestión de Inventario
-        </h1>
 
-        <!-- Mensajes Flash de Flask -->
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                <div class="space-y-3 mb-6">
-                    {% for category, message in messages %}
-                        <div class="p-4 rounded-lg shadow-md {% if category == 'success' %}bg-green-100 border-l-4 border-green-500 text-green-700{% elif category == 'danger' %}bg-red-100 border-l-4 border-red-500 text-red-700{% else %}bg-blue-100 border-l-4 border-blue-500 text-blue-700{% endif %}" role="alert">
-                            {{ message }}
-                        </div>
-                    {% endfor %}
-                </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar Producto</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- =========================
+     MODAL: EDITAR PRODUCTO
+     ========================= -->
+<div class="modal fade" id="editProductModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-dark text-white">
+        <h5 class="modal-title">Editar Producto <span class="badge bg-light text-dark ms-1" id="edit-product-id"></span></h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <form id="editForm" method="POST">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label fw-bold">Nombre</label>
+            <input class="form-control" id="edit-nombre" type="text" name="nombre" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-bold">Código</label>
+            <input class="form-control" id="edit-codigo" type="text" name="codigo">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-bold">Descripción</label>
+            <input class="form-control" id="edit-descripcion" type="text" name="descripcion">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-bold">Marca</label>
+            <input class="form-control" id="edit-marca" type="text" name="marca">
+          </div>
+
+          <div class="row g-2">
+            <div class="col-6">
+              <label class="form-label fw-bold">Cantidad</label>
+              <input class="form-control" id="edit-cantidad" type="number" name="cantidad" min="0" required>
+            </div>
+            <div class="col-6">
+              <label class="form-label fw-bold">Valor Venta ($)</label>
+              <input class="form-control" id="edit-valor_venta" type="number" name="valor_venta" step="0.01" min="0.01" required>
+            </div>
+          </div>
+
+          <div class="mt-3">
+            <label class="form-label fw-bold">Valor Interno ($)</label>
+            <input class="form-control" id="edit-valor_interno" type="number" name="valor_interno" step="0.01" min="0">
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- =========================
+     MODAL: ETIQUETA / BARCODE
+     ========================= -->
+<div class="modal fade" id="modalEtiqueta" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+
+      <div class="modal-header bg-dark text-white">
+        <h5 class="modal-title">Etiqueta del Producto</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="etiqueta-container" id="etiquetaArea">
+          <img src="{{ url_for('static', filename='img/LOGO.png') }}" style="width:80px; margin-bottom:10px;">
+          <div class="etiqueta-titulo" id="etq_nombre"></div>
+          <div class="text-muted" id="etq_marca"></div>
+          <p class="mt-2 mb-1">
+            <strong>Código:</strong> <span id="etq_codigo"></span>
+          </p>
+          <div class="etiqueta-precio">
+            $<span id="etq_precio"></span>
+          </div>
+          <img id="barcodeImage" src="" alt="Código de Barras">
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-info" onclick="imprimirEtiqueta()">Imprimir</button>
+        <a id="btnDescargar" download="etiqueta.png" class="btn btn-primary">Descargar PNG</a>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- =========================
+     CONTENIDO PRINCIPAL
+     ========================= -->
+<div class="container">
+
+  <h1 class="mb-4 text-center">
+    <i class="fas fa-boxes-stacked icon-xl me-2"></i>
+    Gestión de Inventario
+  </h1>
+
+  <!-- ===== Recepción rápida + agregar producto ===== -->
+  <div class="card-recepcion-rapida p-3 mb-4 position-relative">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+      <h5 class="mb-0 fw-bold text-dark">Recepción Rápida de Inventario</h5>
+
+      {% if current_user.rol.lower() == 'administrador' %}
+      <button class="btn-manual-add" data-bs-toggle="modal" data-bs-target="#addProductModal">
+        <i class="fas fa-plus me-1"></i> Agregar Producto
+      </button>
+      {% endif %}
+    </div>
+
+    <form action="{{ url_for('agregar_stock_por_codigo') }}" method="POST" class="row g-2 align-items-end">
+      <div class="col-md-6 position-relative">
+        <label class="form-label fw-bold">Código de Barras / Buscar Producto</label>
+        <input class="form-control input-focus" id="codigo_scanner" name="codigo_scanner"
+               placeholder="Escanee o escriba código / nombre / marca" required>
+        <div id="search-results-rapid" class="search-results d-none"></div>
+      </div>
+
+      <div class="col-md-3">
+        <label class="form-label fw-bold">Cantidad</label>
+        <input class="form-control input-focus" id="cantidad_scanner" name="cantidad_scanner"
+               type="number" min="1" value="1" required>
+      </div>
+
+      <div class="col-md-3 d-grid">
+        <button class="btn-submit-stock" type="submit">
+          <i class="fas fa-boxes-stacked me-1"></i> AGREGAR AL STOCK
+        </button>
+      </div>
+    </form>
+
+    <!-- Detalle rápido -->
+    <div id="product-detail-area" class="mt-3 p-3 border rounded bg-white d-none">
+      <div class="fw-bold mb-1">Detalle de Producto</div>
+      <div class="small text-muted mb-2">Se llena al seleccionar un producto.</div>
+      <div class="row g-1 small">
+        <div class="col-6"><b>ID:</b> <span id="detail-id"></span></div>
+        <div class="col-6"><b>Stock:</b> <span id="detail-cantidad"></span></div>
+        <div class="col-12"><b>Nombre:</b> <span id="detail-nombre"></span></div>
+        <div class="col-6"><b>Venta:</b> $<span id="detail-venta"></span></div>
+        <div class="col-6"><b>Interno:</b> $<span id="detail-interno"></span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Buscador global ===== -->
+  <form method="GET" class="input-group mb-3">
+    <input type="text" class="form-control input-focus"
+           name="search" placeholder="Buscar productos por código, nombre o descripción"
+           value="{{ search_query }}" id="global_search_input">
+    <button class="btn btn-dark" type="submit">
+      <i class="fas fa-search icon-xl"></i>
+    </button>
+  </form>
+
+  <!-- ===== Tabla inventario ===== -->
+  <div class="table-responsive">
+    <table class="tabla-inventario">
+      <thead>
+        <tr>
+          <th style="width:70px;">ID</th>
+          <th style="width:150px;">Código</th>
+          <th style="width:140px;">Marca</th>
+          <th>Descripción</th>
+          <th style="width:120px;">Existencias</th>
+          <th style="width:140px;">Costo Interno</th>
+          <th style="width:140px;">Venta</th>
+          <th style="width:180px;">Acciones</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {% for p in productos_paginados.items %}
+        <tr>
+          <td data-label="ID" class="text-center fw-bold">{{ p.id }}</td>
+          <td data-label="Código" class="text-center">{{ p.codigo or 'N/A' }}</td>
+          <td data-label="Marca" class="text-center">{{ p.marca or 'N/A' }}</td>
+
+          <td data-label="Descripción">
+            <div class="fw-bold">{{ p.nombre }}</div>
+            <div class="text-muted small">{{ p.descripcion or "Sin descripción" }}</div>
+          </td>
+
+          <td data-label="Existencias" class="text-center">
+            {% if p.cantidad <= p.stock_minimo %}
+              <span class="badge bg-danger badge-stock">{{ p.cantidad|format_number }}</span>
+            {% else %}
+              <span class="badge bg-success badge-stock">{{ p.cantidad|format_number }}</span>
             {% endif %}
-        {% endwith %}
-        
-        <!-- Recepción Rápida de Inventario y Botón Agregar -->
-        <div class="bg-white p-6 rounded-xl shadow-lg card mb-8">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-semibold text-gray-700">Recepción Rápida de Inventario</h2>
-                <button class="btn-primary text-white font-bold py-2 px-4 rounded-xl transition duration-150 ease-in-out" onclick="openModal('addProductModal')">
-                    <i class="fas fa-plus mr-1"></i> Agregar Producto
-                </button>
+          </td>
+
+          <td data-label="Costo Interno" class="text-center">
+            ${{ p.valor_interno|format_number }}
+          </td>
+          <td data-label="Venta" class="text-center fw-bold">
+            ${{ p.valor_venta|format_number }}
+          </td>
+
+          <td data-label="Acciones">
+            <div class="action-container">
+              <!-- EDITAR -->
+              <button type="button"
+                      class="btn-action-base btn-action-edit"
+                      title="Editar"
+                      onclick="openEditModal(
+                        '{{ p.id }}',
+                        '{{ p.nombre|e }}',
+                        '{{ p.codigo|e }}',
+                        '{{ p.descripcion|e }}',
+                        '{{ p.marca|e }}',
+                        '{{ p.cantidad }}',
+                        '{{ p.valor_venta }}',
+                        '{{ p.valor_interno }}'
+                      )">
+                <i class="fas fa-pen"></i>
+              </button>
+
+              <!-- ELIMINAR -->
+              <a class="btn-action-base btn-action-delete"
+                 title="Eliminar"
+                 href="{{ url_for('eliminar_producto', producto_id=p.id) }}"
+                 data-confirm="¿Eliminar {{ p.nombre }}? Esto no se puede deshacer.">
+                <i class="fas fa-trash"></i>
+              </a>
+
+              <!-- ETIQUETA -->
+              <button type="button"
+                      class="btn-action-base btn-action-barcode"
+                      title="Etiqueta"
+                      onclick="generarEtiqueta('{{ p.id }}')">
+                <i class="fas fa-barcode"></i>
+              </button>
             </div>
-            
-            <form action="{{ url_for('agregar_stock_por_codigo') }}" method="POST" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-                <div class="md:col-span-2">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="codigo_scanner">Escanear Código / Busque Producto</label>
-                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-pink-500 input-focus" id="codigo_scanner" type="text" name="codigo_scanner" placeholder="Código, Marca o Descripción" required>
-                    <div id="search-results-rapid" class="search-results hidden"></div>
-                </div>
-                
-                <div>
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="cantidad_scanner">Cantidad</label>
-                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-pink-500 input-focus" id="cantidad_scanner" type="number" name="cantidad_scanner" value="1" min="1" required>
-                </div>
-                
-                <div class="flex space-x-2">
-                    <button class="w-full bg-pink-600 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded-xl transition duration-150 ease-in-out" type="submit">
-                        <i class="fas fa-boxes-stacked mr-1"></i> Añadir Stock
-                    </button>
-                </div>
-            </form>
-            
-            <!-- CONTENEDOR DE DETALLE DE PRODUCTO (Se llenará con JS y no genera el espacio vacío si está vacío) -->
-            <div id="product-detail-area" class="mt-4 p-4 border rounded-lg bg-gray-50 hidden">
-                <h3 class="font-bold text-gray-800 mb-2">Detalle de Producto:</h3>
-                <p class="text-gray-700"><span class="font-semibold">ID:</span> <span id="detail-id"></span></p>
-                <p class="text-gray-700"><span class="font-semibold">Nombre:</span> <span id="detail-nombre"></span></p>
-                <p class="text-gray-700"><span class="font-semibold">Stock Actual:</span> <span id="detail-cantidad" class="font-bold"></span></p>
-                <p class="text-gray-700"><span class="font-semibold">Venta:</span> $<span id="detail-venta"></span></p>
-                <p class="text-gray-700"><span class="font-semibold">Interno:</span> $<span id="detail-interno"></span></p>
-            </div>
-            
-        </div>
-        
-        <!-- Listado y Búsqueda de Productos -->
-        <div class="bg-white p-6 rounded-xl shadow-lg card">
-            <form action="{{ url_for('inventario') }}" method="GET" class="flex mb-4">
-                <input class="shadow appearance-none border rounded-l w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-pink-500 input-focus" 
-                       type="text" 
-                       name="search" 
-                       placeholder="Buscar productos (código, nombre, descripción)..."
-                       value="{{ search_query }}"
-                       id="main-search-input">
-                <button class="bg-gray-700 hover:bg-gray-800 text-white font-bold py-2 px-4 rounded-r transition duration-150 ease-in-out" type="submit">
-                    <i class="fas fa-magnifying-glass"></i>
-                </button>
-            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="8" class="text-center text-muted py-4">
+            {% if search_query %}
+              No se encontraron productos que coincidan con "{{ search_query }}".
+            {% else %}
+              No hay productos en el inventario.
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 
-            <div class="table-responsive">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="header-bg">
-                        <tr>
-                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider rounded-tl-xl">ID</th>
-                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">SKU/Código</th>
-                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Marca</th>
-                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Descripción</th>
-                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Existencias</th>
-                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Costo Interno ($)</th>
-                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Valor Venta ($)</th>
-                            <th scope="col" class="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider rounded-tr-xl">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200 text-gray-700">
-                        {% for producto in productos_paginados.items %}
-                        <tr>
-                            <td data-label="ID" class="px-4 py-4 whitespace-nowrap text-sm font-medium">{{ producto.id }}</td>
-                            <td data-label="SKU/Código" class="px-4 py-4 whitespace-nowrap text-sm">{{ producto.codigo or 'N/A' }}</td>
-                            <td data-label="Marca" class="px-4 py-4 whitespace-nowrap text-sm">{{ producto.marca or 'N/A' }}</td>
-                            <td data-label="Descripción" class="px-4 py-4 text-sm">
-                                <span class="font-bold">{{ producto.nombre }}</span>
-                                <span class="text-xs block text-gray-500">{{ producto.descripcion or 'Sin descripción' }}</span>
-                            </td>
-                            <td data-label="Existencias" class="px-4 py-4 whitespace-nowrap text-sm {% if producto.cantidad <= producto.stock_minimo %}text-red-500 font-bold{% endif %}">
-                                {{ producto.cantidad|format_number }}
-                            </td>
-                            <td data-label="Costo Interno ($)" class="px-4 py-4 whitespace-nowrap text-sm">
-                                ${{ producto.valor_interno|format_number }}
-                            </td>
-                            <td data-label="Valor Venta ($)" class="px-4 py-4 whitespace-nowrap text-sm font-semibold">
-                                ${{ producto.valor_venta|format_number }}
-                            </td>
-                            <td data-label="Acciones" class="px-4 py-4 whitespace-nowrap text-center text-sm font-medium">
-                                <div class="flex justify-center space-x-2">
-                                    <button onclick="openEditModal('{{ producto.id }}', '{{ producto.nombre|e }}', '{{ producto.codigo|e }}', '{{ producto.descripcion|e }}', '{{ producto.marca|e }}', '{{ producto.cantidad }}', '{{ producto.valor_venta }}', '{{ producto.valor_interno }}')" 
-                                            class="text-blue-600 hover:text-blue-900 p-2 rounded-full bg-blue-100 hover:bg-blue-200 transition duration-150" title="Editar">
-                                        <i class="fas fa-pencil-alt"></i>
-                                    </button>
-                                    <a href="{{ url_for('eliminar_producto', producto_id=producto.id) }}" 
-                                       onclick="return confirm('¿Está seguro de eliminar el producto {{ producto.nombre }}? Esto no se puede deshacer.')" 
-                                       class="text-red-600 hover:text-red-900 p-2 rounded-full bg-red-100 hover:bg-red-200 transition duration-150" title="Eliminar">
-                                        <i class="fas fa-trash"></i>
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                        {% else %}
-                        <tr>
-                            <td colspan="8" class="px-4 py-8 text-center text-gray-500">
-                                {% if search_query %}
-                                    No se encontraron productos que coincidan con "{{ search_query }}".
-                                {% else %}
-                                    No hay productos en el inventario.
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            
-            <!-- Paginación -->
-            <div class="mt-4 flex justify-between items-center">
-                <p class="text-sm text-gray-700">
-                    Mostrando {{ (productos_paginados.page - 1) * productos_paginados.per_page + 1 }} a {{ (productos_paginados.page - 1) * productos_paginados.per_page + productos_paginados.items|length }} de {{ productos_paginados.total }} productos.
-                </p>
-                <nav class="pagination relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                    {% if productos_paginados.has_prev %}
-                        <a href="{{ url_for('inventario', page=productos_paginados.prev_num, search=search_query) }}" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                            <span class="sr-only">Anterior</span>
-                            <i class="fas fa-chevron-left h-5 w-5"></i>
-                        </a>
-                    {% endif %}
-                    
-                    {% for page_num in productos_paginados.iter_pages() %}
-                        {% if page_num %}
-                            {% if page_num == productos_paginados.page %}
-                                <a href="#" aria-current="page" class="relative inline-flex items-center px-4 py-2 border text-sm font-medium bg-pink-600 text-white">
-                                    {{ page_num }}
-                                </a>
-                            {% else %}
-                                <a href="{{ url_for('inventario', page=page_num, search=search_query) }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
-                                    {{ page_num }}
-                                </a>
-                            {% endif %}
-                        {% else %}
-                            <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
-                                ...
-                            </span>
-                        {% endif %}
-                    {% endfor %}
+  <!-- ===== Paginación Flor ===== -->
+  {% if productos_paginados.pages > 1 %}
+  <div class="pagination-flower">
 
-                    {% if productos_paginados.has_next %}
-                        <a href="{{ url_for('inventario', page=productos_paginados.next_num, search=search_query) }}" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                            <span class="sr-only">Siguiente</span>
-                            <i class="fas fa-chevron-right h-5 w-5"></i>
-                        </a>
-                    {% endif %}
-                </nav>
-            </div>
-        </div>
-        
-    </main>
+    {% if productos_paginados.has_prev %}
+      <a class="page-arrow"
+         href="{{ url_for('inventario', page=productos_paginados.prev_num, search=search_query) }}"
+         aria-label="Anterior">‹</a>
+    {% endif %}
 
-    <script>
-        // Funciones de Modal
-        function openModal(id) {
-            document.getElementById(id).classList.remove('hidden');
-        }
+    {% for page_num in productos_paginados.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+      {% if page_num %}
+        {% if page_num == productos_paginados.page %}
+          <span class="page-flower active">{{ page_num }}</span>
+        {% else %}
+          <a class="page-flower"
+             href="{{ url_for('inventario', page=page_num, search=search_query) }}">{{ page_num }}</a>
+        {% endif %}
+      {% else %}
+        <span class="page-ellipsis">…</span>
+      {% endif %}
+    {% endfor %}
 
-        function closeModal(id) {
-            document.getElementById(id).classList.add('hidden');
-        }
+    {% if productos_paginados.has_next %}
+      <a class="page-arrow"
+         href="{{ url_for('inventario', page=productos_paginados.next_num, search=search_query) }}"
+         aria-label="Siguiente">›</a>
+    {% endif %}
 
-        // Función para abrir el modal de edición
-        function openEditModal(id, nombre, codigo, descripcion, marca, cantidad, valor_venta, valor_interno) {
-            const modal = document.getElementById('editProductModal');
-            document.getElementById('edit-product-id').textContent = id;
-            document.getElementById('edit-nombre').value = nombre;
-            document.getElementById('edit-codigo').value = codigo === 'N/A' ? '' : codigo;
-            document.getElementById('edit-descripcion').value = descripcion === 'Sin descripción' ? '' : descripcion;
-            document.getElementById('edit-marca').value = marca === 'N/A' ? '' : marca;
-            document.getElementById('edit-cantidad').value = parseFloat(cantidad);
-            document.getElementById('edit-valor_venta').value = parseFloat(valor_venta).toFixed(2);
-            document.getElementById('edit-valor_interno').value = parseFloat(valor_interno).toFixed(2);
-            
-            // Establecer la acción del formulario
-            document.getElementById('editForm').action = `{{ url_for('inventario') }}/editar/${id}`;
+  </div>
+  {% endif %}
 
-            openModal('editProductModal');
-        }
-        
-        // Lógica de búsqueda rápida (para el scanner)
-        document.addEventListener('DOMContentLoaded', () => {
-            const inputScanner = document.getElementById('codigo_scanner');
-            const resultsDiv = document.getElementById('search-results-rapid');
-            const detailArea = document.getElementById('product-detail-area');
-            let allProducts = [];
+</div>
 
-            // 1. Cargar productos (simulado con una API endpoint)
-            const fetchProducts = async () => {
-                try {
-                    // Nota: Esta URL asume que tienes un endpoint /api/productos/todos en app.py
-                    const response = await fetch('/api/productos/todos');
-                    const data = await response.json();
-                    if (data.productos) {
-                        allProducts = data.productos;
-                    }
-                } catch (error) {
-                    console.error('Error al cargar productos:', error);
-                }
-            };
-            fetchProducts();
+<script>
+  /* =========================
+     EDIT MODAL (FUNCIONA)
+     ========================= */
+  function openEditModal(id, nombre, codigo, descripcion, marca, cantidad, valor_venta, valor_interno){
+    document.getElementById('edit-product-id').textContent = id;
+    document.getElementById('edit-nombre').value = nombre || '';
+    document.getElementById('edit-codigo').value = (codigo === 'N/A' ? '' : (codigo || ''));
+    document.getElementById('edit-descripcion').value = (descripcion === 'Sin descripción' ? '' : (descripcion || ''));
+    document.getElementById('edit-marca').value = (marca === 'N/A' ? '' : (marca || ''));
+    document.getElementById('edit-cantidad').value = parseInt(cantidad || 0);
+    document.getElementById('edit-valor_venta').value = parseFloat(valor_venta || 0).toFixed(2);
+    document.getElementById('edit-valor_interno').value = parseFloat(valor_interno || 0).toFixed(2);
 
-            // 2. Función de renderizado de resultados
-            const renderResults = (matches) => {
-                resultsDiv.innerHTML = '';
-                if (matches.length > 0 && inputScanner.value.length > 0) {
-                    matches.forEach(p => {
-                        const item = document.createElement('div');
-                        item.className = 'search-item text-gray-700 border-b last:border-b-0';
-                        item.innerHTML = `<span class="font-bold">${p.nombre}</span> (${p.marca}) - Stock: ${p.cantidad_stock}`;
-                        item.onclick = () => selectProduct(p);
-                        resultsDiv.appendChild(item);
-                    });
-                    resultsDiv.classList.remove('hidden');
-                } else {
-                    resultsDiv.classList.add('hidden');
-                }
-            };
+    document.getElementById('editForm').action = `/inventario/editar/${id}`;
 
-            // 3. Función de búsqueda
-            inputScanner.addEventListener('input', (e) => {
-                const query = e.target.value.toLowerCase().trim();
-                if (query.length < 2) {
-                    renderResults([]);
-                    detailArea.classList.add('hidden'); // Ocultar si no hay búsqueda
-                    return;
-                }
-                
-                const filtered = allProducts.filter(p => 
-                    p.nombre.toLowerCase().includes(query) ||
-                    p.marca.toLowerCase().includes(query) ||
-                    (p.descripcion && p.descripcion.toLowerCase().includes(query)) ||
-                    (p.codigo && p.codigo.toLowerCase().includes(query))
-                );
-                renderResults(filtered.slice(0, 10)); // Mostrar solo los primeros 10
-            });
-            
-            // 4. Función de selección de producto
-            const selectProduct = (product) => {
-                inputScanner.value = product.codigo || product.nombre; // Poner el código o nombre en el campo
-                resultsDiv.classList.add('hidden');
-                
-                // Mostrar detalles en el área de detalle
-                document.getElementById('detail-id').textContent = product.id;
-                document.getElementById('detail-nombre').textContent = product.nombre;
-                document.getElementById('detail-cantidad').textContent = product.cantidad_stock;
-                document.getElementById('detail-venta').textContent = (product.valor_venta / 1000).toFixed(3).replace('.', ','); // Formato simple simulado
-                document.getElementById('detail-interno').textContent = (product.valor_interno / 1000).toFixed(3).replace('.', ',');
-                
-                detailArea.classList.remove('hidden');
-                document.getElementById('cantidad_scanner').focus();
-            };
-            
-            // Ocultar resultados al hacer clic fuera
-            document.addEventListener('click', (e) => {
-                if (!inputScanner.contains(e.target) && !resultsDiv.contains(e.target)) {
-                    resultsDiv.classList.add('hidden');
-                }
-            });
-            
-            // Lógica para enviar el formulario rápido al presionar Enter en el campo de código
-            inputScanner.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    e.preventDefault(); // Evitar el envío automático
-                    document.getElementById('cantidad_scanner').focus();
-                }
-            });
-            
-            document.getElementById('cantidad_scanner').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    e.preventDefault(); 
-                    this.closest('form').submit(); // Enviar el formulario de stock
-                }
-            });
+    const modal = new bootstrap.Modal(document.getElementById('editProductModal'));
+    modal.show();
+  }
+
+  /* =========================
+     ETIQUETA / BARCODE
+     ========================= */
+  function generarEtiqueta(id) {
+    fetch(`/barcode/${id}`)
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById("etq_nombre").textContent = data.nombre || '';
+        document.getElementById("etq_marca").textContent = data.marca || "Sin marca";
+        document.getElementById("etq_codigo").textContent = data.codigo || data.id;
+        document.getElementById("etq_precio").textContent = data.precio || '';
+
+        document.getElementById("barcodeImage").src = "data:image/png;base64," + data.barcode;
+        document.getElementById("btnDescargar").href = "data:image/png;base64," + data.barcode;
+
+        let modal = new bootstrap.Modal(document.getElementById('modalEtiqueta'));
+        modal.show();
+      })
+      .catch(() => alert("No se pudo generar la etiqueta. Revisa la ruta /barcode/<id>."));
+  }
+
+  function imprimirEtiqueta() {
+    let contenido = document.getElementById("etiquetaArea").innerHTML;
+    let ventana = window.open("", "PRINT", "height=600,width=400");
+
+    ventana.document.write(`
+      <html><head>
+        <title>Imprimir Etiqueta</title>
+        <style>
+          body { text-align:center; font-family:Arial; }
+          img { max-width:250px; }
+        </style>
+      </head>
+      <body>${contenido}</body></html>
+    `);
+
+    ventana.document.close();
+    ventana.focus();
+    ventana.print();
+    ventana.close();
+  }
+
+  /* =========================
+     BUSQUEDA RÁPIDA (SCANNER)
+     usa /api/productos/todos
+     ========================= */
+  document.addEventListener('DOMContentLoaded', () => {
+    const inputScanner = document.getElementById('codigo_scanner');
+    const resultsDiv = document.getElementById('search-results-rapid');
+    const detailArea = document.getElementById('product-detail-area');
+    let allProducts = [];
+
+    const fetchProducts = async () => {
+      try {
+        const response = await fetch('/api/productos/todos');
+        const data = await response.json();
+        if (data.productos) allProducts = data.productos;
+      } catch (error) {
+        console.error('Error al cargar productos:', error);
+      }
+    };
+    fetchProducts();
+
+    const renderResults = (matches) => {
+      resultsDiv.innerHTML = '';
+      if (matches.length > 0 && inputScanner.value.length > 0) {
+        matches.forEach(p => {
+          const item = document.createElement('div');
+          item.className = 'search-item text-gray-700 border-bottom';
+          item.innerHTML = `<b>${p.nombre}</b> (${p.marca}) - Stock: ${p.cantidad_stock}`;
+          item.onclick = () => selectProduct(p);
+          resultsDiv.appendChild(item);
         });
+        resultsDiv.classList.remove('d-none');
+      } else {
+        resultsDiv.classList.add('d-none');
+      }
+    };
 
-    </script>
-</body>
-</html>
+    inputScanner.addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase().trim();
+      if (query.length < 2) {
+        renderResults([]);
+        detailArea.classList.add('d-none');
+        return;
+      }
+      const filtered = allProducts.filter(p =>
+        (p.nombre && p.nombre.toLowerCase().includes(query)) ||
+        (p.marca && p.marca.toLowerCase().includes(query)) ||
+        (p.descripcion && p.descripcion.toLowerCase().includes(query)) ||
+        (p.codigo && p.codigo.toLowerCase().includes(query))
+      );
+      renderResults(filtered.slice(0, 10));
+    });
+
+    const selectProduct = (product) => {
+      inputScanner.value = product.codigo || product.nombre;
+      resultsDiv.classList.add('d-none');
+
+      document.getElementById('detail-id').textContent = product.id;
+      document.getElementById('detail-nombre').textContent = product.nombre;
+      document.getElementById('detail-cantidad').textContent = product.cantidad_stock;
+      document.getElementById('detail-venta').textContent =
+        (product.valor_venta || 0).toLocaleString('es-CO');
+      document.getElementById('detail-interno').textContent =
+        (product.valor_interno || 0).toLocaleString('es-CO');
+
+      detailArea.classList.remove('d-none');
+      document.getElementById('cantidad_scanner').focus();
+    };
+
+    document.addEventListener('click', (e) => {
+      if (!inputScanner.contains(e.target) && !resultsDiv.contains(e.target)) {
+        resultsDiv.classList.add('d-none');
+      }
+    });
+
+    inputScanner.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        document.getElementById('cantidad_scanner').focus();
+      }
+    });
+
+    document.getElementById('cantidad_scanner').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        this.closest('form').submit();
+      }
+    });
+  });
+</script>
+
+{% endblock %}

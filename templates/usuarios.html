@@ -4,44 +4,107 @@
 
 {% block content %}
 {% if current_user.rol.lower() == 'administrador' %}
-<h2>Personal del Sistema</h2>
 
-<!-- Botón para abrir modal de agregar usuario -->
-<button type="button" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#agregarUsuarioModal">
-    + Crear Nuevo Usuario
-</button>
+<style>
+/* 🎀 Tarjetas y botones coquette */
+.btn-coquette {
+    background: linear-gradient(45deg, #ff8fab, #ffb3c6);
+    border: none;
+    color: white;
+    font-weight: 600;
+    border-radius: 10px;
+    transition: 0.3s;
+}
+.btn-coquette:hover {
+    background: linear-gradient(45deg, #ff7aa2, #ff99bb);
+    transform: translateY(-2px);
+}
 
-<div class="table-responsive">
-    <table class="table table-striped table-hover">
+/* Botón outline */
+.btn-coquette-outline {
+    border: 2px solid #ff8fab;
+    color: #ff5c8d;
+    font-weight: 600;
+    border-radius: 10px;
+}
+.btn-coquette-outline:hover {
+    background: #ff8fab;
+    color: white;
+}
+
+/* Tabla estilo coquette */
+.table-coquette thead {
+    background: #ffe0ea;
+    color: #d63384;
+}
+.table-coquette tbody tr:hover {
+    background: #fff2f7;
+}
+
+/* Badge de roles */
+.badge-admin {
+    background: #c77dff;
+}
+.badge-vendedora {
+    background: #ffb3c6;
+    color: #6a004f;
+}
+
+/* Modal coquette */
+.modal-content {
+    border-radius: 20px !important;
+    border: 3px solid #ffc8dd;
+}
+.modal-header {
+    background: #ffe0ea;
+    border-radius: 20px 20px 0 0 !important;
+}
+</style>
+
+<h2 class="mb-4 fw-bold text-center" style="color:#ff5c8d;">🎀 Gestión de Personal 🎀</h2>
+
+<!-- Botón abrir modal -->
+<div class="text-end mb-3">
+    <button type="button" class="btn btn-coquette btn-lg" data-bs-toggle="modal" data-bs-target="#agregarUsuarioModal">
+        + Crear Nuevo Usuario
+    </button>
+</div>
+
+<div class="table-responsive shadow-sm">
+    <table class="table table-hover table-coquette align-middle">
         <thead>
             <tr>
                 <th>Usuario</th>
                 <th>Rol</th>
-                <th>Acciones</th>
+                <th class="text-center">Acciones</th>
             </tr>
         </thead>
         <tbody>
             {% for usuario in usuarios %}
             <tr>
-                <td>{{ usuario.username }}</td>
+                <td class="fw-semibold">{{ usuario.username }}</td>
                 <td>
-                  <span class="badge text-bg-{% if usuario.rol.lower() == 'administrador' %}secondary{% else %}info{% endif %}">
-                    {{ usuario.rol }}
-                  </span>
+                    {% if usuario.rol.lower() == 'administrador' %}
+                        <span class="badge badge-admin px-3 py-2">Administrador</span>
+                    {% else %}
+                        <span class="badge badge-vendedora px-3 py-2">Vendedora</span>
+                    {% endif %}
                 </td>
-                <td>
-                  {% if usuario.id != current_user.id %}
-                  <a href="{{ url_for('editar_usuario', usuario_id=usuario.id) }}" 
-                     class="btn btn-sm" 
-                     style="background-color: #25dbf3; color: white;">
-                      Editar
-                  </a>
-                    <a href="{{ url_for('eliminar_usuario', usuario_id=usuario.id) }}" 
-                     class="btn btn-sm btn-danger" 
-                     data-confirm="¿Seguro que desea eliminar a {{ usuario.username }}?">
-                      Eliminar
+                <td class="text-center">
+                    {% if usuario.id != current_user.id %}
+                    <a href="{{ url_for('editar_usuario', usuario_id=usuario.id) }}" 
+                       class="btn btn-coquette-outline btn-sm me-2">
+                        ✏ Editar
                     </a>
-                  {% endif %}
+
+                    <a href="{{ url_for('eliminar_usuario', usuario_id=usuario.id) }}" 
+                       class="btn btn-danger btn-sm"
+                       data-confirm="¿Seguro que deseas eliminar a {{ usuario.username }}?">
+                        🗑 Eliminar
+                    </a>
+                    {% else %}
+                    <span class="text-muted small">Tu cuenta</span>
+                    {% endif %}
                 </td>
             </tr>
             {% endfor %}
@@ -49,53 +112,67 @@
     </table>
 </div>
 
-<!-- Modal para agregar usuario -->
+<!-- Modal Agregar Usuario -->
 <div class="modal fade" id="agregarUsuarioModal" tabindex="-1" aria-labelledby="agregarUsuarioModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
+
       <form action="{{ url_for('agregar_usuario') }}" method="POST">
+
         <div class="modal-header">
-          <h5 class="modal-title" id="agregarUsuarioModalLabel">Agregar Nuevo Usuario</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+          <h5 class="modal-title fw-bold" id="agregarUsuarioModalLabel" style="color:#d63384;">
+            ✨ Crear Nuevo Usuario ✨
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
+
         <div class="modal-body">
           <div class="mb-3">
-            <label for="username" class="form-label">Usuario</label>
-            <input type="text" class="form-control" id="username" name="username" required>
+            <label class="form-label fw-bold">Usuario</label>
+            <input type="text" class="form-control" name="username" required>
           </div>
+
           <div class="mb-3">
-            <label for="nombre" class="form-label">Nombre</label>
-            <input type="text" class="form-control" id="nombre" name="nombre" required>
+            <label class="form-label fw-bold">Nombre</label>
+            <input type="text" class="form-control" name="nombre" required>
           </div>
+
           <div class="mb-3">
-            <label for="apellido" class="form-label">Apellido</label>
-            <input type="text" class="form-control" id="apellido" name="apellido" required>
+            <label class="form-label fw-bold">Apellido</label>
+            <input type="text" class="form-control" name="apellido" required>
           </div>
+
           <div class="mb-3">
-            <label for="cedula" class="form-label">Cédula</label>
-            <input type="text" class="form-control" id="cedula" name="cedula" required>
+            <label class="form-label fw-bold">Cédula</label>
+            <input type="text" class="form-control" name="cedula" required>
           </div>
+
           <div class="mb-3">
-            <label for="rol" class="form-label">Rol</label>
-            <select class="form-select" id="rol" name="rol" required>
+            <label class="form-label fw-bold">Rol</label>
+            <select class="form-select" name="rol" required>
               <option value="Administrador">Administrador</option>
               <option value="Vendedora">Vendedora</option>
             </select>
           </div>
+
           <div class="mb-3">
-            <label for="password" class="form-label">Contraseña</label>
-            <input type="password" class="form-control" id="password" name="password" required>
+            <label class="form-label fw-bold">Contraseña</label>
+            <input type="password" class="form-control" name="password" required>
           </div>
         </div>
+
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-          <button type="submit" class="btn btn-primary">Crear Usuario</button>
+          <button type="submit" class="btn btn-coquette">Crear Usuario</button>
         </div>
+
       </form>
+
     </div>
   </div>
 </div>
+
 {% else %}
-<p class="text-muted">No tienes permisos para ver esta sección.</p>
+<p class="text-muted text-center">No tienes permisos para ver esta sección.</p>
 {% endif %}
 {% endblock %}

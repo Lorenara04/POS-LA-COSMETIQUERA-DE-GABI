@@ -5,167 +5,237 @@
 {% block content %}
 <div id="flash-container" class="container mt-3"></div>
 
-<h2 class="mb-2 text-center titulo-ventas-bonita">
-    <i class="fas fa-chart-line me-2"></i> Gestión de Ventas: Panel de Control
-</h2>
-<p class="text-center subtitulo-bonita">
-    Resumen de las últimas <strong>{{ ventas_paginadas.per_page }}</strong> transacciones por página.
-    <br><strong>Acceso Exclusivo para Administradoras.</strong>
-</p>
+<!-- Encabezado Coquette -->
+<div class="ventas-header-coquette container mt-4 mb-2">
+    <h2 class="mb-1 text-center titulo-ventas-bonita">
+        <span class="sparkle">✦</span>
+        <i class="fas fa-chart-line me-2"></i>
+        Gestión de Ventas: Panel de Control
+        <span class="sparkle">✦</span>
+    </h2>
+    <p class="text-center subtitulo-bonita">
+        Resumen de las últimas <strong>{{ ventas_paginadas.per_page }}</strong> transacciones por página.
+        <br><strong>Acceso Exclusivo para Administradoras.</strong>
+    </p>
+</div>
 
 <style>
-    /* ------------------ PALETA "BONITA" CON MAGENTA ------------------ */
+    /* ------------------ PALETA COQUETTE MAGENTA PREMIUM ------------------ */
     :root {
-        --color-magenta-principal: #FF4081; /* Un rosa vibrante y amigable */
-        --color-magenta-suave: #FCE4EC; /* Un rosa muy claro para fondos */
-        --color-magenta-oscuro: #AD1457; /* Magenta más profundo para texto o hover */
-        --color-fondo-pagina: #f9fbfd; /* Blanco azulado muy claro */
+        --color-magenta-principal: #FF2D8D; 
+        --color-magenta-suave: #FFE6F1;
+        --color-magenta-oscuro: #A80F54;
+        --color-fondo-pagina: #FFF7FB;
         --color-tarjeta-fondo: #FFFFFF;
-        --color-texto-oscuro: #333333;
-        --color-texto-claro: #6c757d;
-        --color-borde-suave: #e0e0e0;
-        --color-sombra: rgba(0, 0, 0, 0.08);
-        --color-anular: #dc3545; /* Rojo de anulación */
+        --color-texto-oscuro: #2f2f2f;
+        --color-texto-claro: #7a7a7a;
+        --color-borde-suave: #f3c6dc;
+        --color-sombra: rgba(168, 15, 84, 0.12);
+        --color-anular: #dc3545;
+
+        --coquette-dorado: #f7d7e8;
+        --coquette-perla: #fff9fd;
+        --coquette-brillo: rgba(255, 45, 141, 0.25);
     }
 
     body {
-        background-color: var(--color-fondo-pagina);
-        font-family: 'Poppins', sans-serif; /* Fuente moderna y legible */
+        background:
+            radial-gradient(1200px circle at 10% -10%, #ffeaf5 0%, transparent 50%),
+            radial-gradient(1000px circle at 110% 0%, #ffe0ef 0%, transparent 45%),
+            var(--color-fondo-pagina);
+        font-family: 'Poppins', sans-serif;
         color: var(--color-texto-oscuro);
+    }
+
+    /* Encabezado premium */
+    .ventas-header-coquette{
+        background: linear-gradient(180deg, #fff, var(--coquette-perla));
+        border: 1px solid var(--color-borde-suave);
+        border-radius: 18px;
+        padding: 18px 12px;
+        box-shadow: 0 10px 30px var(--color-sombra);
+        position: relative;
+        overflow: hidden;
+    }
+    .ventas-header-coquette::before{
+        content:"";
+        position:absolute;
+        inset:-40%;
+        background: radial-gradient(circle, rgba(255,45,141,.10) 0%, transparent 60%);
+        transform: rotate(8deg);
+        pointer-events:none;
+    }
+
+    .sparkle{
+        color: var(--color-magenta-principal);
+        text-shadow: 0 0 8px var(--coquette-brillo);
+        font-weight: 700;
+        margin: 0 6px;
     }
 
     /* Títulos */
     .titulo-ventas-bonita {
-        font-family: 'Poppins', sans-serif;
-        font-weight: 700;
-        color: var(--color-magenta-oscuro); 
-        letter-spacing: 0.8px;
-        margin-top: 25px;
-        margin-bottom: 10px;
-        text-shadow: 1px 1px 2px rgba(0,0,0,0.05); /* Sombra suave para el título */
+        font-weight: 800;
+        color: var(--color-magenta-oscuro);
+        letter-spacing: 0.7px;
+        text-shadow:
+            0 2px 0 #fff,
+            0 6px 18px var(--coquette-brillo);
     }
     .subtitulo-bonita {
         font-size: 0.95rem;
         color: var(--color-texto-claro);
-        margin-bottom: 40px;
+        margin-bottom: 8px;
         font-weight: 400;
     }
-    
-    /* Contenedor principal (tarjeta) */
+
+    /* Contenedor principal tipo tarjeta */
     .tabla-container-bonita {
         background-color: var(--color-tarjeta-fondo);
-        border: 1px solid var(--color-borde-suave); 
-        border-radius: 15px; /* Bordes más redondeados */
+        border: 1px solid var(--color-borde-suave);
+        border-radius: 18px;
         padding: 0;
-        box-shadow: 0 8px 25px var(--color-sombra); /* Sombra más pronunciada pero suave */
-        margin-top: 30px;
-        overflow: hidden; /* Asegura que los bordes redondeados se apliquen a la tabla interna */
+        box-shadow: 0 12px 35px var(--color-sombra);
+        margin-top: 26px;
+        overflow: hidden;
+        position: relative;
+    }
+    .tabla-container-bonita::after{
+        content:"";
+        position:absolute;
+        height:6px;
+        inset:0 0 auto 0;
+        background: linear-gradient(90deg, transparent, var(--color-magenta-principal), transparent);
+        opacity:.35;
     }
 
     /* Tabla */
     .tabla-ventas-bonita {
         margin-bottom: 0 !important;
-        border-collapse: separate; /* Necesario para border-radius en celdas si se usara, pero aquí mejor en el contenedor */
+        border-collapse: separate;
     }
-    
-    /* Encabezado de la Tabla */
+
+    /* Encabezados */
     .tabla-ventas-bonita thead th {
-        background-color: var(--color-magenta-suave); /* Fondo rosa muy claro */
+        background: linear-gradient(180deg, var(--color-magenta-suave), #fff);
         color: var(--color-magenta-oscuro);
         border: none;
         text-align: center;
-        font-weight: 600;
-        padding: 15px 10px;
-        font-size: 0.9rem;
+        font-weight: 700;
+        padding: 14px 10px;
+        font-size: 0.88rem;
         text-transform: uppercase;
-        border-bottom: 2px solid var(--color-magenta-principal); /* Línea inferior distintiva */
+        border-bottom: 2px solid var(--color-magenta-principal);
     }
-    /* Estilo para la primera y última celda del thead para mantener el redondeado del contenedor */
-    .tabla-ventas-bonita thead tr th:first-child {
-        border-top-left-radius: 15px;
-    }
-    .tabla-ventas-bonita thead tr th:last-child {
-        border-top-right-radius: 15px;
-    }
-    
+    .tabla-ventas-bonita thead tr th:first-child { border-top-left-radius: 18px; }
+    .tabla-ventas-bonita thead tr th:last-child { border-top-right-radius: 18px; }
+
     /* Filas */
     .tabla-ventas-bonita tbody tr {
-        transition: background-color 0.3s ease, transform 0.2s ease;
+        transition: background-color 0.25s ease, transform 0.2s ease, box-shadow .2s ease;
     }
     .tabla-ventas-bonita tbody tr:nth-child(even) {
-        background-color: #fcfdff; /* Rayado muy sutil */
+        background-color: #fffdfd;
     }
     .tabla-ventas-bonita tbody tr:hover {
-        background-color: var(--color-magenta-suave); 
-        transform: translateY(-2px); /* Efecto flotante al pasar el ratón */
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        background-color: var(--color-magenta-suave);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 18px rgba(0,0,0,0.08);
     }
     .tabla-ventas-bonita td {
         vertical-align: middle;
         text-align: center;
         color: var(--color-texto-oscuro);
-        font-weight: 400;
+        font-weight: 500;
         padding: 12px 10px;
-        font-size: 0.875rem;
+        font-size: 0.88rem;
     }
-    /* Total de Venta */
+
+    /* Total fuerte */
     .text-magenta-fuerte-bonita {
         color: var(--color-magenta-principal) !important;
-        font-weight: 700 !important;
-        font-size: 1.05rem;
+        font-weight: 800 !important;
+        font-size: 1.08rem;
+        text-shadow: 0 0 10px rgba(255,45,141,0.15);
     }
-    
-    /* Botones de Acción */
+
+    /* Botones */
     .btn-bonita-detalle, .btn-bonita-anular {
-        font-family: 'Poppins', sans-serif;
-        font-weight: 600;
-        border-radius: 8px; /* Más redondeado */
+        font-weight: 700;
+        border-radius: 999px;
         padding: 8px 18px;
-        font-size: 0.85rem;
+        font-size: 0.83rem;
         transition: all 0.2s ease;
         text-transform: uppercase;
         letter-spacing: 0.5px;
+        display: inline-flex;
+        align-items:center;
+        gap:6px;
     }
 
     .btn-bonita-detalle {
-        background-color: var(--color-magenta-principal); 
+        background:
+            linear-gradient(135deg, #ff6ab0 0%, var(--color-magenta-principal) 60%, #ff2d8d 100%);
         color: white;
         border: none;
-        box-shadow: 0 4px 10px rgba(255, 64, 129, 0.3);
+        box-shadow:
+            0 6px 16px rgba(255,45,141,0.35),
+            inset 0 0 0 2px rgba(255,255,255,0.65);
+        position: relative;
+        overflow: hidden;
+    }
+    .btn-bonita-detalle::after{
+        content:"";
+        position:absolute;
+        top:-60%;
+        left:-60%;
+        width:120%;
+        height:120%;
+        background: radial-gradient(circle at center, rgba(255,255,255,.6), transparent 55%);
+        transform: rotate(15deg);
+        opacity:.35;
     }
     .btn-bonita-detalle:hover {
-        background-color: var(--color-magenta-oscuro); /* Magenta más oscuro */
-        color: white;
+        background:
+            linear-gradient(135deg, var(--color-magenta-principal) 0%, var(--color-magenta-oscuro) 80%);
         transform: translateY(-2px);
-        box-shadow: 0 6px 15px rgba(173, 20, 87, 0.4);
+        box-shadow: 0 10px 22px rgba(168,15,84,0.45);
+        color:#fff;
     }
-    
+
     .btn-bonita-anular {
-        background-color: transparent; 
-        color: var(--color-anular); /* Rojo de anulación */
-        border: 1px solid var(--color-anular);
+        background-color: transparent;
+        color: var(--color-anular);
+        border: 1.6px dashed var(--color-anular);
+        padding-left:16px;
+        padding-right:16px;
+        text-decoration: none;
     }
     .btn-bonita-anular:hover {
         background-color: var(--color-anular);
         color: white;
         transform: translateY(-2px);
-        box-shadow: 0 4px 10px rgba(220, 53, 69, 0.3);
+        box-shadow: 0 6px 14px rgba(220,53,69,0.35);
+        border-style: solid;
     }
-    
+
     /* Paginación */
     .pagination .page-item a {
         color: var(--color-magenta-principal);
         border: 1px solid var(--color-magenta-suave);
-        border-radius: 8px;
+        border-radius: 999px;
         margin: 0 3px;
         padding: 8px 15px;
         transition: all 0.2s ease;
+        font-weight: 600;
+        background: #fff;
+        box-shadow: 0 2px 6px rgba(255,45,141,0.08);
     }
     .pagination .page-item.active a {
         background-color: var(--color-magenta-principal);
         border-color: var(--color-magenta-principal);
         color: white;
-        box-shadow: 0 4px 10px rgba(255, 64, 129, 0.3);
+        box-shadow: 0 6px 16px rgba(255,45,141,0.35);
     }
     .pagination .page-item a:hover {
         background-color: var(--color-magenta-suave);
@@ -173,104 +243,117 @@
         transform: translateY(-1px);
     }
     .pagination-info-bonita {
-        font-size: 0.85rem;
+        font-size: 0.88rem;
         color: var(--color-texto-claro);
+        font-weight: 500;
     }
-    
+
     /* Modales */
     .modal-content-custom-bonita {
-        border-radius: 15px;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
-        border: none;
+        border-radius: 18px;
+        box-shadow: 0 12px 45px rgba(0,0,0,0.18);
+        border: 1px solid var(--color-borde-suave);
+        overflow:hidden;
     }
     .modal-header-custom-bonita {
-        background-color: var(--color-magenta-principal); 
+        background:
+            linear-gradient(135deg, #ff77b7 0%, var(--color-magenta-principal) 60%, #ff2d8d 100%);
         color: white;
-        border-radius: 15px 15px 0 0;
+        border-radius: 18px 18px 0 0;
         border-bottom: none;
-        padding: 20px;
+        padding: 18px 20px;
         text-align: center;
+        position: relative;
+    }
+    .modal-header-custom-bonita::after{
+        content:"🎀";
+        position:absolute;
+        right:16px;
+        top:12px;
+        font-size:1.2rem;
+        opacity:.9;
+        text-shadow:0 2px 8px rgba(0,0,0,.2);
     }
     .modal-header-custom-bonita .modal-title {
         width: 100%;
-        font-weight: 600;
+        font-weight: 700;
+        letter-spacing:.4px;
     }
     .btn-close-white-bonita {
-        filter: invert(1); /* Hace el ícono blanco */
-        opacity: 0.8;
+        filter: invert(1);
+        opacity: 0.9;
     }
-    .btn-close-white-bonita:hover {
-        opacity: 1;
-    }
-    
-    /* Estilos dentro del modal */
+    .btn-close-white-bonita:hover { opacity: 1; }
+
+    /* Dentro modal */
     .modal-body h4 {
         color: var(--color-magenta-principal);
-        font-weight: 600;
-        margin-bottom: 20px;
-        border-bottom: 2px solid var(--color-magenta-suave);
-        padding-bottom: 10px;
+        font-weight: 700;
+        margin-bottom: 14px;
+        border-bottom: 2px dashed var(--color-magenta-suave);
+        padding-bottom: 8px;
     }
     .modal-body label {
-        font-weight: 500;
+        font-weight: 600;
         color: var(--color-texto-oscuro);
         margin-bottom: 5px;
     }
     .form-control, .form-select {
-        border-radius: 8px;
+        border-radius: 12px;
         border-color: var(--color-borde-suave);
-        padding: 10px 15px;
+        padding: 10px 14px;
+        background:"#fff";
     }
     .form-control:focus, .form-select:focus {
         border-color: var(--color-magenta-principal);
-        box-shadow: 0 0 0 0.25rem rgba(255, 64, 129, 0.25);
+        box-shadow: 0 0 0 0.25rem rgba(255, 45, 141, 0.22);
     }
 
-    #modal-total-venta.fs-4 {
-        font-size: 1.8rem !important; /* Aumenta el tamaño del total */
-    }
+    #modal-total-venta.fs-4 { font-size: 1.9rem !important; }
     #modal-total-venta {
         color: var(--color-magenta-oscuro) !important;
-        font-weight: 700;
+        font-weight: 800;
+        text-shadow: 0 0 10px rgba(255,45,141,0.12);
     }
 
-    /* Detalle de Pagos */
+    /* Métodos de pago */
     .metodo-pago-editable {
         background-color: #fff;
         border: 1px solid var(--color-borde-suave);
-        border-radius: 10px;
-        padding: 15px;
+        border-radius: 14px;
+        padding: 14px;
         margin-bottom: 12px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        box-shadow: 0 3px 10px rgba(0,0,0,0.06);
     }
     .metodo-pago-editable label {
-        font-weight: 600;
+        font-weight: 700;
         color: var(--color-magenta-principal);
-        display: block; /* Para que el input vaya abajo */
-        margin-bottom: 8px;
+        display: block;
+        margin-bottom: 7px;
     }
 
     .alert-bonita-custom {
-        border-left: 5px solid var(--color-magenta-principal);
+        border-left: 6px solid var(--color-magenta-principal);
         background-color: var(--color-magenta-suave);
         color: var(--color-texto-oscuro);
-        border-radius: 8px;
+        border-radius: 12px;
+        font-weight: 500;
     }
 
-    /* Estilos para el select2 */
+    /* Select2 */
     .select2-container--bootstrap-5 .select2-selection {
-        border-radius: 8px !important;
+        border-radius: 12px !important;
         border-color: var(--color-borde-suave) !important;
         padding: 0.6rem 1.1rem !important;
     }
     .select2-container--bootstrap-5.select2-container--focus .select2-selection {
         border-color: var(--color-magenta-principal) !important;
-        box-shadow: 0 0 0 0.25rem rgba(255, 64, 129, 0.25) !important;
+        box-shadow: 0 0 0 0.25rem rgba(255, 45, 141, 0.22) !important;
     }
     .select2-container--bootstrap-5 .select2-dropdown {
-        border-radius: 8px !important;
+        border-radius: 12px !important;
         border-color: var(--color-borde-suave) !important;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        box-shadow: 0 8px 22px rgba(0,0,0,0.12);
     }
     .select2-container--bootstrap-5 .select2-results__option--selected {
         background-color: var(--color-magenta-suave) !important;
@@ -280,14 +363,12 @@
         background-color: var(--color-magenta-principal) !important;
         color: white !important;
     }
-
 </style>
 
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
 {% if current_user.rol.lower() == 'administrador' %}
 <div class="tabla-container-bonita container">
@@ -312,11 +393,16 @@
                     <td>{{ venta.vendedor.username if venta.vendedor else 'N/A' }}</td>
                     <td>{{ venta.comprador.nombre if venta.comprador else 'Contado / Genérico' }}</td>
                     <td>
-                        <button type="button" class="btn-bonita-detalle btn me-2" data-bs-toggle="modal" data-bs-target="#detalleModal" data-venta-id="{{ venta.id }}" data-venta-fecha="{{ venta.fecha | fecha_co }}">
+                        <!-- IMPORTANTE: data-bs-target apunta al modal -->
+                        <button type="button" class="btn-bonita-detalle btn me-2"
+                            data-bs-toggle="modal"
+                            data-bs-target="#detalleModal"
+                            data-venta-id="{{ venta.id }}"
+                            data-venta-fecha="{{ venta.fecha | fecha_co }}">
                             <i class="fas fa-eye me-1"></i> Detalle
                         </button>
-                        <a href="{{ url_for('eliminar_venta', venta_id=venta.id) }}" 
-                            data-confirm="¿Estás segura de que quieres ANULAR la Venta N° {{ venta.id }}? Esta acción es irreversible y devolverá el stock." 
+                        <a href="{{ url_for('eliminar_venta', venta_id=venta.id) }}"
+                            data-confirm="¿Estás segura de que quieres ANULAR la Venta N° {{ venta.id }}? Esta acción es irreversible y devolverá el stock."
                             class="btn-bonita-anular"><i class="fas fa-undo-alt me-1"></i> Anular</a>
                     </td>
                 </tr>
@@ -333,7 +419,7 @@
                 <span aria-hidden="true">&laquo;</span>
             </a>
         </li>
-        
+
         {% for page_num in ventas_paginadas.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
             {% if page_num %}
                 {% if ventas_paginadas.page == page_num %}
@@ -358,7 +444,7 @@
 </div>
 <hr class="mb-5">
 
-<!-- Modal de Detalle/Edición Bonito -->
+<!-- Modal de Detalle/Edición -->
 <div class="modal fade" id="detalleModal" tabindex="-1" aria-labelledby="detalleModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl">
         <div class="modal-content modal-content-custom-bonita">
@@ -368,9 +454,8 @@
             </div>
             <div class="modal-body">
                 <form id="form-editar-info-basica" method="POST" action="">
-                    <!-- Hidden input para el total editado, usado por el JS para la validación de pagos -->
-                    <input type="hidden" name="venta_id" id="input-venta-id"> 
-                    
+                    <input type="hidden" name="venta_id" id="input-venta-id">
+
                     <div class="row">
                         <div class="col-md-7">
                             <h4 class="text-secondary"><i class="fas fa-boxes me-2"></i> Artículos Vendidos
@@ -378,9 +463,10 @@
                                     <i class="fas fa-plus"></i> Añadir Artículo
                                 </button>
                             </h4>
-                            
+
                             <div class="alert alert-warning mt-2 alert-bonita-custom" role="alert">
-                                ⚠️ <strong>Atención:</strong> Modificar cantidades recalcula el <strong>Total</strong>. Se valida el stock. <strong>Guarde Cambios al Detalle</strong> antes de actualizar la sección de pagos.
+                                ⚠️ <strong>Atención:</strong> Modificar cantidades recalcula el <strong>Total</strong>. Se valida el stock.
+                                <strong>Guarde Cambios al Detalle</strong> antes de actualizar la sección de pagos.
                             </div>
 
                             <div class="table-responsive">
@@ -394,12 +480,12 @@
                                         </tr>
                                     </thead>
                                     <tbody id="productos-vendidos-body">
-                                        <!-- Contenido cargado por JS -->
+                                        <!-- JS -->
                                     </tbody>
                                 </table>
                             </div>
-                            
-                            <div class="text-end mt-3 p-3 border rounded" style="background-color: var(--color-magenta-suave);">
+
+                            <div class="text-end mt-3 p-3 border rounded" style="background-color: var(--color-magenta-suave); border-color: var(--color-borde-suave)!important;">
                                 <button type="button" class="btn btn-lg btn-bonita-detalle" id="btn-guardar-detalle-venta">
                                     <i class="fas fa-save me-2"></i> Guardar Cambios al Detalle
                                 </button>
@@ -431,7 +517,7 @@
                                 </select>
                             </div>
                             <hr>
-                            
+
                             <h4 class="text-secondary"><i class="fas fa-credit-card me-2"></i> Formas de Pago</h4>
                             <div id="modal-detalle-pagos">
                                 <div class="metodo-pago-editable">
@@ -463,7 +549,7 @@
                                     <input type="date" name="fecha_transaccion" id="input-fecha-transaccion" class="form-control">
                                 </div>
                             </div>
-                            
+
                             <div class="mt-4 text-center">
                                 <button type="submit" class="btn btn-lg btn-bonita-detalle">
                                     <i class="fas fa-save me-2"></i> Guardar Info y Pagos
@@ -474,11 +560,11 @@
                 </form>
             </div>
         </div>
-        
+
     </div>
 </div>
 
-<!-- Modal para agregar producto (Bonito) -->
+<!-- Modal agregar producto -->
 <div class="modal fade" id="agregarProductoModal" tabindex="-1" aria-labelledby="agregarProductoModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content modal-content-custom-bonita">
@@ -491,7 +577,7 @@
                     <label for="select-producto-agregar" class="form-label">Buscar Producto (por nombre o descripción)</label>
                     <select id="select-producto-agregar" class="form-select w-100" data-bs-theme="bootstrap-5"></select>
                 </div>
-                <div id="info-producto-seleccionado" class="mt-3 p-3 border rounded" style="display:none; background-color: var(--color-magenta-suave);">
+                <div id="info-producto-seleccionado" class="mt-3 p-3 border rounded" style="display:none; background-color: var(--color-magenta-suave); border-color: var(--color-borde-suave)!important;">
                     <p><strong>Marca:</strong> <span id="info-marca"></span></p>
                     <p><strong>Precio Venta:</strong> $<span id="info-precio-venta"></span></p>
                     <p><strong>Stock Disponible:</strong> <span id="info-stock"></span> unidades</p>
@@ -517,24 +603,22 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
     let productosEnVenta = [];
-    let productosInventario = []; 
-    // Variable CLAVE para la sincronización del total
-    let nuevoTotalDetalle = 0; 
+    let productosInventario = [];
+    let nuevoTotalDetalle = 0;
 
     function formatCurrency(value) {
         if (typeof value === 'string') value = parseFloat(value);
-        // Usamos Intl.NumberFormat para un formato de moneda correcto (Colombia usa punto como separador de miles)
+        if (isNaN(value)) value = 0;
         return value.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
     }
 
     function flashMessage(message, category = 'success') {
         const container = $('#flash-container');
         if (!container.length) return;
-        // Mapeamos las categorías a las clases de Bootstrap
-        const bsCategory = category === 'danger' ? 'danger' : (category === 'warning' ? 'warning' : 'success');
-        const alertHtml = `<div class="alert alert-${bsCategory} alert-dismissible fade show" role="alert">${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
+        const bsCategory = category === 'danger' ? 'danger' : (category === 'warning' ? 'warning' : (category === 'info' ? 'info' : 'success'));
+        const alertHtml = `<div class="alert alert-${bsCategory} alert-dismissible fade show alert-bonita-custom" role="alert">${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
         container.html(alertHtml);
-        setTimeout(() => container.empty(), 7000); 
+        setTimeout(() => container.empty(), 7000);
     }
 
     function recalcularTotales() {
@@ -548,31 +632,44 @@
                 p.subtotal = 0;
             }
         });
-        // Sincronizar la variable clave
-        nuevoTotalDetalle = total; 
+        nuevoTotalDetalle = total;
         $('#modal-total-venta').text(formatCurrency(total));
     }
 
+    // ✅ FIX: render confiable (siempre muestra algo)
     function renderProductos() {
         const $tbody = $('#productos-vendidos-body');
         $tbody.empty();
 
+        if (!Array.isArray(productosEnVenta)) {
+            flashMessage('Error: los productos no llegaron correctamente.', 'danger');
+            return;
+        }
+
         const productosVisibles = productosEnVenta.filter(p => p.cantidad > 0);
 
         if (productosVisibles.length === 0) {
-            $tbody.html('<tr><td colspan="4" class="text-muted">No hay artículos vendidos en este pedido.</td></tr>');
-            recalcularTotales();
+            $tbody.html(`
+                <tr>
+                    <td colspan="4" class="text-muted text-center">
+                        ❗ Esta venta no tiene artículos registrados.
+                        <br><small>Puedes agregar productos con el botón “Añadir Artículo”.</small>
+                    </td>
+                </tr>
+            `);
+            $('#modal-total-venta').text("0");
             return;
         }
 
         productosVisibles.forEach((p) => {
             const productoInventario = productosInventario.find(inv => inv.id === p.id);
-            // Stock disponible para la edición (Stock actual + lo que ya está en esta venta)
-            const stockActual = productoInventario ? productoInventario.cantidad_stock + p.cantidad : 'N/A';
+            const stockActual = productoInventario
+                ? productoInventario.cantidad_stock + p.cantidad
+                : p.cantidad;
+
             const descripcion_display = p.descripcion || (productoInventario ? productoInventario.descripcion : 'Sin descripción');
-            const marca_display = p.marca || 'Sin marca';
-            
-            const realIndex = productosEnVenta.indexOf(p); 
+            const marca_display = p.marca || (productoInventario ? productoInventario.marca : 'Sin marca');
+            const realIndex = productosEnVenta.indexOf(p);
             const subtotal = p.cantidad * p.precio_unitario;
 
             const row = `
@@ -584,7 +681,7 @@
                         <br><small class="text-info">(Stock máx. editable: ${stockActual})</small>
                     </td>
                     <td>
-                        <input type="number" class="form-control form-control-sm text-center input-cantidad-producto" 
+                        <input type="number" class="form-control form-control-sm text-center input-cantidad-producto"
                                 value="${p.cantidad}" min="1" data-index="${realIndex}" style="width: 80px; display: inline-block;">
                     </td>
                     <td>$${formatCurrency(p.precio_unitario)}</td>
@@ -602,53 +699,50 @@
     }
 
     $(document).ready(function() {
-        // Inicialización de Select2 para modales
         $('#modal-vendedor').select2({ theme: 'bootstrap-5', dropdownParent: $('#detalleModal') });
         $('#modal-cliente').select2({ theme: 'bootstrap-5', dropdownParent: $('#detalleModal') });
     });
-    
+
+    // ✅ Cargar detalle al abrir modal
     $('#detalleModal').on('show.bs.modal', function (event) {
         const button = $(event.relatedTarget);
         const ventaId = button.data('venta-id');
-        const ventaFecha = button.data('venta-fecha'); 
+        const ventaFecha = button.data('venta-fecha');
         const modal = $(this);
 
-        modal.find('.modal-title #modal-venta-id').text(ventaId);
+        modal.find('#modal-venta-id').text(ventaId);
         modal.find('#input-venta-id').val(ventaId);
-        $('#modal-agregar-venta-id-title').text(ventaId); 
-        modal.find('#modal-fecha').val(ventaFecha); 
+        $('#modal-agregar-venta-id-title').text(ventaId);
+        modal.find('#modal-fecha').val(ventaFecha);
         modal.find('#form-editar-info-basica').attr('action', `/ventas/editar_info/${ventaId}`);
-        $('#info-producto-seleccionado').hide(); 
+        $('#info-producto-seleccionado').hide();
 
-        // Cargar datos de la venta y del inventario en paralelo
         $.when(
             $.getJSON(`/api/ventas/detalle/${ventaId}`),
             $.getJSON(`{{ url_for('api_todos_los_productos') }}`)
         ).done(function(ventaResponse, productosResponse) {
 
             const data = ventaResponse[0];
-            // Aseguramos que la respuesta de productos sea el array dentro de la propiedad 'productos'
             productosInventario = productosResponse[0].productos || [];
-            
+
             if (!data || !data.productos) {
-                flashMessage('Error interno al cargar datos.', 'danger'); 
+                flashMessage('Error interno al cargar datos.', 'danger');
                 modal.modal('hide');
-                return; 
+                return;
             }
-            
+
             productosEnVenta = data.productos.map(p => {
                 const inv = productosInventario.find(inv => inv.id === p.id);
                 p.nombre = p.nombre || (inv ? inv.nombre : 'Producto Desconocido');
-                p.descripcion = p.descripcion || (inv ? inv.descripcion : 'Sin descripción'); 
+                p.descripcion = p.descripcion || (inv ? inv.descripcion : 'Sin descripción');
                 p.marca = p.marca || (inv ? inv.marca : 'Sin marca');
                 p.subtotal = p.cantidad * p.precio_unitario;
                 return p;
             });
 
-            renderProductos(); 
-            
-            // Cargar datos de info básica y pagos
-            $('#modal-cliente').val(data.cliente_id || '').trigger('change'); 
+            renderProductos();
+
+            $('#modal-cliente').val(data.cliente_id || '').trigger('change');
             $('#modal-vendedor').val(data.vendedor_id).trigger('change');
 
             const pagos = data.pagos || {};
@@ -659,22 +753,23 @@
             $('#input-pago-tarjeta').val(pagos['Tarjeta/Bold'] || 0);
             $('#input-codigo-transaccion').val(pagos['Ref_Codigo'] || '');
             $('#input-fecha-transaccion').val(pagos['Ref_Fecha'] || '');
-            
+
         }).fail(function() {
-            flashMessage('Error al cargar los detalles de la venta.', 'danger'); 
-            modal.modal('hide'); 
+            flashMessage('Error al cargar los detalles de la venta.', 'danger');
+            modal.modal('hide');
         });
     });
 
+    // Modal agregar producto
     $('#agregarProductoModal').on('show.bs.modal', function() {
         const select2Data = productosInventario
-            .filter(p => p.cantidad_stock > 0) 
+            .filter(p => p.cantidad_stock > 0)
             .map(p => ({
                 id: p.id,
                 text: `${p.nombre} ${p.marca ? '- ' + p.marca : ''} (${p.descripcion ? p.descripcion.substring(0, 30) + (p.descripcion.length > 30 ? '...' : '') : 'Sin descripción'}) [Stock: ${p.cantidad_stock}]`,
                 data: p
             }));
-        
+
         if ($('#select-producto-agregar').data('select2')) {
             $('#select-producto-agregar').select2('destroy');
         }
@@ -687,7 +782,7 @@
             allowClear: true,
             width: '100%'
         });
-        
+
         $('#select-producto-agregar').val(null).trigger('change');
         $('#input-cantidad-agregar').val(1);
         $('#info-producto-seleccionado').hide();
@@ -712,18 +807,16 @@
         .on('change', '.input-cantidad-producto', function() {
             const index = $(this).data('index');
             let nuevaCantidad = parseInt($(this).val()) || 0;
-            
+
             const productoId = productosEnVenta[index].id;
             const itemInSale = productosEnVenta[index];
 
             const productoInventario = productosInventario.find(inv => inv.id === productoId);
-            // Stock disponible real (inventario + cantidad que ya estaba en esta venta)
-            const stockDisponible = productoInventario ? productoInventario.cantidad_stock + itemInSale.cantidad : Infinity; 
-            
+            const stockDisponible = productoInventario ? productoInventario.cantidad_stock + itemInSale.cantidad : Infinity;
+
             if (nuevaCantidad < 1) {
-                // Usamos la función flashMessage para notificaciones
                 flashMessage(`La cantidad mínima es 1.`, 'warning');
-                nuevaCantidad = 1; 
+                nuevaCantidad = 1;
                 $(this).val(1);
             }
             if (nuevaCantidad > stockDisponible) {
@@ -737,7 +830,6 @@
         })
         .on('click', '.btn-anular-producto', function() {
             const index = $(this).data('index');
-            // Reemplazamos confirm() con flashMessage + un modal custom si fuera necesario. Por simplicidad, mantenemos confirm() por ahora.
             if (!confirm('¿Anular este artículo? Se devolverá el stock al guardar. Continuar?')) return;
             productosEnVenta[index].cantidad = 0;
             renderProductos();
@@ -749,21 +841,20 @@
         $('#agregarProductoModal').modal('show');
         $('#detalleModal').modal('hide');
     });
-    
+
     $('#btn-confirmar-agregar').on('click', function() {
         const productoData = $('#info-producto-seleccionado').data('producto');
         let cantidad = parseInt($('#input-cantidad-agregar').val());
-        
+
         if (!productoData || cantidad <= 0 || isNaN(cantidad)) {
             flashMessage('Selecciona un artículo y cantidad válida.', 'danger');
             return;
         }
-        
+
         const existingItemIndex = productosEnVenta.findIndex(p => p.id === productoData.id);
         const currentInSale = existingItemIndex !== -1 ? productosEnVenta[existingItemIndex].cantidad : 0;
-        // Stock real + cantidad actual en la venta (para no exceder el total disponible)
-        const stock = productoData.cantidad_stock + currentInSale; 
-        
+        const stock = productoData.cantidad_stock + currentInSale;
+
         if (cantidad > stock) {
             flashMessage(`Error: Solo hay ${stock} en stock.`, 'danger');
             return;
@@ -782,13 +873,13 @@
                 subtotal: 0
             });
         }
-        
+
         renderProductos();
         $('#agregarProductoModal').modal('hide');
         flashMessage(`Artículo añadido. ¡Guarda los cambios al detalle!`, 'info');
     });
 
-    $('#btn-guardar-detalle-venta').on('click', async function() {
+    $('#btn-guardar-detalle-venta').on('click', function() {
         const ventaId = $('#input-venta-id').val();
         const url = `/api/ventas/detalle/editar/${ventaId}`;
 
@@ -797,7 +888,7 @@
             cantidad: p.cantidad,
             precio_unitario: p.precio_unitario,
         }));
-        
+
         if (productosAEnviar.length === 0) {
             if (!confirm('La venta quedará sin artículos (Total $0). ¿Continuar?')) return;
         }
@@ -814,16 +905,14 @@
                 $btn.prop('disabled', false).html('<i class="fas fa-save me-2"></i> Guardar Cambios al Detalle');
                 if (response.success) {
                     flashMessage(`✅ Detalle actualizado. Nuevo Total: $${formatCurrency(response.nuevo_total)}. Recargando...`, 'success');
-                    
-                    // CLAVE: Sincronizar el total global para la validación de pagos en el frontend
-                    nuevoTotalDetalle = response.nuevo_total; 
+
+                    nuevoTotalDetalle = response.nuevo_total;
                     $('#modal-total-venta').text(formatCurrency(response.nuevo_total));
 
-                    // Forzar recarga para actualizar la tabla principal y el stock visible
-                    setTimeout(() => location.reload(), 1500); 
+                    setTimeout(() => location.reload(), 1500);
                 } else {
                     flashMessage(`❌ Error: ${response.message}`, 'danger');
-                    renderProductos(); 
+                    renderProductos();
                 }
             },
             error: function(jqXHR) {
@@ -834,34 +923,28 @@
         });
     });
 
-    // CLAVE: Lógica de validación del formulario de pagos
+    // Validación de pagos vs total
     $('#form-editar-info-basica').on('submit', function(e) {
-        // Usamos el total guardado del último detalle editado o el total inicial de la venta
-        const totalVentaBackend = nuevoTotalDetalle; 
-        
+        const totalVentaBackend = nuevoTotalDetalle;
         let totalPagos = 0;
         totalPagos += parseFloat($('#input-pago-efectivo').val() || 0);
         totalPagos += parseFloat($('#input-pago-nequi').val() || 0);
         totalPagos += parseFloat($('#input-pago-daviplata').val() || 0);
         totalPagos += parseFloat($('#input-pago-transferencia').val() || 0);
         totalPagos += parseFloat($('#input-pago-tarjeta').val() || 0);
-        
-        // Usamos una pequeña tolerancia para errores de punto flotante
+
         if (Math.abs(totalVentaBackend - totalPagos) > 0.01) {
-            e.preventDefault(); // Detener el envío
+            e.preventDefault();
             const diff = totalVentaBackend - totalPagos;
             flashMessage(`❌ Error de Descuadre: La suma de pagos ($${formatCurrency(totalPagos)}) no coincide con el Total de Venta ($${formatCurrency(totalVentaBackend)}). Faltan/Sobran: $${formatCurrency(diff)}.`, 'danger');
             return;
         }
-
-        // Si la validación es exitosa, el formulario se envía (this.submit() implícito)
     });
 
-    // Lógica para el botón de anular en la tabla principal (con confirmación)
+    // Confirmación de anular venta
     $('.btn-bonita-anular').on('click', function(e) {
         e.preventDefault();
         const confirmMsg = $(this).data('confirm');
-        // Reemplazamos confirm() con un modal custom si fuera necesario, pero mantenemos la lógica de la URL.
         if (confirm(confirmMsg)) {
             window.location.href = $(this).attr('href');
         }
