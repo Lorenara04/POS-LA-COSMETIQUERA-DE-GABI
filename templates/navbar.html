@@ -1,0 +1,64 @@
+<!-- Barra de Navegación (Navbar) -->
+<nav class="bg-pink-600 shadow-lg">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
+            <!-- Logo y nombre de la aplicación -->
+            <div class="flex items-center">
+                <a href="{{ url_for('dashboard') }}" class="flex-shrink-0 flex items-center">
+                    <!-- Icono de Corazón -->
+                    <svg class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                    </svg>
+                    <span class="text-white text-xl font-bold ml-2">La Cosmetiquera de Gabi</span>
+                </a>
+            </div>
+
+            <!-- Menú Principal (Visibles para todos los usuarios logueados) -->
+            <div class="flex items-center space-x-4">
+                <div class="hidden sm:ml-6 sm:flex sm:space-x-4">
+                    <a href="{{ url_for('dashboard') }}" class="text-white hover:bg-pink-700 px-3 py-2 rounded-md text-sm font-medium transition duration-150 ease-in-out">
+                        <i class="fas fa-home mr-1"></i> Dashboard
+                    </a>
+                    <a href="{{ url_for('nueva_venta') }}" class="text-white hover:bg-pink-700 px-3 py-2 rounded-md text-sm font-medium transition duration-150 ease-in-out">
+                        <i class="fas fa-cash-register mr-1"></i> Nueva Venta
+                    </a>
+                    <a href="{{ url_for('inventario') }}" class="text-white hover:bg-pink-700 px-3 py-2 rounded-md text-sm font-medium transition duration-150 ease-in-out">
+                        <i class="fas fa-boxes-stacked mr-1"></i> Inventario
+                    </a>
+                    <a href="{{ url_for('clientes') }}" class="text-white hover:bg-pink-700 px-3 py-2 rounded-md text-sm font-medium transition duration-150 ease-in-out">
+                        <i class="fas fa-users mr-1"></i> Clientes
+                    </a>
+                    
+                    <!-- Enlaces de Administrador -->
+                    {% if current_user.is_authenticated and current_user.rol.lower() == 'administrador' %}
+                        <a href="{{ url_for('gestion_ventas') }}" class="text-white hover:bg-pink-700 px-3 py-2 rounded-md text-sm font-medium transition duration-150 ease-in-out">
+                            <i class="fas fa-file-invoice-dollar mr-1"></i> Gestión Ventas
+                        </a>
+                        <a href="{{ url_for('reportes') }}" class="text-white hover:bg-pink-700 px-3 py-2 rounded-md text-sm font-medium transition duration-150 ease-in-out">
+                            <i class="fas fa-chart-line mr-1"></i> Reportes
+                        </a>
+                        <a href="{{ url_for('usuarios') }}" class="text-white hover:bg-pink-700 px-3 py-2 rounded-md text-sm font-medium transition duration-150 ease-in-out">
+                            <i class="fas fa-user-gear mr-1"></i> Usuarios
+                        </a>
+                        <!-- NUEVO ENLACE DE IMPORTACIÓN -->
+                        <a href="{{ url_for('vista_importar') }}" class="bg-pink-700 text-white hover:bg-pink-800 px-3 py-2 rounded-md text-sm font-bold transition duration-150 ease-in-out">
+                            <i class="fas fa-file-upload mr-1"></i> Importar Datos
+                        </a>
+                    {% endif %}
+                </div>
+
+                <!-- Perfil y Logout -->
+                {% if current_user.is_authenticated %}
+                <div class="hidden sm:ml-6 sm:flex sm:items-center">
+                    <span class="text-white text-sm mr-4">{{ current_user.nombre }} ({{ current_user.rol }})</span>
+                    <a href="{{ url_for('logout') }}" class="text-pink-100 hover:text-white hover:bg-pink-700 p-2 rounded-full transition duration-150 ease-in-out">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </a>
+                </div>
+                {% endif %}
+
+            </div>
+
+        </div>
+    </div>
+</nav>
