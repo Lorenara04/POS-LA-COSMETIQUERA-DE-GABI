@@ -28,9 +28,7 @@ load_dotenv()  # carga .env automáticamente
 #    IMPORTANTE: NO definas funciones SMTP dentro del template .html
 from enviar_correo import enviar_correo_html
 
-CORREO_INFORMES = os.getenv("CORREO_INFORMES", "lorenarodriguezr155@gmail.com")
-
-
+CORREO_INFORMES = os.getenv("CORREO_INFORMES", "johanna.chacon@outlook.es")
 
 # =================================================================
 # CONFIGURACIÓN Y BASE DE DATOS
@@ -376,6 +374,22 @@ class CierreCaja(db.Model):
     detalles_json = db.Column(db.Text)
 
     usuario = db.relationship('Usuario', backref='cierres_caja', lazy=True)
+
+class AcumuladoMensual(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    year = db.Column(db.Integer, nullable=False)
+    month = db.Column(db.Integer, nullable=False)  # 1-12
+
+    total_venta = db.Column(db.Float, default=0)
+    total_efectivo = db.Column(db.Float, default=0)
+    total_electronico = db.Column(db.Float, default=0)
+
+    fuente = db.Column(db.String(50), default="import_excel")  # opcional
+    detalles_json = db.Column(db.Text)  # opcional
+
+    __table_args__ = (
+        db.UniqueConstraint('year', 'month', name='uq_acumulado_year_month'),
+    )
 
 
 # =================================================================
@@ -924,7 +938,7 @@ def nueva_venta():
             db.session.add(nueva_venta)
             db.session.flush()
 
-            productos_vendidos_json = request.form.getBytesIO('productos_vendidos_json', '[]')
+            productos_vendidos_json = request.form.get('productos_vendidos_json', '[]')
             productos_vendidos = json.loads(productos_vendidos_json)
 
             if not productos_vendidos:
@@ -1104,7 +1118,7 @@ def historial_cierres():
     cierres = CierreCaja.query.order_by(CierreCaja.fecha_cierre.desc()).all()
     return render_template('historial_cierres.html', cierres=cierres)
 
-
+#=========================REPORTES========================
 @app.route('/reportes')
 @login_required
 def reportes():
@@ -1112,57 +1126,95 @@ def reportes():
         flash('Permiso denegado.', 'danger')
         return redirect(url_for('dashboard'))
 
+    # Día comercial (6am CO -> 5:59:59am CO)
     fecha_comercial, inicio_utc, fin_utc = obtener_rango_turno_colombia()
 
-    ventas_hoy = Venta.query.filter(and_(Venta.fecha >= inicio_utc, Venta.fecha <= fin_utc)).all()
-    total_diario = sum(v.total for v in ventas_hoy)
+    # ----------------------------
+    # 1) Ventas de HOY (comercial)
+    # ----------------------------
+    ventas_hoy = Venta.query.filter(
+        and_(Venta.fecha >= inicio_utc, Venta.fecha <= fin_utc)
+    ).all()
 
+    total_diario = sum(float(v.total or 0) for v in ventas_hoy)
+
+    # ----------------------------
+    # 2) Desglose pagos (tabla)
+    # ----------------------------
     desglose_temp = defaultdict(float)
-
     for v in ventas_hoy:
         try:
-            pagos = json.loads(v.detalle_pago)
+            pagos = json.loads(v.detalle_pago or "{}")
             for metodo, valor in pagos.items():
                 if metodo not in ['Ref_Codigo', 'Ref_Fecha', 'change', 'Efectivo_Recibido', 'Vuelto'] and isinstance(valor, (int, float)):
                     desglose_temp[metodo] += float(valor or 0)
         except Exception:
             pass
 
-    informe_diario_list = []
-    for metodo, total in desglose_temp.items():
-        informe_diario_list.append(("General", metodo, total))
+    informe_diario_list = [("General", metodo, total) for metodo, total in desglose_temp.items()]
 
-    inicio_mes = datetime.utcnow().replace(day=1, hour=0, minute=0, second=0)
-    total_mensual = db.session.query(func.sum(Venta.total)).filter(Venta.fecha >= inicio_mes).scalar() or 0
+    # ----------------------------
+    # 3) Total mensual (mes calendario CO)
+    # ----------------------------
+    ahora_co = obtener_hora_colombia()
+    inicio_mes_co = TIMEZONE_CO.localize(datetime(ahora_co.year, ahora_co.month, 1, 0, 0, 0))
+    inicio_mes_utc = inicio_mes_co.astimezone(pytz.UTC)
 
-    inicio_semana_utc = datetime.utcnow() - timedelta(days=datetime.utcnow().weekday())
-    inicio_semana_utc = inicio_semana_utc.replace(hour=0, minute=0, second=0, microsecond=0)
-    total_semanal = db.session.query(func.sum(Venta.total)).filter(Venta.fecha >= inicio_semana_utc).scalar() or 0
+    total_mensual = db.session.query(func.sum(Venta.total)).filter(
+        Venta.fecha >= inicio_mes_utc
+    ).scalar() or 0
 
-    datos_vendedores_query = db.session.query(
+    # ----------------------------
+    # 4) Total semanal (semana CO desde lunes 00:00)
+    # ----------------------------
+    lunes_co = (ahora_co - timedelta(days=ahora_co.weekday())).replace(
+        hour=0, minute=0, second=0, microsecond=0
+    )
+    if lunes_co.tzinfo is None:
+        lunes_co = TIMEZONE_CO.localize(lunes_co)
+    lunes_utc = lunes_co.astimezone(pytz.UTC)
+
+    total_semanal = db.session.query(func.sum(Venta.total)).filter(
+        Venta.fecha >= lunes_utc
+    ).scalar() or 0
+
+    # ----------------------------
+    # 5) Datos gráficos: Ventas por vendedor (HOY)
+    # ----------------------------
+    rows_vend = db.session.query(
         Usuario.username,
-        func.sum(Venta.total)
-    ).join(Venta).filter(
+        func.coalesce(func.sum(Venta.total), 0)
+    ).join(Venta, Venta.usuario_id == Usuario.id).filter(
         and_(Venta.fecha >= inicio_utc, Venta.fecha <= fin_utc)
     ).group_by(Usuario.username).order_by(func.sum(Venta.total).desc()).all()
 
-    labels_vendedores = [row[0] for row in datos_vendedores_query]
-    data_vendedores = [float(row[1]) for row in datos_vendedores_query]
-
-    if not labels_vendedores:
-        labels_vendedores = ["Tienda (Sin Ventas)"]
-        data_vendedores = [0]
-
     datos_vendedores = {
-        "labels": labels_vendedores,
-        "data": data_vendedores
+        "labels": [u for (u, _) in rows_vend],
+        "data": [float(t or 0) for (_, t) in rows_vend]
     }
 
-    datos_tendencia = {
-        "labels": ["Semana Pasada", "Hoy"],
-        "data": [0, total_diario]
-    }
+    # ----------------------------
+    # 6) Datos gráficos: Tendencia últimos 7 días comerciales
+    # ----------------------------
+    labels = []
+    data = []
+    # últimos 7 días comerciales (incluye hoy)
+    for i in range(6, -1, -1):
+        d = fecha_comercial - timedelta(days=i)
+        di_utc, df_utc = obtener_rango_turno_por_fecha_comercial(d)
 
+        total_dia = db.session.query(func.coalesce(func.sum(Venta.total), 0)).filter(
+            and_(Venta.fecha >= di_utc, Venta.fecha <= df_utc)
+        ).scalar() or 0
+
+        labels.append(d.strftime("%d/%m"))
+        data.append(float(total_dia))
+
+    datos_tendencia = {"labels": labels, "data": data}
+
+    # ----------------------------
+    # 7) Caja cerrada hoy
+    # ----------------------------
     caja_cerrada_hoy = CierreCaja.query.filter_by(fecha_cierre=fecha_comercial).first() is not None
 
     return render_template(
@@ -1176,6 +1228,8 @@ def reportes():
         datos_tendencia=datos_tendencia,
         datos_vendedores=datos_vendedores
     )
+
+#================================================================
 from flask import render_template
 
 from sqlalchemy import func, and_
@@ -1305,7 +1359,9 @@ def enviar_informe_rango():
     total_electronico = pago_metodos["Nequi"] + pago_metodos["Daviplata"] + pago_metodos["Transferencia"] + pago_metodos["Tarjeta"]
 
     # =========================
-    # 7) MES(ES) DENTRO DEL PERIODO (para mostrar “Mes dentro del rango”)
+      # =========================
+    # 7) MES(ES) DENTRO DEL PERIODO + ACUMULADO DEL MES COMPLETO
+    #    (Aunque el rango sea solo una semana, total_mes será del mes entero)
     # =========================
     meses = defaultdict(float)
 
@@ -1314,14 +1370,19 @@ def enviar_informe_rango():
         # v.fecha normalmente está en UTC (a veces naive). Normalizamos:
         if dt and (dt.tzinfo is None or dt.tzinfo.utcoffset(dt) is None):
             dt = pytz.UTC.localize(dt)
+
         dt_co = dt.astimezone(TIMEZONE_CO)
         key = (dt_co.year, dt_co.month)
         meses[key] += float(v.total or 0)
 
-    # Ordenados
+    # Ordenados (detalle del rango, por si lo usas en template)
     meses_detalle = []
     for (y, m) in sorted(meses.keys()):
-        meses_detalle.append({"year": y, "month": m, "total": float(meses[(y, m)] or 0)})
+        meses_detalle.append({
+            "year": int(y),
+            "month": int(m),
+            "total": float(meses[(y, m)] or 0)
+        })
 
     meses_es = {
         1: "Enero", 2: "Febrero", 3: "Marzo", 4: "Abril", 5: "Mayo", 6: "Junio",
@@ -1331,11 +1392,35 @@ def enviar_informe_rango():
     # Mes principal: el último mes presente en el periodo (más intuitivo)
     if meses_detalle:
         last = meses_detalle[-1]
-        mes_label = f"{meses_es.get(last['month'], last['month'])} {last['year']}"
-        total_mes = last["total"]
+        y = int(last["year"])
+        m = int(last["month"])
+
+        mes_label = f"{meses_es.get(m, m)} {y}"
+
+        # ✅ ACUMULADO DEL MES COMPLETO (mes calendario en hora Colombia)
+        inicio_mes_local = datetime(y, m, 1, 0, 0, 0)
+        if inicio_mes_local.tzinfo is None:
+            inicio_mes_local = TIMEZONE_CO.localize(inicio_mes_local)
+
+        if m == 12:
+            inicio_sig_mes_local = datetime(y + 1, 1, 1, 0, 0, 0)
+        else:
+            inicio_sig_mes_local = datetime(y, m + 1, 1, 0, 0, 0)
+
+        if inicio_sig_mes_local.tzinfo is None:
+            inicio_sig_mes_local = TIMEZONE_CO.localize(inicio_sig_mes_local)
+
+        inicio_mes_utc = inicio_mes_local.astimezone(pytz.UTC)
+        inicio_sig_mes_utc = inicio_sig_mes_local.astimezone(pytz.UTC)
+
+        total_mes = db.session.query(func.sum(Venta.total)).filter(
+            and_(Venta.fecha >= inicio_mes_utc, Venta.fecha < inicio_sig_mes_utc)
+        ).scalar() or 0
+
     else:
         mes_label = "—"
         total_mes = 0
+
 
     # =========================
     # 8) Render de correo
@@ -1659,6 +1744,163 @@ with app.app_context():
         print(f"❌ ¡ERROR CRÍTICO DURANTE LA INICIALIZACIÓN DE DB!: {e}")
         print("Asegúrese de que la URL de la base de datos sea accesible.")
         db.session.rollback()
+# ======================IMPORTAR CIERRE DE CAJA ===========================================
+@app.route("/admin/importar_cierres_excel", methods=["POST"])
+@login_required
+def importar_cierres_excel():
+    if current_user.rol.lower() != "administrador":
+        flash("Permiso denegado.", "danger")
+        return redirect(url_for("reportes"))
+
+    if "excel_file" not in request.files:
+        flash("No se encontró el archivo en la solicitud.", "danger")
+        return redirect(url_for("reportes"))
+
+    file = request.files["excel_file"]
+    if not file or file.filename == "":
+        flash("Archivo no seleccionado.", "danger")
+        return redirect(url_for("reportes"))
+
+    if not file.filename.endswith(".xlsx"):
+        flash("El archivo debe ser .xlsx", "danger")
+        return redirect(url_for("reportes"))
+
+    try:
+        excel_data = BytesIO(file.read())
+        df = pd.read_excel(excel_data, sheet_name="CierresCaja")
+
+        requeridas = {"Fecha Cierre", "Total Venta", "Total Efectivo", "Total Electrónico"}
+        if not requeridas.issubset(set(df.columns)):
+            faltan = requeridas - set(df.columns)
+            flash(f"Faltan columnas en CierresCaja: {', '.join(faltan)}", "danger")
+            return redirect(url_for("reportes"))
+
+        importados = 0
+
+        for _, row in df.iterrows():
+            fecha_raw = row.get("Fecha Cierre")
+
+            # Fecha puede venir como datetime o string
+            if pd.isna(fecha_raw):
+                continue
+            if isinstance(fecha_raw, datetime):
+                fecha_cierre = fecha_raw.date()
+            else:
+                fecha_cierre = datetime.strptime(str(fecha_raw)[:10], "%Y-%m-%d").date()
+
+            total_venta = float(row.get("Total Venta") or 0)
+            total_efectivo = float(row.get("Total Efectivo") or 0)
+            total_electronico = float(row.get("Total Electrónico") or 0)
+
+            detalles = row.get("Detalles (JSON)")
+            detalles = "" if pd.isna(detalles) else str(detalles)
+
+            # Si ya existe cierre para esa fecha, actualiza; si no, crea
+            cierre = CierreCaja.query.filter_by(fecha_cierre=fecha_cierre).first()
+            if cierre:
+                cierre.usuario_id = current_user.id
+                cierre.total_venta = total_venta
+                cierre.total_efectivo = total_efectivo
+                cierre.total_electronico = total_electronico
+                cierre.detalles_json = detalles
+                cierre.hora_ejecucion = datetime.utcnow()
+            else:
+                cierre = CierreCaja(
+                    fecha_cierre=fecha_cierre,
+                    hora_ejecucion=datetime.utcnow(),
+                    usuario_id=current_user.id,
+                    total_venta=total_venta,
+                    total_efectivo=total_efectivo,
+                    total_electronico=total_electronico,
+                    detalles_json=detalles
+                )
+                db.session.add(cierre)
+
+            importados += 1
+
+        db.session.commit()
+        flash(f"✅ Cierres importados/actualizados: {importados}", "success")
+        return redirect(url_for("historial_cierres"))
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Error importando cierres: {e}", "danger")
+        return redirect(url_for("reportes"))
+#=============================IMPORTAR ACUMULADOS DEL MES  ==================================
+@app.route("/admin/importar_acumulado_mes_excel", methods=["POST"])
+@login_required
+def importar_acumulado_mes_excel():
+    if current_user.rol.lower() != "administrador":
+        flash("Permiso denegado.", "danger")
+        return redirect(url_for("reportes"))
+
+    if "excel_file" not in request.files:
+        flash("No se encontró el archivo en la solicitud.", "danger")
+        return redirect(url_for("reportes"))
+
+    file = request.files["excel_file"]
+    if not file or file.filename == "":
+        flash("Archivo no seleccionado.", "danger")
+        return redirect(url_for("reportes"))
+
+    if not file.filename.endswith(".xlsx"):
+        flash("El archivo debe ser .xlsx", "danger")
+        return redirect(url_for("reportes"))
+
+    try:
+        excel_data = BytesIO(file.read())
+        df = pd.read_excel(excel_data, sheet_name="AcumuladosMes")
+
+        requeridas = {"Año", "Mes", "Total Venta", "Total Efectivo", "Total Electrónico"}
+        if not requeridas.issubset(set(df.columns)):
+            faltan = requeridas - set(df.columns)
+            flash(f"Faltan columnas en AcumuladosMes: {', '.join(faltan)}", "danger")
+            return redirect(url_for("reportes"))
+
+        importados = 0
+
+        for _, row in df.iterrows():
+            if pd.isna(row.get("Año")) or pd.isna(row.get("Mes")):
+                continue
+
+            year = int(row.get("Año"))
+            month = int(row.get("Mes"))
+
+            total_venta = float(row.get("Total Venta") or 0)
+            total_efectivo = float(row.get("Total Efectivo") or 0)
+            total_electronico = float(row.get("Total Electrónico") or 0)
+
+            detalles = row.get("Detalles (JSON)")
+            detalles = "" if pd.isna(detalles) else str(detalles)
+
+            reg = AcumuladoMensual.query.filter_by(year=year, month=month).first()
+            if reg:
+                reg.total_venta = total_venta
+                reg.total_efectivo = total_efectivo
+                reg.total_electronico = total_electronico
+                reg.detalles_json = detalles
+            else:
+                reg = AcumuladoMensual(
+                    year=year,
+                    month=month,
+                    total_venta=total_venta,
+                    total_efectivo=total_efectivo,
+                    total_electronico=total_electronico,
+                    detalles_json=detalles
+                )
+                db.session.add(reg)
+
+            importados += 1
+
+        db.session.commit()
+        flash(f"✅ Acumulados mensuales importados/actualizados: {importados}", "success")
+        return redirect(url_for("reportes"))
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Error importando acumulado mensual: {e}", "danger")
+        return redirect(url_for("reportes"))
+
 # -------------------- EXPORTAR EXCEL (ADMIN) --------------------
 from flask import send_file
 from io import BytesIO
@@ -1709,6 +1951,124 @@ def exportar_productos_excel():
     except Exception as e:
         flash(f'Error al exportar productos: {e}', 'danger')
         return redirect(url_for('inventario'))
+#= =============================EXPORTAR CIERRE DE CAJA ===================================
+@app.route("/exportar_cierres_excel")
+@login_required
+def exportar_cierres_excel():
+    if current_user.rol.lower() != "administrador":
+        flash("Permiso denegado.", "danger")
+        return redirect(url_for("reportes"))
+
+    # opcional: filtro por fechas (YYYY-MM-DD) desde query params
+    fecha_inicio = request.args.get("fecha_inicio")  # "2026-01-01"
+    fecha_fin = request.args.get("fecha_fin")        # "2026-01-31"
+
+    q = CierreCaja.query.order_by(CierreCaja.fecha_cierre.asc())
+
+    if fecha_inicio and fecha_fin:
+        try:
+            fi = datetime.strptime(fecha_inicio, "%Y-%m-%d").date()
+            ff = datetime.strptime(fecha_fin, "%Y-%m-%d").date()
+            q = q.filter(CierreCaja.fecha_cierre >= fi, CierreCaja.fecha_cierre <= ff)
+        except Exception:
+            flash("Fechas inválidas. Usa formato YYYY-MM-DD.", "warning")
+            return redirect(url_for("reportes"))
+
+    cierres = q.all()
+
+    data = []
+    for c in cierres:
+        usuario_nombre = c.usuario.username if c.usuario else ""
+        data.append({
+            "ID": c.id,
+            "Fecha Cierre": c.fecha_cierre.isoformat() if c.fecha_cierre else "",
+            "Hora Ejecución (UTC)": c.hora_ejecucion.isoformat() if c.hora_ejecucion else "",
+            "Usuario": usuario_nombre,
+            "Total Venta": float(c.total_venta or 0),
+            "Total Efectivo": float(c.total_efectivo or 0),
+            "Total Electrónico": float(c.total_electronico or 0),
+            "Detalles (JSON)": c.detalles_json or ""
+        })
+
+    df = pd.DataFrame(data)
+
+    output = BytesIO()
+    df.to_excel(output, index=False, sheet_name="CierresCaja")
+    output.seek(0)
+
+    return send_file(
+        output,
+        download_name="cierres_caja.xlsx",
+        as_attachment=True,
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+#=================================EXPORTAR ACUMULADO ==================================
+@app.route("/exportar_acumulados_excel")
+@login_required
+def exportar_acumulados_excel():
+    if current_user.rol.lower() != "administrador":
+        flash("Permiso denegado.", "danger")
+        return redirect(url_for("reportes"))
+
+    fecha_inicio = request.args.get("fecha_inicio")
+    fecha_fin = request.args.get("fecha_fin")
+
+    if not fecha_inicio or not fecha_fin:
+        flash("Debes enviar fecha_inicio y fecha_fin en la URL (YYYY-MM-DD).", "warning")
+        return redirect(url_for("reportes"))
+
+    try:
+        fi_date = datetime.strptime(fecha_inicio, "%Y-%m-%d").date()
+        ff_date = datetime.strptime(fecha_fin, "%Y-%m-%d").date()
+    except Exception:
+        flash("Fechas inválidas. Usa formato YYYY-MM-DD.", "warning")
+        return redirect(url_for("reportes"))
+
+    # Convertimos cada día comercial a su rango UTC (06:00 CO a 05:59 CO)
+    rows = []
+    dia = fi_date
+    while dia <= ff_date:
+        inicio_utc, fin_utc = obtener_rango_turno_por_fecha_comercial(dia)
+
+        ventas = Venta.query.filter(and_(Venta.fecha >= inicio_utc, Venta.fecha <= fin_utc)).all()
+
+        total_venta = 0.0
+        total_efectivo = 0.0
+
+        for v in ventas:
+            total_venta += float(v.total or 0)
+            try:
+                pagos = json.loads(v.detalle_pago or "{}")
+                total_efectivo += float(pagos.get("Efectivo", 0) or 0)
+            except Exception:
+                pass
+
+        total_electronico = total_venta - total_efectivo
+
+        rows.append({
+            "Fecha Comercial": dia.isoformat(),
+            "Total Venta": total_venta,
+            "Total Efectivo": total_efectivo,
+            "Total Electrónico": total_electronico,
+            "Cantidad Ventas": len(ventas),
+        })
+
+        dia += timedelta(days=1)
+
+    df = pd.DataFrame(rows)
+
+    output = BytesIO()
+    df.to_excel(output, index=False, sheet_name="Acumulados")
+    output.seek(0)
+
+    nombre_archivo = f"acumulados_{fecha_inicio}_a_{fecha_fin}.xlsx"
+
+    return send_file(
+        output,
+        download_name=nombre_archivo,
+        as_attachment=True,
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
 
 
 if __name__ == "__main__":
