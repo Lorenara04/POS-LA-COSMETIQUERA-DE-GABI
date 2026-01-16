@@ -28,13 +28,39 @@
         height: 350px;
         position: relative;
     }
+
+    .card-informe {
+        background: #fff;
+        border-radius: 18px;
+        padding: 18px;
+        box-shadow: 0 6px 10px rgba(0,0,0,0.08);
+        border: 2px solid rgba(255, 105, 180, 0.25);
+    }
+
+    .btn-pink {
+        background-color: #ff69b4;
+        border-color: #ff69b4;
+        color: white;
+        font-weight: 600;
+        border-radius: 12px;
+    }
+    .btn-pink:hover {
+        background-color: #ff4fa7;
+        border-color: #ff4fa7;
+        color: white;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: #ff69b4;
+    }
 </style>
 
 <div class="container mt-4">
 
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 style="color: #ff69b4; font-weight: bold;">🎀 Reportes y Cierre ✨</h2>
-        
+
         <form action="{{ url_for('ejecutar_cierre_caja') }}" method="POST" data-confirm="¿Estás segura de cerrar la caja?">
             {% if caja_cerrada_hoy %}
                 <button type="button" class="btn btn-secondary btn-lg" disabled>
@@ -45,7 +71,7 @@
                     <i class="fas fa-lock-open"></i> Cerrar Caja Ahora
                 </button>
             {% endif %}
-            
+
             <a href="{{ url_for('historial_cierres') }}" class="btn btn-outline-dark btn-lg ms-2">
                 <i class="fas fa-history"></i> Historial
             </a>
@@ -58,7 +84,7 @@
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <h6 class="text-uppercase mb-1">Venta Hoy ({{ hoy }})</h6>
-                        <h2 class="mb-0 fw-bold">${{ "{:,.0f}".format(total_diario) }}</h2>
+                        <h2 class="mb-0 fw-bold">${{ "{:,.0f}".format(total_diario or 0) }}</h2>
                     </div>
                     <i class="fas fa-calendar-day fa-3x" style="opacity: 0.3;"></i>
                 </div>
@@ -70,7 +96,7 @@
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <h6 class="text-uppercase mb-1">Acumulado Semana</h6>
-                        <h2 class="mb-0 fw-bold">${{ "{:,.0f}".format(total_semanal) }}</h2>
+                        <h2 class="mb-0 fw-bold">${{ "{:,.0f}".format(total_semanal or 0) }}</h2>
                     </div>
                     <i class="fas fa-calendar-week fa-3x" style="opacity: 0.3;"></i>
                 </div>
@@ -82,12 +108,51 @@
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <h6 class="text-uppercase mb-1">Acumulado Mes</h6>
-                        <h2 class="mb-0 fw-bold">${{ "{:,.0f}".format(total_mensual) }}</h2>
+                        <h2 class="mb-0 fw-bold">${{ "{:,.0f}".format(total_mensual or 0) }}</h2>
                     </div>
                     <i class="fas fa-calendar-alt fa-3x" style="opacity: 0.3;"></i>
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- ✅ NUEVO: Enviar informe por rango (sin tocar tu cierre) -->
+    <div class="card-informe mb-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <div>
+                <h4 class="mb-1" style="color:#ff69b4; font-weight:800;">
+                    📩 Enviar informe por rango
+                </h4>
+                <small class="text-muted">
+                    Selecciona fecha inicial y final para enviar el informe al correo de las administradoras.
+                </small>
+            </div>
+        </div>
+
+        <form method="POST" action="/enviar-informe-rango" class="row g-3 mt-2">
+            <div class="col-12 col-md-4">
+                <label class="form-label">Desde</label>
+                <input type="date" name="fecha_inicio" class="form-control" required>
+            </div>
+
+            <div class="col-12 col-md-4">
+                <label class="form-label">Hasta</label>
+                <input type="date" name="fecha_fin" class="form-control" required>
+            </div>
+
+            <div class="col-12 col-md-4 d-grid">
+                <button type="submit" class="btn btn-pink btn-lg shadow mt-md-4">
+                    <i class="fas fa-paper-plane"></i> Enviar Informe
+                </button>
+            </div>
+        </form>
+
+        {# Si tu backend manda "mensaje", se muestra aquí (opcional) #}
+        {% if mensaje %}
+        <div class="alert alert-info mt-3 mb-0">
+            {{ mensaje }}
+        </div>
+        {% endif %}
     </div>
 
     <hr class="my-4">
@@ -110,7 +175,7 @@
                             <td>{{ origen }}</td>
                             <td><span class="badge bg-light text-dark border">{{ metodo }}</span></td>
                             <td class="text-end fw-bold" style="color: #ff69b4;">
-                                ${{ "{:,.0f}".format(total) }}
+                                ${{ "{:,.0f}".format(total or 0) }}
                             </td>
                         </tr>
                         {% else %}
@@ -120,12 +185,12 @@
                         {% endfor %}
                     </tbody>
 
-                    {% if total_diario > 0 %}
+                    {% if (total_diario or 0) > 0 %}
                     <tfoot style="background:#fff0f5;">
                         <tr>
                             <td colspan="2" class="text-end fw-bold">TOTAL GENERAL:</td>
                             <td class="text-end fw-bold fs-5" style="color:#ff69b4;">
-                                ${{ "{:,.0f}".format(total_diario) }}
+                                ${{ "{:,.0f}".format(total_diario or 0) }}
                             </td>
                         </tr>
                     </tfoot>
@@ -160,9 +225,9 @@
 <script>
 document.addEventListener("DOMContentLoaded", function () {
 
-    // Datos seguros desde Flask → JS
-    const datosVend = JSON.parse(`{{ datos_vendedores | tojson | safe }}`);
-    const datosTend = JSON.parse(`{{ datos_tendencia | tojson | safe }}`);
+    // ✅ Forma segura: inyecta objetos JSON directos (sin JSON.parse doble)
+    const datosVend = {{ (datos_vendedores or {"labels": [], "data": []}) | tojson }};
+    const datosTend = {{ (datos_tendencia  or {"labels": [], "data": []}) | tojson }};
 
     const commonOptions = {
         responsive: true,
@@ -173,7 +238,7 @@ document.addEventListener("DOMContentLoaded", function () {
         scales: {
             y: {
                 beginAtZero: true,
-                grid: { 
+                grid: {
                     color: 'rgba(255, 192, 203, 0.3)',
                     borderDash: [5, 5]
                 }
@@ -183,7 +248,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // GRAFICO 1 - VENTAS VENDEDOR
     const ctx1 = document.getElementById('chartVendedores');
-    if (ctx1 && datosVend.labels?.length) {
+    if (ctx1 && (datosVend.labels || []).length) {
         new Chart(ctx1, {
             type: 'bar',
             data: {
@@ -203,7 +268,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // GRAFICO 2 - TENDENCIA
     const ctx2 = document.getElementById('chartTendencia');
-    if (ctx2 && datosTend.labels?.length) {
+    if (ctx2 && (datosTend.labels || []).length) {
         new Chart(ctx2, {
             type: 'line',
             data: {

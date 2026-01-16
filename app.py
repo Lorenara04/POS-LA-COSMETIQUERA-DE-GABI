@@ -592,40 +592,6 @@ def inventario():
         productos_paginados=productos_paginados,
         search_query=search_query
     )
-@app.route("/exportar_productos_excel")
-@login_required
-def exportar_productos_excel():
-    if current_user.rol.lower() != "administrador":
-        flash("Permiso denegado.", "danger")
-        return redirect(url_for("inventario"))
-
-    productos = Producto.query.order_by(Producto.id.asc()).all()
-
-    data = []
-    for p in productos:
-        data.append({
-            "ID": p.id,
-            "Código": p.codigo,
-            "Nombre": p.nombre,
-            "Marca": p.marca,
-            "Descripción": p.descripcion,
-            "Stock": p.cantidad,
-            "Costo Interno": p.valor_interno,
-            "Precio Venta": p.valor_venta
-        })
-
-    df = pd.DataFrame(data)
-
-    output = BytesIO()
-    df.to_excel(output, index=False, sheet_name="Productos")
-    output.seek(0)
-
-    return send_file(
-        output,
-        download_name="productos_inventario.xlsx",
-        as_attachment=True
-    )
-
 
 @app.route('/inventario/agregar', methods=['POST'])
 @login_required

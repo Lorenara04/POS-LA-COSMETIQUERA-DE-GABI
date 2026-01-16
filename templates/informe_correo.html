@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>Informe Ejecutivo</title>
+</head>
+
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:Arial,Helvetica,sans-serif;color:#111827;">
+  <!-- Wrapper -->
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f3f4f6;padding:24px 0;">
+    <tr>
+      <td align="center">
+
+        <!-- Container -->
+        <table role="presentation" width="720" cellpadding="0" cellspacing="0" border="0" style="width:720px;max-width:720px;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 10px 28px rgba(17,24,39,0.08);">
+
+          <!-- Top Bar -->
+          <tr>
+            <td style="background:#111827;padding:0;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td style="padding:18px 22px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td valign="middle">
+                          <div style="font-size:11px;letter-spacing:1.3px;text-transform:uppercase;color:#cbd5e1;">
+                            Informe ejecutivo
+                          </div>
+                          <div style="font-size:20px;font-weight:900;color:#ffffff;margin-top:6px;">
+                            La Cosmetiquera de Gabi
+                          </div>
+                          <div style="font-size:12px;color:#e5e7eb;margin-top:6px;line-height:1.4;">
+                            Periodo evaluado: <b>{{ fecha_inicio }}</b> a <b>{{ fecha_fin }}</b>
+                          </div>
+                        </td>
+
+                        <td align="right" valign="middle">
+                          <div style="display:inline-block;border:1px solid rgba(255,105,180,.35);background:rgba(255,105,180,.12);color:#ffd1e8;padding:8px 12px;border-radius:999px;font-size:11px;">
+                            Ventas · Ingresos
+                          </div>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+
+                <!-- Accent line -->
+                <tr>
+                  <td style="height:6px;background:linear-gradient(90deg,#ff4fa7,#a855f7,#22c55e);line-height:6px;font-size:0;">&nbsp;</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Executive Summary / KPI Row -->
+          <tr>
+            <td style="padding:18px 18px 8px 18px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+
+                  <!-- KPI 1 -->
+                  <td width="33.33%" style="padding:10px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #e5e7eb;border-radius:14px;">
+                      <tr>
+                        <td style="padding:14px 14px 12px 14px;">
+                          <div style="font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:#6b7280;">Total del día</div>
+                          <div style="font-size:22px;font-weight:900;color:#111827;margin-top:8px;">
+                            ${{ "{:,.0f}".format(total_hoy or 0) }}
+                          </div>
+                          <div style="font-size:11px;color:#9ca3af;margin-top:6px;">Turno operativo (Colombia)</div>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+
+                  <!-- KPI 2 -->
+                  <td width="33.33%" style="padding:10px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #e5e7eb;border-radius:14px;">
+                      <tr>
+                        <td style="padding:14px 14px 12px 14px;">
+                          <div style="font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:#6b7280;">Total semanal</div>
+                          <div style="font-size:22px;font-weight:900;color:#111827;margin-top:8px;">
+                            ${{ "{:,.0f}".format(total_semana or 0) }}
+                          </div>
+                          <div style="font-size:11px;color:#9ca3af;margin-top:6px;">Lunes 00:00 → hoy</div>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+
+                  <!-- KPI 3 (Mes del periodo) -->
+                  <td width="33.33%" style="padding:10px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid rgba(255,79,167,.30);border-radius:14px;background:#fff5fb;">
+                      <tr>
+                        <td style="padding:14px 14px 12px 14px;">
+                          <div style="font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:#b83280;">
+                            Mes del periodo · {{ mes_label }}
+                          </div>
+                          <div style="font-size:22px;font-weight:900;color:#111827;margin-top:8px;">
+                            ${{ "{:,.0f}".format(total_mes or 0) }}
+                          </div>
+                          <div style="font-size:11px;color:#6b7280;margin-top:6px;">
+                            Total del periodo: <b>${{ "{:,.0f}".format(total_ingresos or 0) }}</b>
+                          </div>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Section Title -->
+          <tr>
+            <td style="padding:6px 22px 0 22px;">
+              <div style="font-size:14px;font-weight:900;color:#111827;">
+                Resumen financiero del periodo
+              </div>
+              <div style="font-size:12px;color:#6b7280;margin-top:4px;">
+                Vista ejecutiva (ingresos únicamente).
+              </div>
+            </td>
+          </tr>
+
+          <!-- Two Columns: Payments + Indicators -->
+          <tr>
+            <td style="padding:12px 12px 4px 12px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+
+                  <!-- Left: Payment Channel -->
+                  <td width="56%" style="padding:10px;" valign="top">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #e5e7eb;border-radius:14px;">
+                      <tr>
+                        <td style="padding:14px 14px 12px 14px;">
+                          <div style="font-size:13px;font-weight:900;color:#111827;">Ingresos por canal</div>
+                          <div style="font-size:11px;color:#6b7280;margin-top:4px;">Efectivo vs electrónico + desglose.</div>
+
+                          <!-- Totals -->
+                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:12px;">
+                            <tr>
+                              <td width="50%" style="padding-right:8px;">
+                                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#111827;border-radius:12px;">
+                                  <tr>
+                                    <td style="padding:12px 12px;">
+                                      <div style="font-size:10px;letter-spacing:.8px;text-transform:uppercase;color:#cbd5e1;">Efectivo</div>
+                                      <div style="font-size:18px;font-weight:900;color:#ffffff;margin-top:6px;">
+                                        ${{ "{:,.0f}".format(total_efectivo or 0) }}
+                                      </div>
+                                    </td>
+                                  </tr>
+                                </table>
+                              </td>
+
+                              <td width="50%" style="padding-left:8px;">
+                                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#fff5fb;border:1px solid rgba(255,79,167,.30);border-radius:12px;">
+                                  <tr>
+                                    <td style="padding:12px 12px;">
+                                      <div style="font-size:10px;letter-spacing:.8px;text-transform:uppercase;color:#b83280;">Electrónico</div>
+                                      <div style="font-size:18px;font-weight:900;color:#111827;margin-top:6px;">
+                                        ${{ "{:,.0f}".format(total_electronico or 0) }}
+                                      </div>
+                                    </td>
+                                  </tr>
+                                </table>
+                              </td>
+                            </tr>
+                          </table>
+
+                          <!-- Breakdown -->
+                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:12px;border-top:1px solid #eef2f7;padding-top:10px;">
+                            <tr>
+                              <td style="padding:6px 0;font-size:12px;color:#374151;">
+                                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                                  <tr>
+                                    <td>Nequi</td>
+                                    <td align="right" style="font-weight:900;">${{ "{:,.0f}".format(nequi or 0) }}</td>
+                                  </tr>
+                                  <tr><td colspan="2" style="height:6px;font-size:0;line-height:6px;">&nbsp;</td></tr>
+                                  <tr>
+                                    <td>Daviplata</td>
+                                    <td align="right" style="font-weight:900;">${{ "{:,.0f}".format(daviplata or 0) }}</td>
+                                  </tr>
+                                  <tr><td colspan="2" style="height:6px;font-size:0;line-height:6px;">&nbsp;</td></tr>
+                                  <tr>
+                                    <td>Transferencia</td>
+                                    <td align="right" style="font-weight:900;">${{ "{:,.0f}".format(transferencia or 0) }}</td>
+                                  </tr>
+                                  <tr><td colspan="2" style="height:6px;font-size:0;line-height:6px;">&nbsp;</td></tr>
+                                  <tr>
+                                    <td>Tarjeta</td>
+                                    <td align="right" style="font-weight:900;">${{ "{:,.0f}".format(tarjeta or 0) }}</td>
+                                  </tr>
+                                </table>
+                              </td>
+                            </tr>
+                          </table>
+
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+
+                  <!-- Right: Indicators -->
+                  <td width="44%" style="padding:10px;" valign="top">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #e5e7eb;border-radius:14px;">
+                      <tr>
+                        <td style="padding:14px 14px 12px 14px;">
+                          <div style="font-size:13px;font-weight:900;color:#111827;">Indicadores del periodo</div>
+                          <div style="font-size:11px;color:#6b7280;margin-top:4px;">Rendimiento general.</div>
+
+                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:10px;">
+                            <tr>
+                              <td style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:12px;color:#374151;">Días con ventas</td>
+                              <td align="right" style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:12px;font-weight:900;color:#111827;">
+                                {{ total_dias or 0 }}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:12px;color:#374151;">Promedio diario</td>
+                              <td align="right" style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:12px;font-weight:900;color:#111827;">
+                                ${{ "{:,.0f}".format(promedio or 0) }}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td style="padding:8px 0;font-size:12px;color:#374151;">Mejor día</td>
+                              <td align="right" style="padding:8px 0;font-size:12px;font-weight:900;color:#111827;">
+                                {{ mejor_dia_fecha or "—" }} · ${{ "{:,.0f}".format(mejor_dia_valor or 0) }}
+                              </td>
+                            </tr>
+                          </table>
+
+                          {% if (meses_detalle or [])|length > 1 %}
+                          <div style="margin-top:12px;border-top:1px solid #eef2f7;padding-top:10px;">
+                            <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#6b7280;">
+                              Ventas por mes dentro del periodo
+                            </div>
+
+                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:8px;">
+                              {% for m in meses_detalle %}
+                              <tr>
+                                <td style="padding:6px 0;font-size:12px;color:#374151;">{{ m.month }}/{{ m.year }}</td>
+                                <td align="right" style="padding:6px 0;font-size:12px;font-weight:900;color:#111827;">
+                                  ${{ "{:,.0f}".format(m.total or 0) }}
+                                </td>
+                              </tr>
+                              {% endfor %}
+                            </table>
+                          </div>
+                          {% endif %}
+
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Vendor Table -->
+          <tr>
+            <td style="padding:8px 22px 18px 22px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;">
+                <tr>
+                  <td style="padding:14px 14px 10px 14px;background:#ffffff;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td style="font-size:13px;font-weight:900;color:#111827;">Total por vendedor (periodo)</td>
+                        <td align="right" style="font-size:11px;color:#6b7280;">Ordenado de mayor a menor</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td style="padding:0;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                      <tr style="background:#fff5fb;">
+                        <th align="left" style="padding:12px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:#b83280;border-top:1px solid rgba(255,79,167,.20);border-bottom:1px solid rgba(255,79,167,.20);">
+                          Vendedor
+                        </th>
+                        <th align="right" style="padding:12px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:#b83280;border-top:1px solid rgba(255,79,167,.20);border-bottom:1px solid rgba(255,79,167,.20);">
+                          Total
+                        </th>
+                      </tr>
+
+                      {% for r in (ventas_por_vendedor or []) %}
+                      <tr>
+                        <td style="padding:12px 14px;border-bottom:1px solid #f1f5f9;font-size:12px;color:#111827;">
+                          <b>{{ r.vendedor }}</b>
+                        </td>
+                        <td align="right" style="padding:12px 14px;border-bottom:1px solid #f1f5f9;font-size:12px;font-weight:900;color:#111827;">
+                          ${{ "{:,.0f}".format(r.total or 0) }}
+                        </td>
+                      </tr>
+                      {% else %}
+                      <tr>
+                        <td colspan="2" style="padding:14px;text-align:center;color:#6b7280;font-size:12px;">
+                          No se registraron ventas en el periodo seleccionado.
+                        </td>
+                      </tr>
+                      {% endfor %}
+
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding:0 22px 22px 22px;">
+              <div style="text-align:center;color:#9ca3af;font-size:11px;line-height:1.6;">
+                Generado automáticamente por el sistema · La Cosmetiquera de Gabi<br>
+                Este reporte corresponde únicamente a ingresos.
+              </div>
+            </td>
+          </tr>
+
+        </table>
+        <!-- /Container -->
+
+      </td>
+    </tr>
+  </table>
+  <!-- /Wrapper -->
+</body>
+</html>
