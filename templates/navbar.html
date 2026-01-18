@@ -40,10 +40,14 @@
                         <a href="{{ url_for('usuarios') }}" class="text-white hover:bg-pink-700 px-3 py-2 rounded-md text-sm font-medium transition duration-150 ease-in-out">
                             <i class="fas fa-user-gear mr-1"></i> Usuarios
                         </a>
+                        <a href="{{ url_for('proveedores') }}" class="text-white hover:bg-pink-700 px-3 py-2 rounded-md text-sm font-medium transition duration-150 ease-in-out">
+                            <i class="fas fa-truck mr-1"></i> Proveedores
                         <!-- NUEVO ENLACE DE IMPORTACIÓN -->
                         <a href="{{ url_for('vista_importar') }}" class="bg-pink-700 text-white hover:bg-pink-800 px-3 py-2 rounded-md text-sm font-bold transition duration-150 ease-in-out">
                             <i class="fas fa-file-upload mr-1"></i> Importar Datos
                         </a>
+
+
                     {% endif %}
                 </div>
 

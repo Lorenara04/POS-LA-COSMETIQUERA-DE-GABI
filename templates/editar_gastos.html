@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Editar Gasto</title>
+
+  <style>
+    body{
+      font-family: Arial, sans-serif;
+      background:#faf7fb;
+      padding:20px;
+    }
+    .card{
+      max-width: 680px;
+      margin: 0 auto;
+      background:#fff;
+      border-radius: 16px;
+      padding:16px;
+      border: 2px solid rgba(255, 170, 200, 0.35);
+      box-shadow: 0 8px 20px rgba(255,140,180,.18);
+    }
+    label{ font-weight:700; color:#6a1b9a; font-size: 13px; }
+    input, select{
+      width:100%;
+      padding:10px;
+      border-radius:12px;
+      border:1px solid rgba(180,180,180,.35);
+      margin:6px 0 12px 0;
+      outline:none;
+    }
+    button{
+      padding:10px 12px;
+      border-radius:12px;
+      border:none;
+      cursor:pointer;
+      font-weight:900;
+      background: linear-gradient(135deg, #ff7fc8, #9c0277);
+      color:#fff;
+    }
+    a{ text-decoration:none; font-weight:900; color:#6a1b9a; }
+    .row{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    @media(max-width:700px){ .row{ grid-template-columns:1fr; } }
+  </style>
+</head>
+
+<body>
+  <div class="card">
+    <h2 style="margin-top:0;">✏️ Editar Gasto</h2>
+
+    <form method="POST">
+      <div class="row">
+        <div>
+          <label>Categoría</label>
+          <select name="categoria" required>
+            <option value="Arriendo" {{ "selected" if gasto["categoria"]=="Arriendo" else "" }}>Arriendo</option>
+            <option value="Servicios" {{ "selected" if gasto["categoria"]=="Servicios" else "" }}>Servicios</option>
+            <option value="Aseo" {{ "selected" if gasto["categoria"]=="Aseo" else "" }}>Aseo</option>
+            <option value="Nómina" {{ "selected" if gasto["categoria"]=="Nómina" else "" }}>Nómina</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Fecha</label>
+          <input type="date" name="fecha" value="{{ gasto['fecha'] or '' }}">
+        </div>
+      </div>
+
+      <label>Concepto</label>
+      <input type="text" name="concepto" value="{{ gasto['concepto'] }}" required>
+
+      <label>Total</label>
+      <input type="number" step="0.01" name="total" value="{{ gasto['total'] }}" required>
+
+      <button type="submit">💾 Guardar cambios</button>
+    </form>
+
+    <div style="margin-top:12px;">
+      <a href="{{ url_for('gastos') }}">← Volver a Gastos</a>
+    </div>
+  </div>
+</body>
+</html>

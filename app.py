@@ -1,6 +1,7 @@
 from flask import Flask, render_template, redirect, url_for, request, flash, abort, jsonify
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user, UserMixin
 from flask_sqlalchemy import SQLAlchemy
+import sqlalchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import func, and_
 # Importaciones añadidas para manejo de errores de DB
@@ -20,6 +21,7 @@ import pandas as pd  # Importado para manejo de Excel
 from dotenv import load_dotenv
 from flask import send_file
 from io import BytesIO
+from openpyxl import Workbook
 
 load_dotenv()  # carga .env automáticamente
 
@@ -390,6 +392,63 @@ class AcumuladoMensual(db.Model):
     __table_args__ = (
         db.UniqueConstraint('year', 'month', name='uq_acumulado_year_month'),
     )
+
+# ===================== PROVEEDORES =====================
+
+class Factura(db.Model):
+    __tablename__ = "facturas"
+
+    id = db.Column(db.Integer, primary_key=True)
+    numero = db.Column(db.String(100), nullable=False)
+    proveedor = db.Column(db.String(150), nullable=False)
+    total = db.Column(db.Float, nullable=False)
+    fecha = db.Column(db.Date, nullable=False, default=date.today)
+
+    abonos = db.relationship(
+        "Abono",
+        backref="factura",
+        cascade="all, delete-orphan",
+        lazy=True
+    )
+
+
+class Abono(db.Model):
+    __tablename__ = "abonos"
+
+    id = db.Column(db.Integer, primary_key=True)
+    factura_id = db.Column(db.Integer, db.ForeignKey("facturas.id", ondelete="CASCADE"), nullable=False)
+    monto = db.Column(db.Float, nullable=False)
+    medio_pago = db.Column(db.String(50), nullable=False)
+    fecha = db.Column(db.Date, nullable=False, default=date.today)
+
+
+# ===================== GASTOS =====================
+
+class Gasto(db.Model):
+    __tablename__ = "gastos"
+
+    id = db.Column(db.Integer, primary_key=True)
+    categoria = db.Column(db.String(100), nullable=False)
+    concepto = db.Column(db.String(200), nullable=False)
+    total = db.Column(db.Float, nullable=False)
+    fecha = db.Column(db.Date, nullable=False, default=date.today)
+
+    abonos = db.relationship(
+        "AbonoGasto",
+        backref="gasto",
+        cascade="all, delete-orphan",
+        lazy=True
+    )
+
+
+class AbonoGasto(db.Model):
+    __tablename__ = "abonos_gastos"
+
+    id = db.Column(db.Integer, primary_key=True)
+    gasto_id = db.Column(db.Integer, db.ForeignKey("gastos.id", ondelete="CASCADE"), nullable=False)
+    monto = db.Column(db.Float, nullable=False)
+    medio_pago = db.Column(db.String(50), nullable=False)
+    fecha = db.Column(db.Date, nullable=False, default=date.today)
 
 
 # =================================================================
@@ -2067,6 +2126,414 @@ def exportar_acumulados_excel():
         output,
         download_name=nombre_archivo,
         as_attachment=True,
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+#=================================================================
+# PROVEEDORES
+#=================================================================
+from sqlalchemy import func
+
+@app.route("/proveedores", methods=["GET", "POST"])
+@login_required
+def proveedores():
+    if current_user.rol.lower() != "administrador":
+        flash("Permiso denegado.", "danger")
+        return redirect(url_for("dashboard"))
+
+    if request.method == "POST":
+        numero = (request.form.get("numero") or "").strip()
+        proveedor = (request.form.get("proveedor") or "").strip()
+        total_raw = (request.form.get("total") or "0").strip()
+        fecha_str = (request.form.get("fecha") or "").strip()
+
+        if not numero or not proveedor:
+            abort(400, description="Número y proveedor son obligatorios.")
+
+        try:
+            total = float(total_raw)
+        except ValueError:
+            abort(400, description="Total inválido.")
+
+        try:
+            fecha_factura = datetime.strptime(fecha_str, "%Y-%m-%d").date() if fecha_str else date.today()
+        except Exception:
+            fecha_factura = date.today()
+
+        f = Factura(numero=numero, proveedor=proveedor, total=total, fecha=fecha_factura)
+        db.session.add(f)
+        db.session.commit()
+        return redirect(url_for("proveedores"))
+
+    # Facturas con: abonado, saldo, fecha_ultimo_abono
+    rows = db.session.query(
+        Factura,
+        func.coalesce(func.sum(Abono.monto), 0).label("abonado"),
+        (Factura.total - func.coalesce(func.sum(Abono.monto), 0)).label("saldo"),
+        func.max(Abono.fecha).label("fecha_ultimo_abono")
+    ).outerjoin(Abono, Abono.factura_id == Factura.id) \
+     .group_by(Factura.id) \
+     .order_by(Factura.fecha.desc(), Factura.id.desc()) \
+     .all()
+
+    facturas = []
+    for f, abonado, saldo, fecha_ultimo_abono in rows:
+        facturas.append({
+            "id": f.id,
+            "numero": f.numero,
+            "proveedor": f.proveedor,
+            "total": float(f.total or 0),
+            "abonado": float(abonado or 0),
+            "saldo": float(saldo or 0),
+            "fecha_factura": f.fecha,
+            "fecha_ultimo_abono": fecha_ultimo_abono
+        })
+
+    abonos = db.session.query(Abono).order_by(Abono.fecha.asc(), Abono.id.asc()).all()
+
+    # Si tu template espera sqlite Row, esto igual funciona porque mandamos dicts + objetos.
+    return render_template("proveedores.html", facturas=facturas, abonos=abonos)
+
+
+@app.route("/abonar/<int:factura_id>", methods=["POST"])
+@login_required
+def abonar(factura_id):
+    if current_user.rol.lower() != "administrador":
+        flash("Permiso denegado.", "danger")
+        return redirect(url_for("dashboard"))
+
+    monto_raw = (request.form.get("monto") or "0").strip()
+    medio = (request.form.get("medio") or "").strip()
+
+    try:
+        monto = float(monto_raw)
+    except ValueError:
+        return redirect(url_for("proveedores"))
+
+    if monto <= 0 or not medio:
+        return redirect(url_for("proveedores"))
+
+    factura = Factura.query.get(factura_id)
+    if not factura:
+        return redirect(url_for("proveedores"))
+
+    abonado = db.session.query(func.coalesce(func.sum(Abono.monto), 0)) \
+        .filter(Abono.factura_id == factura_id).scalar() or 0
+
+    saldo = float(factura.total or 0) - float(abonado or 0)
+    if saldo <= 0:
+        return redirect(url_for("proveedores"))
+
+    if monto > saldo:
+        monto = saldo
+
+    db.session.add(Abono(factura_id=factura_id, monto=monto, medio_pago=medio, fecha=date.today()))
+    db.session.commit()
+    return redirect(url_for("proveedores"))
+
+
+@app.route("/eliminar_factura/<int:factura_id>", methods=["POST"])
+@login_required
+def eliminar_factura(factura_id):
+    if current_user.rol.lower() != "administrador":
+        flash("Permiso denegado.", "danger")
+        return redirect(url_for("dashboard"))
+
+    factura = Factura.query.get_or_404(factura_id)
+    db.session.delete(factura)  # cascade borra abonos
+    db.session.commit()
+    return redirect(url_for("proveedores"))
+
+
+@app.route("/editar_factura/<int:factura_id>", methods=["GET", "POST"])
+@login_required
+def editar_factura(factura_id):
+    if current_user.rol.lower() != "administrador":
+        flash("Permiso denegado.", "danger")
+        return redirect(url_for("dashboard"))
+
+    factura = Factura.query.get_or_404(factura_id)
+
+    if request.method == "POST":
+        numero = (request.form.get("numero") or "").strip()
+        proveedor = (request.form.get("proveedor") or "").strip()
+        total_raw = (request.form.get("total") or "0").strip()
+        fecha_str = (request.form.get("fecha") or "").strip()
+
+        if not numero or not proveedor:
+            abort(400, description="Número y proveedor son obligatorios.")
+
+        try:
+            total = float(total_raw)
+        except ValueError:
+            abort(400, description="Total inválido.")
+
+        try:
+            fecha_factura = datetime.strptime(fecha_str, "%Y-%m-%d").date() if fecha_str else date.today()
+        except Exception:
+            fecha_factura = date.today()
+
+        abonado = db.session.query(func.coalesce(func.sum(Abono.monto), 0)) \
+            .filter(Abono.factura_id == factura_id).scalar() or 0
+
+        if total < float(abonado or 0):
+            abort(400, description=f"El total no puede ser menor que lo abonado ({float(abonado):.2f}).")
+
+        factura.numero = numero
+        factura.proveedor = proveedor
+        factura.total = total
+        factura.fecha = fecha_factura
+
+        db.session.commit()
+        return redirect(url_for("proveedores"))
+
+    return render_template("editar_factura.html", factura=factura)
+ 
+ #=================================================================
+ #GASTOS
+ #================================================================
+@app.route("/gastos", methods=["GET", "POST"])
+@login_required
+def gastos():
+    if current_user.rol.lower() != "administrador":
+        flash("Permiso denegado.", "danger")
+        return redirect(url_for("dashboard"))
+
+    if request.method == "POST":
+        categoria = (request.form.get("categoria") or "").strip()
+        concepto = (request.form.get("concepto") or "").strip()
+        total_raw = (request.form.get("total") or "0").strip()
+        fecha_str = (request.form.get("fecha") or "").strip()
+
+        if not categoria or not concepto:
+            abort(400, description="Categoría y concepto son obligatorios.")
+
+        try:
+            total = float(total_raw)
+        except ValueError:
+            abort(400, description="Total inválido.")
+
+        try:
+            fecha_gasto = datetime.strptime(fecha_str, "%Y-%m-%d").date() if fecha_str else date.today()
+        except Exception:
+            fecha_gasto = date.today()
+
+        g = Gasto(categoria=categoria, concepto=concepto, total=total, fecha=fecha_gasto)
+        db.session.add(g)
+        db.session.commit()
+        return redirect(url_for("gastos"))
+
+    rows = db.session.query(
+        Gasto,
+        func.coalesce(func.sum(AbonoGasto.monto), 0).label("abonado"),
+        (Gasto.total - func.coalesce(func.sum(AbonoGasto.monto), 0)).label("saldo"),
+        func.max(AbonoGasto.fecha).label("fecha_ultimo_abono")
+    ).outerjoin(AbonoGasto, AbonoGasto.gasto_id == Gasto.id) \
+     .group_by(Gasto.id) \
+     .order_by(Gasto.fecha.desc(), Gasto.id.desc()) \
+     .all()
+
+    gastos_list = []
+    for g, abonado, saldo, fecha_ultimo_abono in rows:
+        gastos_list.append({
+            "id": g.id,
+            "categoria": g.categoria,
+            "concepto": g.concepto,
+            "total": float(g.total or 0),
+            "abonado": float(abonado or 0),
+            "saldo": float(saldo or 0),
+            "fecha_gasto": g.fecha,
+            "fecha_ultimo_abono": fecha_ultimo_abono
+        })
+
+    abonos_gastos = db.session.query(AbonoGasto).order_by(AbonoGasto.fecha.asc(), AbonoGasto.id.asc()).all()
+
+    return render_template("modulo_gastos.html", gastos=gastos_list, abonos_gastos=abonos_gastos)
+
+
+@app.route("/abonar_gasto/<int:gasto_id>", methods=["POST"])
+@login_required
+def abonar_gasto(gasto_id):
+    if current_user.rol.lower() != "administrador":
+        flash("Permiso denegado.", "danger")
+        return redirect(url_for("dashboard"))
+
+    monto_raw = (request.form.get("monto") or "0").strip()
+    medio = (request.form.get("medio") or "").strip()
+
+    try:
+        monto = float(monto_raw)
+    except ValueError:
+        return redirect(url_for("gastos"))
+
+    if monto <= 0 or not medio:
+        return redirect(url_for("gastos"))
+
+    gasto = Gasto.query.get(gasto_id)
+    if not gasto:
+        return redirect(url_for("gastos"))
+
+    abonado = db.session.query(func.coalesce(func.sum(AbonoGasto.monto), 0)) \
+        .filter(AbonoGasto.gasto_id == gasto_id).scalar() or 0
+
+    saldo = float(gasto.total or 0) - float(abonado or 0)
+    if saldo <= 0:
+        return redirect(url_for("gastos"))
+
+    if monto > saldo:
+        monto = saldo
+
+    db.session.add(AbonoGasto(gasto_id=gasto_id, monto=monto, medio_pago=medio, fecha=date.today()))
+    db.session.commit()
+    return redirect(url_for("gastos"))
+
+
+@app.route("/eliminar_gasto/<int:gasto_id>", methods=["POST"])
+@login_required
+def eliminar_gasto(gasto_id):
+    if current_user.rol.lower() != "administrador":
+        flash("Permiso denegado.", "danger")
+        return redirect(url_for("dashboard"))
+
+    gasto = Gasto.query.get_or_404(gasto_id)
+    db.session.delete(gasto)  # cascade borra abonos_gastos
+    db.session.commit()
+    return redirect(url_for("gastos"))
+
+
+@app.route("/editar_gasto/<int:gasto_id>", methods=["GET", "POST"])
+@login_required
+def editar_gasto(gasto_id):
+    if current_user.rol.lower() != "administrador":
+        flash("Permiso denegado.", "danger")
+        return redirect(url_for("dashboard"))
+
+    gasto = Gasto.query.get_or_404(gasto_id)
+
+    if request.method == "POST":
+        categoria = (request.form.get("categoria") or "").strip()
+        concepto = (request.form.get("concepto") or "").strip()
+        total_raw = (request.form.get("total") or "0").strip()
+        fecha_str = (request.form.get("fecha") or "").strip()
+
+        if not categoria or not concepto:
+            abort(400, description="Categoría y concepto son obligatorios.")
+
+        try:
+            total = float(total_raw)
+        except ValueError:
+            abort(400, description="Total inválido.")
+
+        try:
+            fecha_gasto = datetime.strptime(fecha_str, "%Y-%m-%d").date() if fecha_str else date.today()
+        except Exception:
+            fecha_gasto = date.today()
+
+        abonado = db.session.query(func.coalesce(func.sum(AbonoGasto.monto), 0)) \
+            .filter(AbonoGasto.gasto_id == gasto_id).scalar() or 0
+
+        if total < float(abonado or 0):
+            abort(400, description=f"El total no puede ser menor que lo abonado ({float(abonado):.2f}).")
+
+        gasto.categoria = categoria
+        gasto.concepto = concepto
+        gasto.total = total
+        gasto.fecha = fecha_gasto
+
+        db.session.commit()
+        return redirect(url_for("gastos"))
+
+    return render_template("editar_gasto.html", gasto=gasto)
+#==================================================================
+#EXPORTA PROVEEDORES Y GASTOS A EXCEL
+#==================================================================
+@app.route("/exportar_proveedores")
+@login_required
+def exportar_proveedores():
+    if current_user.rol.lower() != "administrador":
+        flash("Permiso denegado.", "danger")
+        return redirect(url_for("dashboard"))
+
+    rows = db.session.query(
+        Factura,
+        func.coalesce(func.sum(Abono.monto), 0).label("abonado"),
+        (Factura.total - func.coalesce(func.sum(Abono.monto), 0)).label("saldo"),
+        func.max(Abono.fecha).label("fecha_ultimo_abono")
+    ).outerjoin(Abono, Abono.factura_id == Factura.id) \
+     .group_by(Factura.id) \
+     .order_by(Factura.fecha.desc(), Factura.id.desc()) \
+     .all()
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Proveedores"
+    ws.append(["ID", "Factura", "Proveedor", "Total", "Abonado", "Saldo", "Fecha Factura", "Último Abono"])
+
+    for f, abonado, saldo, ult in rows:
+        ws.append([
+            f.id,
+            f.numero,
+            f.proveedor,
+            float(f.total or 0),
+            float(abonado or 0),
+            float(saldo or 0),
+            f.fecha.isoformat() if f.fecha else "",
+            ult.isoformat() if ult else ""
+        ])
+
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+
+    return send_file(
+        output,
+        as_attachment=True,
+        download_name="proveedores.xlsx",
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+
+
+@app.route("/exportar_gastos")
+@login_required
+def exportar_gastos():
+    if current_user.rol.lower() != "administrador":
+        flash("Permiso denegado.", "danger")
+        return redirect(url_for("dashboard"))
+
+    rows = db.session.query(
+        Gasto,
+        func.coalesce(func.sum(AbonoGasto.monto), 0).label("abonado"),
+        (Gasto.total - func.coalesce(func.sum(AbonoGasto.monto), 0)).label("saldo"),
+        func.max(AbonoGasto.fecha).label("fecha_ultimo_abono")
+    ).outerjoin(AbonoGasto, AbonoGasto.gasto_id == Gasto.id) \
+     .group_by(Gasto.id) \
+     .order_by(Gasto.fecha.desc(), Gasto.id.desc()) \
+     .all()
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Gastos"
+    ws.append(["ID", "Categoría", "Concepto", "Total", "Abonado", "Saldo", "Fecha Gasto", "Último Abono"])
+
+    for g, abonado, saldo, ult in rows:
+        ws.append([
+            g.id,
+            g.categoria,
+            g.concepto,
+            float(g.total or 0),
+            float(abonado or 0),
+            float(saldo or 0),
+            g.fecha.isoformat() if g.fecha else "",
+            ult.isoformat() if ult else ""
+        ])
+
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+
+    return send_file(
+        output,
+        as_attachment=True,
+        download_name="gastos.xlsx",
         mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
 
