@@ -2,32 +2,20 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Editar Factura ✨</title>
 
-  <!-- Fuente coquette -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
 
   <style>
     :root{
-      --bg1:#fff1f6;
-      --bg2:#f3edff;
-      --bg3:#e9fbff;
-      --ink:#2b2b2b;
-
-      --glass: rgba(255,255,255,.60);
-      --stroke: rgba(255,255,255,.55);
-      --shadow: 0 14px 34px rgba(0,0,0,.14);
-
-      --pink:#ff63a6;
-      --lila:#7b61ff;
-      --mint:#21c7b7;
-
-      --danger:#ff3b6b;
-      --muted: rgba(0,0,0,.55);
-
-      --radius: 20px;
+      --pink: #ff63a6;
+      --pink-soft: #ff8c94;
+      --lila: #9c0277;
+      --glass: rgba(255, 255, 255, 0.88);
+      --shadow: 0 20px 40px rgba(255, 140, 180, 0.15);
     }
 
     * { box-sizing: border-box; }
@@ -35,489 +23,235 @@
     body{
       margin:0;
       min-height:100vh;
-      font-family:"Quicksand", system-ui, -apple-system, Segoe UI, Roboto, Arial;
-      color:var(--ink);
-      padding:28px 16px;
-
-      background:
-        radial-gradient(900px 600px at 12% 10%, rgba(255,99,166,.24), transparent 60%),
-        radial-gradient(900px 650px at 88% 15%, rgba(123,97,255,.22), transparent 60%),
-        radial-gradient(900px 650px at 55% 95%, rgba(33,199,183,.18), transparent 60%),
-        linear-gradient(135deg, var(--bg1), var(--bg2), var(--bg3));
-      overflow-x:hidden;
-    }
-
-    /* ✨ sparkles */
-    body::before{
-      content:"";
-      position:fixed;
-      inset:-50px;
-      pointer-events:none;
-      background-image:
-        radial-gradient(circle at 12% 18%, rgba(255,255,255,.75) 0 2px, transparent 3px),
-        radial-gradient(circle at 80% 12%, rgba(255,255,255,.65) 0 1.5px, transparent 3px),
-        radial-gradient(circle at 30% 86%, rgba(255,255,255,.55) 0 1.5px, transparent 3px),
-        radial-gradient(circle at 92% 78%, rgba(255,255,255,.55) 0 2px, transparent 3px);
-      opacity:.6;
-      filter: blur(.2px);
+      font-family:"Quicksand", sans-serif;
+      color:#2a1f2d;
+      padding:40px 16px;
+      /* Fondo característico con burbujas de color */
+      background: 
+        radial-gradient(circle at 10% 10%, rgba(255,180,210,.4), transparent 40%),
+        radial-gradient(circle at 90% 20%, rgba(230,206,255,.5), transparent 45%),
+        radial-gradient(circle at 50% 90%, rgba(255,219,112,.3), transparent 45%),
+        #faf7fb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .wrap{
-      max-width: 720px;
-      margin: 0 auto;
-      display:flex;
-      flex-direction:column;
-      gap: 14px;
-    }
-
-    .topbar{
-      display:flex;
-      align-items:flex-end;
-      justify-content:space-between;
-      gap:12px;
-      padding: 6px 6px 0;
-    }
-
-    .brand h1{
-      margin:0;
-      font-size:28px;
-      letter-spacing:.2px;
-    }
-    .brand p{
-      margin:4px 0 0;
-      font-size:14px;
-      color: var(--muted);
-    }
-
-    .badge{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding:8px 12px;
-      border-radius:999px;
-      background: rgba(255,255,255,.62);
-      border:1px solid rgba(255,255,255,.6);
-      box-shadow: 0 10px 22px rgba(0,0,0,.08);
-      backdrop-filter: blur(10px);
-      font-size:13px;
-      font-weight:700;
-      white-space:nowrap;
+      width: 100%;
+      max-width: 600px;
+      position: relative;
     }
 
     .card{
       background: var(--glass);
-      border:1px solid rgba(255,255,255,.55);
-      border-radius: var(--radius);
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+      border-radius: 30px;
+      border: 3px solid white;
       box-shadow: var(--shadow);
-      backdrop-filter: blur(14px);
-      overflow:hidden;
+      overflow: hidden;
+      animation: fadeIn 0.6s ease-out;
     }
 
-    .header{
-      padding:16px 18px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      background:
-        linear-gradient(135deg, rgba(255,99,166,.18), rgba(123,97,255,.14), rgba(33,199,183,.12));
-      border-bottom:1px solid rgba(255,255,255,.55);
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
-    .header h2{
-      margin:0;
-      font-size:18px;
-      display:flex;
-      align-items:center;
-      gap:10px;
+    .header-pink {
+      background: linear-gradient(135deg, rgba(255,99,166,.15), rgba(156,2,119,.1));
+      padding: 30px;
+      text-align: center;
+      border-bottom: 1px solid rgba(255,140,180,0.1);
     }
 
-    .content{
-      padding:18px;
+    .header-pink h1 {
+      margin: 0;
+      font-size: 26px;
+      color: var(--lila);
+      letter-spacing: -0.5px;
     }
 
-    .grid{
-      display:grid;
+    .content { padding: 30px; }
+
+    .grid-row {
+      display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 12px;
+      gap: 20px;
+      margin-bottom: 20px;
     }
 
-    .field{
-      display:flex;
-      flex-direction:column;
-      gap:6px;
-      text-align:left;
-    }
+    .field { display: flex; flex-direction: column; gap: 8px; }
 
-    label{
-      font-size:12.5px;
-      font-weight:800;
-      letter-spacing:.2px;
-      color: rgba(0,0,0,.65);
-    }
-
-    input{
-      width:100%;
-      padding:12px 12px;
-      border-radius: 16px;
-      border:1px solid rgba(255,255,255,.85);
-      background: rgba(255,255,255,.78);
-      outline:none;
-      box-shadow: 0 10px 20px rgba(0,0,0,.06);
-      transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
-      font-family: inherit;
-      font-size:14px;
-    }
-
-    input:focus{
-      transform: translateY(-1px);
-      box-shadow: 0 16px 28px rgba(0,0,0,.10);
-      border-color: rgba(255,99,166,.55);
-    }
-
-    .span-2{ grid-column: span 2; }
-
-    .actions{
-      margin-top: 14px;
-      display:flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-    }
-
-    .btn{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      gap:8px;
-      padding:11px 14px;
-      border-radius: 16px;
-      border:1px solid rgba(255,255,255,.6);
-      cursor:pointer;
-      font-weight:800;
-      font-size:13px;
-      letter-spacing:.2px;
-      box-shadow: 0 12px 24px rgba(0,0,0,.12);
-      transition: transform .12s ease, filter .12s ease, box-shadow .12s ease;
-      user-select:none;
-      text-decoration:none;
-      white-space:nowrap;
-      position: relative;
-      overflow:hidden;
-    }
-    .btn:hover{ transform: translateY(-1px); filter: brightness(1.03); }
-    .btn:active{ transform: translateY(0px) scale(.99); box-shadow: 0 10px 18px rgba(0,0,0,.10); }
-
-    .btn-save{
-      color:white;
-      background: linear-gradient(135deg, var(--pink), var(--lila));
-    }
-
-    .btn-cancel{
-      color: #2b2b2b;
-      background: rgba(255,255,255,.78);
-    }
-
-    /* ✨ shimmer on hover */
-    .btn-save::after{
-      content:"";
-      position:absolute;
-      top:-40%;
-      left:-30%;
-      width:40%;
-      height:180%;
-      transform: rotate(25deg);
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent);
-      opacity:0;
-      transition: opacity .2s ease;
-    }
-    .btn-save:hover::after{
-      opacity:1;
-      animation: shimmer 1s ease-in-out infinite;
-    }
-    @keyframes shimmer{
-      0%{ left:-30%; }
-      100%{ left:130%; }
-    }
-
-    /* Loading state on button */
-    .btn[disabled]{
-      cursor: not-allowed;
-      filter: grayscale(.15) brightness(.95);
-      opacity: .92;
-      transform:none !important;
-    }
-    .btn .spinner{
-      width:14px;
-      height:14px;
-      border-radius:999px;
-      border:2px solid rgba(255,255,255,.6);
-      border-top-color: rgba(255,255,255,1);
-      animation: spin .9s linear infinite;
-      display:none;
-    }
-    .btn.loading .spinner{ display:inline-block; }
-    .btn.loading .btn-text{ opacity:.9; }
-    @keyframes spin{
-      to{ transform: rotate(360deg); }
-    }
-
-    .footer-note{
-      padding: 12px 18px 16px;
-      border-top: 1px solid rgba(255,255,255,.55);
-      background: rgba(255,255,255,.35);
+    label {
       font-size: 13px;
-      color: rgba(0,0,0,.55);
-      display:flex;
-      justify-content:space-between;
-      gap:10px;
-      flex-wrap:wrap;
+      font-weight: 700;
+      color: #8a005a;
+      margin-left: 10px;
+      text-transform: uppercase;
     }
 
-    .tiny{
-      display:inline-flex;
-      align-items:center;
-      gap:6px;
-      padding:6px 10px;
-      border-radius:999px;
-      background: rgba(0,0,0,.05);
-      font-weight:700;
-      font-size:12px;
+    input {
+      width: 100%;
+      padding: 14px 18px;
+      border-radius: 18px;
+      border: 1px solid rgba(0,0,0,0.05);
+      background: white;
+      outline: none;
+      font-size: 15px;
+      transition: 0.3s ease;
+      font-family: inherit;
     }
 
-    /* ⭐ Bonus overlay (hermoso) */
-    .overlay{
-      position:fixed;
-      inset:0;
-      display:none;
-      align-items:center;
-      justify-content:center;
-      padding: 16px;
-      background: rgba(255,255,255,.22);
-      backdrop-filter: blur(14px);
+    input:focus {
+      border-color: var(--pink-soft);
+      box-shadow: 0 0 0 5px rgba(255, 179, 209, 0.3);
+      transform: translateY(-2px);
+    }
+
+    .actions {
+      display: flex;
+      gap: 15px;
+      margin-top: 30px;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 15px;
+      border-radius: 18px;
+      border: none;
+      font-weight: 800;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      text-decoration: none;
+      font-size: 14px;
+    }
+
+    .btn-save {
+      background: linear-gradient(135deg, #ff7fc8, #9c0277);
+      color: white;
+      box-shadow: 0 10px 25px rgba(156, 2, 119, 0.3);
+    }
+
+    .btn-save:hover { transform: translateY(-3px); filter: brightness(1.1); }
+
+    .btn-cancel {
+      background: #f1f1f1;
+      color: #666;
+    }
+
+    /* Overlay de carga "Fifiris" */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(10px);
+      display: none;
+      align-items: center;
+      justify-content: center;
       z-index: 9999;
     }
-    .overlay.show{ display:flex; }
 
-    .overlay-card{
-      width:min(520px, 92vw);
-      background: rgba(255,255,255,.78);
-      border: 1px solid rgba(255,255,255,.7);
-      border-radius: 22px;
-      box-shadow: 0 20px 50px rgba(0,0,0,.18);
-      padding: 18px 18px 16px;
-      position: relative;
-      overflow:hidden;
-    }
+    .overlay.show { display: flex; }
 
-    /* glow gradient border effect */
-    .overlay-card::before{
-      content:"";
-      position:absolute;
-      inset:-2px;
-      background: linear-gradient(135deg, rgba(255,99,166,.55), rgba(123,97,255,.55), rgba(33,199,183,.55));
-      filter: blur(18px);
-      opacity:.55;
-      z-index:0;
-    }
-    .overlay-card > *{ position:relative; z-index:1; }
-
-    .overlay-top{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      margin-bottom: 10px;
-    }
-    .overlay-title{
-      margin:0;
-      font-size: 16px;
-      font-weight: 800;
-    }
-    .overlay-sub{
-      margin:0;
-      margin-top: 2px;
-      color: rgba(0,0,0,.6);
-      font-size: 13px;
-      line-height: 1.2rem;
+    .loader-card {
+      background: white;
+      padding: 40px;
+      border-radius: 30px;
+      text-align: center;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.1);
+      border: 2px solid var(--pink-soft);
     }
 
-    .sparkle-row{
-      display:flex;
-      gap:10px;
-      align-items:center;
-      margin-top: 12px;
+    .heart-spinner {
+      font-size: 40px;
+      animation: pulse 1s infinite;
+      margin-bottom: 15px;
     }
 
-    .big-loader{
-      width: 46px;
-      height: 46px;
-      border-radius: 999px;
-      border: 4px solid rgba(123,97,255,.20);
-      border-top-color: rgba(255,99,166,.95);
-      border-right-color: rgba(33,199,183,.85);
-      animation: spin 1s linear infinite;
-      box-shadow: 0 14px 30px rgba(0,0,0,.12);
-      flex: 0 0 auto;
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.2); }
     }
 
-    .progress{
-      height: 10px;
-      border-radius: 999px;
-      background: rgba(0,0,0,.06);
-      overflow:hidden;
-      flex: 1 1 auto;
-      border: 1px solid rgba(255,255,255,.7);
-    }
-    .bar{
-      height:100%;
-      width: 40%;
-      border-radius: 999px;
-      background: linear-gradient(90deg, rgba(255,99,166,.85), rgba(123,97,255,.85), rgba(33,199,183,.85));
-      animation: loading 1.15s ease-in-out infinite;
-    }
-    @keyframes loading{
-      0%{ transform: translateX(-60%); }
-      50%{ transform: translateX(30%); }
-      100%{ transform: translateX(160%); }
-    }
-
-    /* Floating hearts */
-    .floaty{
-      position:absolute;
-      inset:0;
-      pointer-events:none;
-      opacity:.35;
-      z-index:0;
-    }
-    .floaty span{
-      position:absolute;
-      font-size:18px;
-      animation: floatUp 2.2s ease-in-out infinite;
-      filter: blur(.2px);
-    }
-    .floaty span:nth-child(1){ left:8%; top:75%; animation-delay: .0s; }
-    .floaty span:nth-child(2){ left:22%; top:85%; animation-delay: .4s; }
-    .floaty span:nth-child(3){ left:68%; top:78%; animation-delay: .2s; }
-    .floaty span:nth-child(4){ left:86%; top:88%; animation-delay: .6s; }
-    @keyframes floatUp{
-      0%{ transform: translateY(0) scale(.95); opacity:.20; }
-      50%{ opacity:.55; }
-      100%{ transform: translateY(-90px) scale(1.15); opacity:.0; }
-    }
-
-    @media (max-width: 640px){
-      .grid{ grid-template-columns: 1fr; }
-      .span-2{ grid-column: span 1; }
-      .actions{ justify-content: stretch; }
-      .actions .btn{ flex:1; }
+    @media (max-width: 500px) {
+      .grid-row { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 
 <body>
   <div class="wrap">
-    <div class="topbar">
-      <div class="brand">
-        <h1>Editar factura ✨</h1>
-        <p>berigud · fifiris · nais 💖 (pero con datos correctos)</p>
-      </div>
-      <div class="badge">🫧 Glass · ✨ Brillitos · 💅 Coquette</div>
-    </div>
-
+    
     <div class="card">
-      <div class="header">
-        <h2>✏️ Editar datos</h2>
-        <span class="tiny">🧾 ID: {{ factura['id'] }}</span>
+      <div class="header-pink">
+        <span style="font-size: 30px;"></span>
+        <h1>Editar factura ✨</h1>
+        <p style="color: #888; margin: 5px 0 0; font-size: 13px;">Asegúrate de que todo este correcto</p>
       </div>
 
       <div class="content">
         <form method="POST" id="editForm">
-          <div class="grid">
+          <div class="grid-row">
             <div class="field">
               <label>N° Factura</label>
-              <input type="text" name="numero" value="{{ factura['numero'] }}" required>
+              <input type="text" name="numero" value="{{ factura.numero if factura.numero is defined else factura[1] }}" required>
             </div>
 
             <div class="field">
               <label>Proveedor</label>
-              <input type="text" name="proveedor" value="{{ factura['proveedor'] }}" required>
+              <input type="text" name="proveedor" value="{{ factura.proveedor if factura.proveedor is defined else factura[2] }}" required>
             </div>
+          </div>
 
+          <div class="grid-row">
             <div class="field">
-              <label>Total</label>
-              <input type="number" step="0.01" name="total" value="{{ factura['total'] }}" required>
+              <label>Total ($)</label>
+              <input type="number" step="0.01" name="total" value="{{ factura.total if factura.total is defined else factura[3] }}" required>
             </div>
 
             <div class="field">
               <label>Fecha</label>
-              <input type="date" name="fecha" value="{{ factura['fecha'] if factura['fecha'] else '' }}">
+              {% set fecha = factura.fecha_factura if factura.fecha_factura is defined else factura[5] %}
+              <input type="date" name="fecha" value="{{ fecha or '' }}">
             </div>
+          </div>
 
-            <div class="field span-2">
-              <div class="actions">
-                <a class="btn btn-cancel" href="{{ url_for('proveedores') }}">↩️ Cancelar</a>
-
-                <button class="btn btn-save" type="submit" id="saveBtn">
-                  <span class="spinner" aria-hidden="true"></span>
-                  <span class="btn-text">✨ Guardar cambios</span>
-                </button>
-              </div>
-            </div>
+          <div class="actions">
+            <a class="btn btn-cancel" href="{{ url_for('exportar_proveedores') }}">✖ Cancelar</a>
+            <button class="btn btn-save" type="submit" id="saveBtn">
+              ✨ Guardar
+            </button>
           </div>
         </form>
       </div>
 
-      <div class="footer-note">
-        <span class="tiny">💡 Tip: no pongas total menor a lo abonado</span>
-        <span class="tiny">✨ cambios con glitter responsable</span>
+      <div style="background: #fafafa; padding: 15px; text-align: center; font-size: 11px; color: #bbb; letter-spacing: 1px;">
+        REGISTRO ID #{{ factura.id if factura.id is defined else factura[0] }} • LA COSMETIQUERA
       </div>
-    </div>
-
-    <div style="text-align:center; opacity:.75; font-size:13px; padding:6px 0;">
-      hecho con 💗 + ✨
     </div>
   </div>
 
-  <!-- ⭐ Bonus Sorpresa Overlay -->
-  <div class="overlay" id="overlay" aria-hidden="true">
-    <div class="overlay-card" role="dialog" aria-live="polite">
-      <div class="floaty" aria-hidden="true">
-        <span>💗</span><span>✨</span><span>💖</span><span>🌸</span>
-      </div>
-
-      <div class="overlay-top">
-        <div>
-          <p class="overlay-title">Guardando con glitter… ✨</p>
-          <p class="overlay-sub">Un segundito preciosa 💅 Estamos aplicando los cambios con amor y brillo.</p>
-        </div>
-        <div class="big-loader" aria-hidden="true"></div>
-      </div>
-
-      <div class="sparkle-row">
-        <div class="progress" aria-hidden="true">
-          <div class="bar"></div>
-        </div>
-      </div>
+  <div class="overlay" id="overlay">
+    <div class="loader-card">
+      <div class="heart-spinner">💖</div>
+      <h3 style="color: #9c0277; margin: 0;">Guardando con amor...</h3>
+      <p style="color: #888; font-size: 13px;">Estamos aplicando los brillitos a tus datos.</p>
     </div>
   </div>
 
   <script>
-    (function () {
-      const form = document.getElementById("editForm");
-      const overlay = document.getElementById("overlay");
-      const saveBtn = document.getElementById("saveBtn");
+    const form = document.getElementById("editForm");
+    const overlay = document.getElementById("overlay");
 
-      form.addEventListener("submit", function () {
-        // evita doble click
-        saveBtn.disabled = true;
-        saveBtn.classList.add("loading");
-
-        // muestra overlay coquette
-        overlay.classList.add("show");
-        overlay.setAttribute("aria-hidden", "false");
-      });
-    })();
+    form.addEventListener("submit", function () {
+      overlay.classList.add("show");
+    });
   </script>
 </body>
 </html>

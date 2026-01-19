@@ -1,522 +1,248 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Módulo de Costos • Facturas</title>
+{% extends "base.html" %}
 
-  <style>
-    :root{
-      --pink-1:#ff8c94;
-      --pink-2:#ffb3d1;
-      --pink-3:#ffe2f0;
-      --lila-1:#b39ddb;
-      --lila-2:#e6ceff;
-      --gold-1:#ffc72c;
-      --gold-2:#ffdb70;
+{% block title %}Módulo de Costos • Facturas{% endblock %}
+{% block page %}Gastos y Costos{% endblock %}
 
-      --ink:#2a1f2d;
-      --muted:#6b5a6e;
-      --card:#ffffff;
-      --line:rgba(255, 170, 200, 0.35);
+{% block content %}
 
-      --shadow: 0 10px 28px rgba(255, 140, 180, 0.22);
-      --shadow-soft: 0 6px 18px rgba(255, 140, 180, 0.16);
-    }
+<style>
+  :root{
+    --pink-1:#ff8c94;
+    --pink-2:#ffb3d1;
+    --pink-3:#ffe2f0;
+    --lila-1:#b39ddb;
+    --lila-2:#e6ceff;
+    --purple-nails:#9c0277;
+    --ink:#2a1f2d;
+    --line:rgba(255, 170, 200, 0.35);
+  }
 
-    *{ box-sizing:border-box; }
-    body{
-      margin:0;
-      font-family: Arial, sans-serif;
-      color:var(--ink);
-      background:
-        radial-gradient(circle at 10% 10%, rgba(255,180,210,.35), transparent 40%),
-        radial-gradient(circle at 90% 20%, rgba(230,206,255,.45), transparent 45%),
-        radial-gradient(circle at 50% 90%, rgba(255,219,112,.25), transparent 45%),
-        #faf7fb;
-      padding: 20px;
-    }
+  .page-costos{
+    font-family: 'Quicksand', 'Segoe UI', sans-serif;
+    background: radial-gradient(circle at 10% 10%, rgba(255,180,210,.35), transparent 40%), #faf7fb;
+    padding: 20px;
+    border-radius: 18px;
+  }
 
-    /* header coqueto */
-    .hero{
-      max-width: 1100px;
-      margin: 0 auto 16px auto;
-      padding: 16px 18px;
-      border-radius: 18px;
-      background: linear-gradient(135deg, rgba(255,140,148,.30), rgba(230,206,255,.35));
-      border: 2px solid var(--line);
-      box-shadow: var(--shadow);
-      position: relative;
-      overflow:hidden;
-    }
-    .hero:before{
-      content:"";
-      position:absolute;
-      inset:-60px -60px auto auto;
-      width:220px; height:220px;
-      background: radial-gradient(circle, rgba(255,255,255,.75), transparent 60%);
-      transform: rotate(15deg);
-      pointer-events:none;
-    }
-    .hero h1{
-      margin:0;
-      font-size: 22px;
-      letter-spacing:.3px;
-      display:flex;
-      align-items:center;
-      gap:10px;
-    }
-    .sparkle{
-      display:inline-grid;
-      place-items:center;
-      width:34px; height:34px;
-      border-radius: 12px;
-      background: linear-gradient(135deg, rgba(255,199,44,.65), rgba(255,179,209,.65));
-      box-shadow: 0 10px 20px rgba(255,199,44,.18);
-      border:1px solid rgba(255,255,255,.7);
-    }
-    .hero p{
-      margin:6px 0 0 44px;
-      color: var(--muted);
-      font-size: 13px;
-    }
+  /* HERO HEADER */
+  .hero{
+    max-width: 1200px;
+    margin: 0 auto 16px auto;
+    padding: 25px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, rgba(255,140,148,.25), rgba(179,157,219,.25));
+    border: 2px solid var(--line);
+    box-shadow: 0 10px 25px rgba(255, 140, 180, 0.15);
+  }
 
-    /* ✅ NUEVO: contenedor del botón (no afecta lo demás) */
-    .top-actions{
-      max-width: 1100px;
-      margin: 10px auto 0 auto;
-      display:flex;
-      justify-content:flex-end;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
+  .top-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 15px; }
+  
+  .btn-nav {
+    padding: 10px 18px;
+    border-radius: 15px;
+    font-weight: 700;
+    font-size: 13px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: 0.3s;
+    border: 1px solid white;
+    background: white;
+    color: #444;
+  }
 
-    /* layout */
-    .wrap{
-      max-width: 1100px;
-      margin: 0 auto;
-      display:grid;
-      gap:16px;
-    }
+  /* --- ESTILOS DE LA TABLA CON COLORES DIFERENCIADOS --- */
+  .table-wrap{ 
+    background: white; 
+    border-radius: 20px; 
+    padding: 15px; 
+    overflow:auto;
+    border: 1px solid var(--line);
+  }
 
-    .card{
-      background: var(--card);
-      border-radius: 18px;
-      border: 2px solid var(--line);
-      box-shadow: var(--shadow-soft);
-      padding: 16px;
-      position:relative;
-      overflow:hidden;
-    }
+  table{ width:100%; border-collapse: separate; border-spacing: 0 8px; min-width: 1000px; }
 
-    .card-title{
-      margin: 0 0 10px 0;
-      font-size: 16px;
-      display:flex;
-      align-items:center;
-      gap:10px;
-    }
-    .badge{
-      font-size: 12px;
-      padding: 4px 10px;
-      border-radius: 999px;
-      background: #fff1fa;
-      border: 1px solid rgba(255, 170, 200, 0.55);
-      color:#8a005a;
-      font-weight:700;
-    }
+  thead th{ 
+    background: #2a1f2d; 
+    color:#fff; 
+    padding: 15px; 
+    border-radius: 12px; 
+    font-size: 12px; 
+    text-transform: uppercase;
+  }
 
-    /* form factura */
-    .form-row{
-      display:grid;
-      grid-template-columns: 1.2fr 1.4fr .8fr .9fr auto;
-      gap:10px;
-      align-items:end;
-    }
-    @media (max-width: 900px){
-      .form-row{ grid-template-columns: 1fr 1fr; }
-    }
+  /* Filas Impares (Blancas) */
+  tbody tr:nth-child(odd) {
+    background: #ffffff;
+  }
 
-    input, select, button{
-      padding: 10px 10px;
-      border-radius: 12px;
-      border: 1px solid rgba(180,180,180,.35);
-      outline: none;
-      font-size: 14px;
-      background:#fff;
-    }
-    input:focus, select:focus{
-      border-color: rgba(255, 140, 180, 0.85);
-      box-shadow: 0 0 0 4px rgba(255, 179, 209, 0.35);
-    }
+  /* Filas Pares (Rosa/Lila muy suave para diferenciar) */
+  tbody tr:nth-child(even) {
+    background: #fff5f8; /* Un rosa sutil */
+  }
 
-    .btn{
-      cursor:pointer;
-      border:none;
-      font-weight: 800;
-      letter-spacing:.2px;
-      transition: .18s ease;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      gap:8px;
-      white-space:nowrap;
-      text-decoration:none;
-    }
-    .btn-primary{
-      background: linear-gradient(135deg, #ff7fc8, #9c0277);
-      color:#fff;
-      box-shadow: 0 10px 22px rgba(156,2,119,.22);
-    }
-    .btn-primary:hover{ transform: translateY(-1px); filter: brightness(1.03); }
+  /* Efecto al pasar el mouse */
+  tbody tr:hover {
+    background: #f3edff !important; /* Un lila suave al resaltar */
+    transform: scale(1.002);
+    transition: 0.2s;
+  }
 
-    .btn-soft{
-      background: linear-gradient(135deg, rgba(255,199,44,.70), rgba(255,179,209,.75));
-      color:#2a1f2d;
-      border: 1px solid rgba(255,255,255,.75);
-    }
-    .btn-soft:hover{ transform: translateY(-1px); }
+  td {
+    padding: 15px 10px;
+    text-align: center;
+    border-top: 1px solid rgba(255, 170, 200, 0.1);
+    border-bottom: 1px solid rgba(255, 170, 200, 0.1);
+  }
 
-    .btn-mini{
-      padding: 8px 10px;
-      border-radius: 999px;
-      font-size: 13px;
-    }
+  /* Bordes redondeados para las celdas de los extremos */
+  td:first-child { border-left: 1px solid rgba(255, 170, 200, 0.1); border-radius: 15px 0 0 15px; }
+  td:last-child { border-right: 1px solid rgba(255, 170, 200, 0.1); border-radius: 0 15px 15px 0; }
 
-    .btn-edit{
-      background: linear-gradient(135deg, rgba(118,194,255,1), rgba(66,165,245,1));
-      color:#fff;
-      box-shadow: 0 10px 18px rgba(66,165,245,.18);
-    }
-    .btn-delete{
-      background: linear-gradient(135deg, rgba(255,130,178,1), rgba(236,64,122,1));
-      color:#fff;
-      box-shadow: 0 10px 18px rgba(236,64,122,.18);
-    }
-    .btn-edit:hover, .btn-delete:hover{
-      transform: translateY(-1px) scale(1.01);
-      filter: brightness(1.03);
-    }
+  /* BOTONES DE ACCIÓN */
+  .action-group {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px solid #f5f5f5;
+  }
 
-    /* table */
-    .table-wrap{
-      background: #fff7fb;
-      border-radius: 16px;
-      border: 2px solid var(--line);
-      padding: 10px;
-      overflow:auto;
-    }
+  .btn-label {
+    padding: 8px 14px;
+    border-radius: 12px;
+    background: white;
+    border: 1px solid #eee;
+    font-size: 12px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+    color: #444;
+  }
+</style>
 
-    table{
-      width:100%;
-      border-collapse: separate;
-      border-spacing: 0 8px;
-      font-size: 14px;
-      min-width: 980px;
-    }
-    thead th{
-      background: linear-gradient(145deg, #000000, #111111);
-      color:#fff;
-      padding: 12px 10px;
-      text-align:center;
-      border-radius: 12px;
-      font-weight: 800;
-    }
-
-    tbody tr{
-      background:#fff;
-      box-shadow: 0 6px 14px rgba(255,170,200,.25);
-      transition:.18s ease;
-      border-radius: 14px;
-    }
-    tbody tr:hover{
-      background:#fff1fa;
-      transform: scale(1.004);
-    }
-    td{
-      padding: 12px 10px;
-      text-align:center;
-      vertical-align: top;
-      border-right: 1px solid rgba(255, 200, 220, 0.35);
-    }
-    td:last-child{ border-right:none; }
-
-    .saldo-ok{ color:#1b7f2a; font-weight:900; }
-    .saldo-pend{ color:#b00020; font-weight:900; }
-
-    /* historial */
-    details.historial{
-      margin-top:10px;
-      text-align:left;
-      font-size:13px;
-      background: linear-gradient(135deg, #fff, #fff7fb);
-      border: 1px solid rgba(255, 170, 200, 0.45);
-      border-radius: 14px;
-      padding: 10px;
-      box-shadow: 0 6px 14px rgba(255, 170, 200, 0.18);
-    }
-    details.historial summary{
-      cursor:pointer;
-      font-weight: 900;
-      user-select:none;
-      list-style:none;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      color:#6a1b9a;
-    }
-    details.historial summary::-webkit-details-marker{ display:none; }
-
-    .hist-pill{
-      display:inline-block;
-      padding: 4px 10px;
-      border-radius: 999px;
-      background: rgba(255, 179, 209, 0.35);
-      border: 1px solid rgba(255, 140, 180, 0.45);
-      font-size: 12px;
-      color:#8a005a;
-      white-space: nowrap;
-    }
-    .hist-item{
-      padding: 8px 0;
-      border-bottom: 1px dashed rgba(180,180,180,.35);
-    }
-    .hist-item:last-child{ border-bottom:none; }
-
-    .pill-pay{
-      display:inline-block;
-      padding: 2px 10px;
-      border-radius: 999px;
-      background: #f1f1f1;
-      border: 1px solid rgba(0,0,0,.06);
-      font-size: 12px;
-      margin-left: 6px;
-    }
-
-    /* abonar form inside table */
-    .abonar-form{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      justify-content:center;
-      align-items:center;
-      margin-bottom: 8px;
-    }
-    .abonar-form input{ width: 120px; }
-    .abonar-form select{ width: 160px; }
-
-    /* acciones facturas */
-    .actions{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      justify-content:center;
-      margin-top:10px;
-    }
-
-    .muted{ color:var(--muted); font-size: 12px; }
-  </style>
-</head>
-
-<body>
+<div class="page-costos">
 
   <div class="hero">
-    <h1>
-      <span class="sparkle">✨</span>
-      Módulo de Costos — Facturas & Abonos
-    </h1>
-    <p>Registra facturas, abona por método de pago y revisa el historial con fecha 🖤</p>
+    <h1><span style="background:white; padding:8px; border-radius:12px;">✨</span> Módulo de Costos</h1>
+    <p style="color:#666; margin-left:55px;">Facturas & Abonos</p>
 
-    <!-- ✅ BOTONES ARRIBA: Gastos + Exportar Excel -->
     <div class="top-actions">
-      <a class="btn btn-soft btn-mini" href="/gastos">💸 Ir a Módulo de Gastos</a>
-      <a class="btn btn-soft btn-mini" href="/exportar_proveedores">📤 Exportar Excel</a>
+      <a class="btn-nav" href="{{ url_for('dashboard') }}">🏠 Menú Principal</a>
+      <a class="btn-nav" href="{{ url_for('gastos') }}">💸 Gastos Diarios</a>
+      <a class="btn-nav" style="background: linear-gradient(135deg, #ff7fc8, #9c0277); color:white; border:none;" href="{{ url_for('exportar_proveedores') }}">📤 Exportar Excel</a>
     </div>
   </div>
 
-  <div class="wrap">
-
-    <!-- Registrar factura -->
-    <div class="card">
-      <h2 class="card-title">💌 Registrar Factura <span class="badge">nuevo</span></h2>
-
+  <div class="wrap" style="max-width:1200px; margin:0 auto;">
+    
+    <div class="card" style="background:white; border-radius:22px; padding:25px; margin-bottom:20px; border:2px solid var(--line); box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+      <h2 style="margin:0 0 20px 0; font-size:18px; color:var(--purple-nails);">💌 Registrar Factura</h2>
       <form method="POST" action="">
-        <div class="form-row">
+        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr auto; gap:15px; align-items:end;">
           <div>
-            <label class="muted">N° Factura</label>
-            <input type="text" name="numero" placeholder="Ej: F-00123" required>
+            <label style="font-size:11px; font-weight:800; color:#888;">N° FACTURA</label>
+            <input type="text" name="numero" required style="width:100%; border-radius:12px; padding:10px; border:1px solid #eee;">
           </div>
-
           <div>
-            <label class="muted">Proveedor</label>
-            <input type="text" name="proveedor" placeholder="Ej: Proveedor X" required>
+            <label style="font-size:11px; font-weight:800; color:#888;">PROVEEDOR</label>
+            <input type="text" name="proveedor" required style="width:100%; border-radius:12px; padding:10px; border:1px solid #eee;">
           </div>
-
           <div>
-            <label class="muted">Total</label>
-            <input type="number" step="0.01" name="total" placeholder="0.00" required>
+            <label style="font-size:11px; font-weight:800; color:#888;">TOTAL</label>
+            <input type="number" step="0.01" name="total" required style="width:100%; border-radius:12px; padding:10px; border:1px solid #eee;">
           </div>
-
           <div>
-            <label class="muted">Fecha (opcional)</label>
-            <input type="date" name="fecha">
+            <label style="font-size:11px; font-weight:800; color:#888;">FECHA</label>
+            <input type="date" name="fecha" style="width:100%; border-radius:12px; padding:10px; border:1px solid #eee;">
           </div>
-
-          <button class="btn btn-primary" type="submit">💾 Guardar</button>
+          <button type="submit" style="background: linear-gradient(135deg, #ff7fc8, #9c0277); color:white; border:none; padding:12px 25px; border-radius:12px; font-weight:700; cursor:pointer;">💾 GUARDAR</button>
         </div>
       </form>
     </div>
 
-    <!-- Tabla facturas -->
-    <div class="card">
-      <h2 class="card-title">🧾 Facturas por pagar / Historial <span class="badge">con abonos</span></h2>
-
+    <div class="card" style="background:white; border-radius:22px; padding:25px; border:2px solid var(--line); box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+      <h2 style="margin:0 0 20px 0; font-size:18px; color:#b39ddb;">🧾 Listado General de Facturas</h2>
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
-              <th>Fecha Factura</th>
-              <th>Último Abono</th>
-              <th>Factura</th>
+              <th>Fecha</th>
+              <th>N° Factura</th>
               <th>Proveedor</th>
               <th>Total</th>
               <th>Abonado</th>
               <th>Saldo</th>
-              <th>Abonar + Historial + Acciones</th>
+              <th>Gestión y Acciones</th>
             </tr>
           </thead>
-
           <tbody>
             {% for f in facturas %}
-              {% set total = f["total"] if "total" in f.keys() else f[3] %}
-              {% set abonado = f["abonado"] if "abonado" in f.keys() else f[4] %}
+              {% set total = f.total if f.total is defined else f[3] %}
+              {% set abonado = f.abonado if f.abonado is defined else f[4] %}
               {% set saldo = total - abonado %}
-
-              {% set factura_id = f["id"] if "id" in f.keys() else f[0] %}
-              {% set numero = f["numero"] if "numero" in f.keys() else f[1] %}
-              {% set proveedor = f["proveedor"] if "proveedor" in f.keys() else f[2] %}
-              {% set fecha_factura = f["fecha_factura"] if "fecha_factura" in f.keys() else f[5] %}
-              {% set fecha_ultimo_abono = f["fecha_ultimo_abono"] if "fecha_ultimo_abono" in f.keys() else f[6] %}
-
+              {% set f_id = f.id if f.id is defined else f[0] %}
+              
               <tr>
-                <td>{{ fecha_factura if fecha_factura else "—" }}</td>
-                <td>{{ fecha_ultimo_abono if fecha_ultimo_abono else "—" }}</td>
-
-                <td><b>{{ numero }}</b></td>
-                <td>{{ proveedor }}</td>
-
-                <td>${{ "%.2f"|format(total) }}</td>
-                <td>${{ "%.2f"|format(abonado) }}</td>
-
-                <td class="{{ 'saldo-ok' if saldo <= 0 else 'saldo-pend' }}">
-                  ${{ "%.2f"|format(saldo) }}
-                </td>
-
+                <td>{{ (f.fecha_factura if f.fecha_factura is defined else f[5]) or '—' }}</td>
+                <td><b>{{ f.numero if f.numero is defined else f[1] }}</b></td>
+                <td>{{ f.proveedor if f.proveedor is defined else f[2] }}</td>
+                <td style="font-weight:700;">${{ "%.2f"|format(total) }}</td>
+                <td style="color:#2e7d32; font-weight:700;">${{ "%.2f"|format(abonado) }}</td>
                 <td>
+                  <span style="padding:5px 12px; border-radius:20px; font-size:11px; font-weight:800; {{ 'background:#e8f5e9; color:#2e7d32;' if saldo <= 0 else 'background:#ffebee; color:#c62828;' }}">
+                    ${{ "%.2f"|format(saldo) }}
+                  </span>
+                </td>
+                <td style="min-width:350px;">
                   {% if saldo > 0 %}
-                    <form class="abonar-form" method="POST" action="/abonar/{{ factura_id }}">
-                      <input type="number"
-                             step="0.01"
-                             name="monto"
-                             min="0.01"
-                             max="{{ saldo }}"
-                             placeholder="Abonar"
-                             required>
-
-                      <select name="medio" required>
+                    <form method="POST" action="{{ url_for('abonar', factura_id=f_id) }}" style="display:flex; gap:5px; justify-content:center; margin-bottom:10px;">
+                      <input type="number" step="0.01" name="monto" max="{{ saldo }}" placeholder="Monto" required style="width:80px; padding:6px; border-radius:8px; border:1px solid #ddd;">
+                      <select name="medio" required style="padding:6px; border-radius:8px; border:1px solid #ddd; font-size:11px;">
                         <option value="Efectivo">Efectivo</option>
                         <option value="Transferencia">Transferencia</option>
-                        <option value="Tarjeta">Tarjeta</option>
                         <option value="Nequi">Nequi</option>
-                        <option value="Daviplata">Daviplata</option>
+                        <option value="Nequi">Daviplata</option>
                       </select>
-
-                      <button class="btn btn-soft btn-mini" type="submit">💖 Abonar</button>
+                      <button type="submit" style="background:linear-gradient(135deg, #ff7fc8, #9c0277); color:white; border:none; padding:6px 12px; border-radius:8px; font-size:11px; cursor:pointer;">Abonar o Saldar</button>
                     </form>
                   {% else %}
-                    <div class="saldo-ok">Pagada ✅</div>
+                    <div style="color:#1b7f2a; font-weight:800; margin-bottom:5px;">PAGADA ✅</div>
                   {% endif %}
 
-                  <!-- Historial -->
-                  <details class="historial">
-                    <summary>
-                      🧁 Historial de abonos
-                      <span class="hist-pill">Ver / Ocultar</span>
-                    </summary>
-
-                    {% set tiene_abonos = false %}
+                  <details style="background:rgba(255,255,255,0.5); border-radius:12px; padding:8px; border:1px solid #eee; text-align:left;">
+                    <summary style="cursor:pointer; font-weight:700; font-size:12px; color:#6a1b9a;">Ver abonos</summary>
+                    {% set ns = namespace(found=false) %}
                     {% for a in abonos %}
-                      {% set a_factura_id = a["factura_id"] if "factura_id" in a.keys() else a[0] %}
-                      {% if a_factura_id == factura_id %}
-                        {% set tiene_abonos = true %}
-                        {% set a_monto = a["monto"] if "monto" in a.keys() else a[1] %}
-                        {% set a_medio = a["medio_pago"] if "medio_pago" in a.keys() else a[2] %}
-                        {% set a_fecha = a["fecha"] if "fecha" in a.keys() else a[3] %}
-
-                        <div class="hist-item">
-                          📅 {{ a_fecha if a_fecha else "—" }}
-                          <span class="pill-pay">💳 {{ a_medio }}</span><br>
-                          💰 <b>${{ "%.2f"|format(a_monto) }}</b>
+                      {% set a_f_id = a.factura_id if a.factura_id is defined else a[0] %}
+                      {% if a_f_id == f_id %}
+                        {% set ns.found = true %}
+                        <div style="font-size:11px; padding:4px 0; border-bottom: 1px dashed #eee;">
+                          {{ a.fecha if a.fecha is defined else a[3] }}: <b>${{ "%.2f"|format(a.monto if a.monto is defined else a[1]) }}</b>
                         </div>
                       {% endif %}
                     {% endfor %}
-
-                    {% if not tiene_abonos %}
-                      <div class="hist-item">— Sin abonos aún —</div>
-                    {% endif %}
+                    {% if not ns.found %}<div style="color:#999; font-size:11px;">Sin abonos</div>{% endif %}
                   </details>
 
-                  <!-- Acciones -->
-                  <div class="actions">
-                    <a class="btn btn-edit btn-mini"
-                       href="/editar_factura/{{ factura_id }}">
-                      ✏️ Editar
-                    </a>
-
-                    <form method="POST"
-                          action="/eliminar_factura/{{ factura_id }}"
-                          style="display:inline;">
-                      <button class="btn btn-delete btn-mini"
-                              type="submit"
-                              data-confirm="¿Seguro que deseas eliminar la factura {{ numero }}? Se borrarán también sus abonos y no se puede deshacer.">
-                        🗑️ Eliminar
-                      </button>
+                  <div class="action-group">
+                    <a href="{{ url_for('editar_factura', factura_id=f_id) }}" class="btn-label btn-edit-glow">✏️ Editar</a>
+                    <form method="POST" action="{{ url_for('eliminar_factura', factura_id=f_id) }}" style="display:inline;">
+                      <button type="submit" class="btn-label btn-delete-glow" onclick="return confirm('¿Borrar factura?')">🗑️ Eliminar</button>
                     </form>
                   </div>
-
-                </td>
-              </tr>
-
-            {% else %}
-              <tr>
-                <td colspan="8" style="padding:18px; text-align:center; color:#6b5a6e;">
-                  No hay facturas todavía 🫶
                 </td>
               </tr>
             {% endfor %}
           </tbody>
         </table>
       </div>
-
     </div>
-
   </div>
+</div>
 
-  <script>
-    // ✅ Confirmación antes de borrar (sirve para botones o links con data-confirm)
-    document.addEventListener("DOMContentLoaded", () => {
-      document.querySelectorAll("[data-confirm]").forEach((el) => {
-        el.addEventListener("click", (e) => {
-          const msg = el.getAttribute("data-confirm") || "¿Seguro?";
-          if (!confirm(msg)) {
-            e.preventDefault();
-            e.stopPropagation();
-          }
-        });
-      });
-    });
-  </script>
-
-</body>
-</html>
+{% endblock %}

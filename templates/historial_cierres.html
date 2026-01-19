@@ -1,174 +1,128 @@
 {% extends "base.html" %}
 
-{% block title %}Historial de Cierres de Caja{% endblock %}
+{% block title %}Historial de Cierres • ✨{% endblock %}
 
 {% block content %}
 
 <style>
 /* ===============================================
-   ESTILO COQUETTE MAGENTA PREMIUM (MATCH SISTEMA)
+   ESTILO COQUETTE MAGENTA PREMIUM - COMPLETO
    =============================================== */
 :root {
     --magenta-principal: #FF2D8D;
     --magenta-suave: #FFE6F1;
     --magenta-oscuro: #A80F54;
-    --fondo-perlado: #FFF7FB;
     --borde-suave: #f3c6dc;
-    --sombra: rgba(255, 45, 141, 0.15);
+    --fondo-perlado: #FFF7FB;
 }
 
-/* Fondo general */
 body {
-    background:
-        radial-gradient(1200px circle at 10% -10%, #ffeaf5 0%, transparent 50%),
-        radial-gradient(1000px circle at 110% 0%, #ffe0ef 0%, transparent 45%),
-        var(--fondo-perlado);
-    font-family: 'Poppins', sans-serif;
+    background: radial-gradient(circle at 10% 10%, #ffeaf5, transparent), var(--fondo-perlado);
+    font-family: 'Quicksand', sans-serif;
 }
 
-/* Encabezado */
 .titulo-coquette {
     font-weight: 800;
     color: var(--magenta-oscuro);
     text-align: center;
-    letter-spacing: 0.5px;
-    margin-bottom: 20px;
-    text-shadow: 0 2px 0 #fff, 0 6px 18px rgba(255, 45, 141, 0.25);
+    margin: 25px 0;
+    text-shadow: 0 4px 10px rgba(255, 45, 141, 0.2);
 }
 
-.sparkle {
-    color: var(--magenta-principal);
-    font-weight: 700;
-    text-shadow: 0 0 8px rgba(255,45,141,0.25);
-}
-
-/* Contenedor tabla */
 .tabla-coquette {
-    border-radius: 18px;
+    border-radius: 20px;
     background: #fff;
     border: 1px solid var(--borde-suave);
-    box-shadow: 0 12px 35px var(--sombra);
+    box-shadow: 0 10px 30px rgba(255, 45, 141, 0.1);
     overflow: hidden;
 }
 
-/* Encabezado tabla */
 .table thead th {
-    background: linear-gradient(180deg, var(--magenta-suave), #fff);
-    border-bottom: 2px solid var(--magenta-principal);
-    color: var(--magenta-oscuro);
-    font-size: 0.9rem;
+    background: var(--magenta-principal);
+    color: white !important;
+    font-size: 0.85rem;
     text-transform: uppercase;
     font-weight: 700;
-}
-
-/* Filas */
-.table tbody tr {
-    transition: 0.25s ease;
-}
-
-.table tbody tr:hover {
-    background-color: var(--magenta-suave);
-    transform: translateY(-2px);
-}
-
-/* Celda */
-.table td {
-    color: #2f2f2f;
-    font-weight: 500;
-}
-
-/* Botón Detalle */
-.btn-detalle {
-    background: linear-gradient(135deg, #ff6ab0 0%, var(--magenta-principal) 60%, #ff2d8d 100%);
-    color: white !important;
-    border-radius: 999px;
-    padding: 6px 16px;
-    font-weight: 700;
-    font-size: 0.8rem;
     border: none;
-    box-shadow: 0 6px 16px rgba(255,45,141,0.3);
-    transition: 0.25s ease;
-}
-.btn-detalle:hover {
-    background: linear-gradient(135deg, var(--magenta-principal), var(--magenta-oscuro));
-    transform: translateY(-2px);
+    padding: 15px;
 }
 
-/* MODAL */
-.modal-content {
-    border-radius: 20px !important;
-    border: 1px solid var(--borde-suave);
-    box-shadow: 0 12px 45px rgba(0,0,0,0.15);
+.btn-detalle {
+    background: linear-gradient(135deg, #ff6ab0, var(--magenta-principal));
+    color: white !important;
+    border-radius: 12px;
+    padding: 6px 18px;
+    font-weight: 700;
+    border: none;
+    transition: 0.3s;
 }
 
+.modal-content { border-radius: 25px; border: none; overflow: hidden; }
 .modal-header {
     background: linear-gradient(135deg, #ff77b7, var(--magenta-principal));
     color: white;
-    border-radius: 20px 20px 0 0 !important;
-    border-bottom: none;
+    padding: 20px;
 }
 
-/* Caja resumen */
 .resumen-box {
-    background-color: var(--magenta-suave);
-    border-left: 5px solid var(--magenta-principal);
-    padding: 15px;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(255,45,141,0.15);
+    background: var(--magenta-suave);
+    border-radius: 20px;
+    padding: 18px;
+    margin-bottom: 15px;
+    border: 1px solid var(--borde-suave);
+    text-align: center;
 }
 
-.resumen-box h5 {
-    color: var(--magenta-oscuro);
-    font-weight: 700;
+.monto { font-size: 1.6rem; font-weight: 900; color: var(--magenta-oscuro); }
+.monto-gasto { color: #ff4d4d; font-weight: 900; font-size: 1.6rem; }
+
+.card-medio {
+    background: white;
+    border: 2px solid var(--magenta-suave);
+    padding: 12px;
+    border-radius: 15px;
+    text-align: center;
 }
 
-.monto {
-    font-size: 1.7rem;
-    font-weight: 900;
+.inner-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+.inner-table th { 
+    background: #fdf2f7; 
+    color: var(--magenta-oscuro); 
+    padding: 12px; 
+    font-size: 11px; 
+    text-transform: uppercase; 
+    border-bottom: 2px solid var(--magenta-principal); 
 }
-
-.monto-efectivo { color: #007bff; }
-.monto-elec { color: #d9007b; }
-
+.inner-table td { padding: 12px; border-bottom: 1px solid #f9f9f9; font-size: 13px; text-align: center; }
 </style>
 
-<!-- TÍTULO -->
-<h2 class="titulo-coquette mt-3">
-    <span class="sparkle">✦</span>
-    Historial de Cierres de Caja
-    <span class="sparkle">✦</span>
-</h2>
+<h2 class="titulo-coquette">🌸 Historial de Cierres de Caja 🌸</h2>
 
-<a href="{{ url_for('reportes') }}" class="btn btn-outline-secondary mb-3">
-    <i class="fas fa-arrow-left me-2"></i> Volver a Informes Diarios
-</a>
-
-<!-- TABLA PRINCIPAL -->
-<div class="table-responsive tabla-coquette">
+<div class="table-responsive tabla-coquette mx-3 mb-5">
     <table class="table text-center mb-0">
         <thead>
             <tr>
                 <th>Fecha Cierre</th>
-                <th>Vendedor</th>
-                <th>Total Venta</th>
-                <th>Total Efectivo</th>
-                <th>Total Electrónico</th>
-                <th>Detalle</th>
+                <th>Responsable</th>
+                <th>Ventas Brutas</th>
+                <th>Gastos/Pagos</th>
+                <th>Efectivo Neto</th>
+                <th>Reporte</th>
             </tr>
         </thead>
         <tbody>
             {% for cierre in cierres %}
+            {% set detalles = cierre.detalles_json | from_json %}
+            {% set egresos = detalles.get('EGRESOS_TOTAL', 0) %}
             <tr>
                 <td>{{ (cierre.fecha_cierre - timedelta(hours=5)).strftime('%d/%m/%Y %I:%M %p') }}</td>
-                <td>{{ cierre.usuario.username }}</td>
-                <td>${{ "{:,.0f}".format(cierre.total_venta) }}</td>
-                <td>${{ "{:,.0f}".format(cierre.total_efectivo) }}</td>
-                <td class="text-magenta">${{ "{:,.0f}".format(cierre.total_electronico) }}</td>
-
+                <td><strong>{{ cierre.usuario.username | capitalize }}</strong></td>
+                <td style="color: var(--magenta-principal); font-weight: 800;">${{ "{:,.0f}".format(cierre.total_venta) }}</td>
+                <td style="color: #ff4d4d;">-${{ "{:,.0f}".format(egresos) }}</td>
+                <td style="font-weight: 900; color: #2e7d32;">${{ "{:,.0f}".format(cierre.total_efectivo - egresos) }}</td>
                 <td>
-                    <button class="btn btn-detalle" data-bs-toggle="modal"
-                        data-bs-target="#modal{{ cierre.id }}">
-                        <i class="fas fa-eye"></i> Ver
+                    <button class="btn btn-detalle" data-bs-toggle="modal" data-bs-target="#modal{{ cierre.id }}">
+                        Ver Reporte
                     </button>
                 </td>
             </tr>
@@ -177,115 +131,106 @@ body {
     </table>
 </div>
 
-
-<!-- MODALES DETALLE DE CADA CIERRE -->
 {% for cierre in cierres %}
 {% set detalles = cierre.detalles_json | from_json %}
-{% set desglose = detalles.GENERAL if 'GENERAL' in detalles else {} %}
+{% set metodos = detalles.get('metodos', {}) %}
+{% set vendedores = detalles.get('vendedores', {}) %}
+{% set lista_egresos = detalles.get('EGRESOS_LISTA', []) %}
 
 <div class="modal fade" id="modal{{ cierre.id }}" tabindex="-1">
-    <div class="modal-dialog modal-xl">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
-
             <div class="modal-header">
-                <h5 class="modal-title">
-                    Detalle del Cierre – {{ (cierre.fecha_cierre - timedelta(hours=5)).strftime('%d/%m/%Y %I:%M %p') }}
-                </h5>
+                <h5 class="modal-title">🎀 Reporte Detallado: {{ (cierre.fecha_cierre - timedelta(hours=5)).strftime('%d/%m/%Y') }}</h5>
                 <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-
             <div class="modal-body">
-
-                <div class="row text-center mb-4">
-                    <div class="col-md-6">
+                
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
                         <div class="resumen-box">
-                            <h5>Total Efectivo Contado</h5>
-                            <p class="monto monto-efectivo">${{ "{:,.0f}".format(cierre.total_efectivo) }}</p>
+                            <small style="color: #888; font-weight: 800;">INGRESOS TOTALES</small>
+                            <div class="monto">${{ "{:,.0f}".format(cierre.total_venta) }}</div>
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <div class="resumen-box">
-                            <h5>Total Electrónico</h5>
-                            <p class="monto monto-elec">${{ "{:,.0f}".format(cierre.total_electronico) }}</p>
+                    <div class="col-md-4">
+                        <div class="resumen-box" style="background: #fff5f5;">
+                            <small style="color: #ff4d4d; font-weight: 800;">GASTOS HOY</small>
+                            <div class="monto-gasto">-${{ "{:,.0f}".format(detalles.get('EGRESOS_TOTAL', 0)) }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="resumen-box" style="background: #f2fff4; border-color: #98fb98;">
+                            <small style="color: #2e7d32; font-weight: 800;">EFECTIVO EN CAJA</small>
+                            <div class="monto" style="color: #2e7d32;">${{ "{:,.0f}".format(cierre.total_efectivo - detalles.get('EGRESOS_TOTAL', 0)) }}</div>
                         </div>
                     </div>
                 </div>
 
-                <!-- DESGLOSE ELECTRÓNICO GENERAL -->
-                <h5 class="text-center mb-3" style="color: var(--magenta-oscuro); font-weight:800;">
-                    💳 Desglose General de Pagos Electrónicos
-                </h5>
+                <h6 style="color: var(--magenta-oscuro); font-weight: 800; margin-bottom: 15px; border-left: 4px solid var(--magenta-principal); padding-left: 10px;">💳 DESGLOSE PAGOS ELECTRÓNICOS</h6>
+                <div class="row g-2 mb-4">
+                    {% for metodo, monto in metodos.items() %}
+                    <div class="col-md-3 col-6">
+                        <div class="card-medio">
+                            <small style="color: #999; display: block; font-size: 10px; font-weight: 800; text-transform: uppercase;">{{ metodo }}</small>
+                            <span style="font-size: 1rem; font-weight: 900; color: var(--magenta-principal);">${{ "{:,.0f}".format(monto) }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
 
+                <h6 style="color: var(--magenta-oscuro); font-weight: 800; margin-bottom: 10px; border-left: 4px solid var(--magenta-principal); padding-left: 10px;">👩‍💼 VENTAS POR VENDEDOR</h6>
                 <div class="table-responsive mb-4">
-                    <table class="table table-bordered text-center">
+                    <table class="inner-table">
                         <thead>
                             <tr>
-                                <th>Nequi</th>
-                                <th>Daviplata</th>
-                                <th>Transferencia</th>
-                                <th>Tarjeta/Bold</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>${{ "{:,.0f}".format(desglose.Nequi or 0) }}</td>
-                                <td>${{ "{:,.0f}".format(desglose.Daviplata or 0) }}</td>
-                                <td>${{ "{:,.0f}".format(desglose.Transferencia or 0) }}</td>
-                                <td>${{ "{:,.0f}".format(desglose["Tarjeta/Bold"] or 0) }}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- DESGLOSE POR VENDEDOR -->
-                <h5 class="text-center mb-3" style="color: var(--magenta-oscuro); font-weight:800;">
-                    👩‍💼 Ventas por Vendedor
-                </h5>
-
-                <div class="table-responsive">
-                    <table class="table table-striped text-center">
-                        <thead>
-                            <tr>
-                                <th>Vendedor</th>
-                                <th>Total Venta</th>
+                                <th>Colaborador</th>
                                 <th>Efectivo</th>
                                 <th>Electrónico</th>
-                                <th>Nequi</th>
-                                <th>Daviplata</th>
-                                <th>Transferencia</th>
-                                <th>Tarjeta</th>
+                                <th>Total</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for vendedor, datos in detalles.items() %}
-                            {% if vendedor != 'GENERAL' %}
-                            {% set tot_ele = (datos.Nequi or 0) + (datos.Daviplata or 0) + (datos.Transferencia or 0) + (datos["Tarjeta/Bold"] or 0) %}
+                            {% for vendedor, info in vendedores.items() %}
                             <tr>
-                                <td>{{ vendedor }}</td>
-                                <td>${{ "{:,.0f}".format(datos.total_venta or 0) }}</td>
-                                <td>${{ "{:,.0f}".format(datos.Efectivo or 0) }}</td>
-                                <td>${{ "{:,.0f}".format(tot_ele) }}</td>
-                                <td>${{ "{:,.0f}".format(datos.Nequi or 0) }}</td>
-                                <td>${{ "{:,.0f}".format(datos.Daviplata or 0) }}</td>
-                                <td>${{ "{:,.0f}".format(datos.Transferencia or 0) }}</td>
-                                <td>${{ "{:,.0f}".format(datos["Tarjeta/Bold"] or 0) }}</td>
+                                <td><strong>{{ vendedor | capitalize }}</strong></td>
+                                <td>${{ "{:,.0f}".format(info.efectivo | default(0)) }}</td>
+                                {% set total_v = info.total | default(0) %}
+                                {% set elec_v = total_v - (info.efectivo | default(0)) %}
+                                <td>${{ "{:,.0f}".format(elec_v) }}</td>
+                                <td style="font-weight: 800; color: var(--magenta-principal);">${{ "{:,.0f}".format(total_v) }}</td>
                             </tr>
-                            {% endif %}
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
 
-                <h4 class="text-end mt-3" style="color: var(--magenta-oscuro); font-weight:900;">
-                    TOTAL DEL DÍA: ${{ "{:,.0f}".format(cierre.total_venta) }}
-                </h4>
+                <h6 style="color: #ff4d4d; font-weight: 800; margin-bottom: 10px; border-left: 4px solid #ff4d4d; padding-left: 10px;">💸 DETALLE DE EGRESOS</h6>
+                <table class="inner-table">
+                    <thead style="border-color: #ff4d4d;">
+                        <tr>
+                            <th>Concepto</th>
+                            <th>Medio</th>
+                            <th style="text-align: right;">Monto</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for egreso in lista_egresos %}
+                        <tr>
+                            <td>{{ egreso.concepto }}</td>
+                            <td><small style="background:#eee; padding:2px 6px; border-radius:5px;">{{ egreso.medio }}</small></td>
+                            <td style="text-align: right; color: #ff4d4d; font-weight: 700;">-${{ "{:,.0f}".format(egreso.monto) }}</td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="3" style="text-align: center; color: #ccc; padding: 15px;">No se registraron egresos ✨</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
 
             </div>
-
-            <div class="modal-footer">
-                <button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            <div class="modal-footer" style="border: none;">
+                <button class="btn btn-secondary" style="border-radius: 12px;" data-bs-dismiss="modal">Cerrar Reporte</button>
             </div>
-
         </div>
     </div>
 </div>
@@ -293,8 +238,3 @@ body {
 
 {% endblock %}
 
-{% block scripts %}
-<script>
-/* No requiere JS adicional */
-</script>
-{% endblock %}

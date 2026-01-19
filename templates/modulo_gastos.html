@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Módulo de Gastos • Pagos & Abonos</title>
+  <title>Módulo de Gastos • ✨</title>
 
   <style>
     :root{
@@ -14,12 +14,10 @@
       --lila-2:#e6ceff;
       --gold-1:#ffc72c;
       --gold-2:#ffdb70;
-
       --ink:#2a1f2d;
       --muted:#6b5a6e;
       --card:#ffffff;
       --line:rgba(255, 170, 200, 0.35);
-
       --shadow: 0 10px 28px rgba(255, 140, 180, 0.22);
       --shadow-soft: 0 6px 18px rgba(255, 140, 180, 0.16);
     }
@@ -27,7 +25,7 @@
     *{ box-sizing:border-box; }
     body{
       margin:0;
-      font-family: Arial, sans-serif;
+      font-family: 'Quicksand', 'Segoe UI', Arial, sans-serif;
       color:var(--ink);
       background:
         radial-gradient(circle at 10% 10%, rgba(255,180,210,.35), transparent 40%),
@@ -38,11 +36,11 @@
     }
 
     .hero{
-      max-width: 1100px;
+      max-width: 1200px;
       margin: 0 auto 16px auto;
-      padding: 16px 18px;
-      border-radius: 18px;
-      background: linear-gradient(135deg, rgba(255,140,148,.30), rgba(230,206,255,.35));
+      padding: 20px 25px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, rgba(255,140,148,.25), rgba(179,157,219,.25));
       border: 2px solid var(--line);
       box-shadow: var(--shadow);
       position: relative;
@@ -50,226 +48,93 @@
     }
     .hero h1{
       margin:0;
-      font-size: 22px;
-      letter-spacing:.3px;
+      font-size: 24px;
       display:flex;
       align-items:center;
-      gap:10px;
+      gap:12px;
     }
     .sparkle{
       display:inline-grid;
       place-items:center;
-      width:34px; height:34px;
+      width:38px; height:38px;
       border-radius: 12px;
-      background: linear-gradient(135deg, rgba(255,199,44,.65), rgba(255,179,209,.65));
-      box-shadow: 0 10px 20px rgba(255,199,44,.18);
-      border:1px solid rgba(255,255,255,.7);
+      background: white;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
     }
     .hero p{
-      margin:6px 0 0 44px;
+      margin:8px 0 0 50px;
       color: var(--muted);
-      font-size: 13px;
+      font-size: 14px;
     }
 
     .wrap{
-      max-width: 1100px;
+      max-width: 1200px;
       margin: 0 auto;
       display:grid;
-      gap:16px;
+      gap:20px;
     }
 
     .card{
       background: var(--card);
-      border-radius: 18px;
+      border-radius: 20px;
       border: 2px solid var(--line);
       box-shadow: var(--shadow-soft);
-      padding: 16px;
+      padding: 24px;
     }
 
     .card-title{
-      margin: 0 0 10px 0;
-      font-size: 16px;
+      margin: 0 0 15px 0;
+      font-size: 18px;
+      font-weight: 700;
+      color: #9c0277;
       display:flex;
       align-items:center;
       gap:10px;
     }
 
-    .badge{
-      font-size: 12px;
-      padding: 4px 10px;
-      border-radius: 999px;
-      background: #fff1fa;
-      border: 1px solid rgba(255, 170, 200, 0.55);
-      color:#8a005a;
-      font-weight:700;
-    }
-
     .form-row{
       display:grid;
-      grid-template-columns: 1.1fr 1.6fr .8fr .9fr auto;
-      gap:10px;
+      grid-template-columns: 1.2fr 1.8fr 1fr 1fr auto;
+      gap:15px;
       align-items:end;
-    }
-    @media (max-width: 900px){
-      .form-row{ grid-template-columns: 1fr 1fr; }
     }
 
     input, select, button{
-      padding: 10px 10px;
+      padding: 12px;
       border-radius: 12px;
-      border: 1px solid rgba(180,180,180,.35);
+      border: 1px solid rgba(0,0,0,0.08);
       outline: none;
       font-size: 14px;
       background:#fff;
+      transition: 0.3s;
     }
     input:focus, select:focus{
-      border-color: rgba(255, 140, 180, 0.85);
-      box-shadow: 0 0 0 4px rgba(255, 179, 209, 0.35);
+      border-color: var(--pink-1);
+      box-shadow: 0 0 0 4px rgba(255, 179, 209, 0.2);
     }
 
-    .btn{
-      cursor:pointer;
-      border:none;
-      font-weight: 800;
-      letter-spacing:.2px;
-      transition: .18s ease;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      gap:8px;
-      white-space:nowrap;
-      text-decoration:none;
-    }
     .btn-primary{
       background: linear-gradient(135deg, #ff7fc8, #9c0277);
       color:#fff;
-      box-shadow: 0 10px 22px rgba(156,2,119,.22);
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      box-shadow: 0 5px 15px rgba(156,2,119,0.2);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 25px;
+      text-decoration: none;
     }
-    .btn-primary:hover{ transform: translateY(-1px); filter: brightness(1.03); }
+    .btn-primary:hover{ transform: translateY(-2px); filter: brightness(1.1); }
 
-    .btn-soft{
-      background: linear-gradient(135deg, rgba(255,199,44,.70), rgba(255,179,209,.75));
-      color:#2a1f2d;
-      border: 1px solid rgba(255,255,255,.75);
-    }
-    .btn-soft:hover{ transform: translateY(-1px); }
-
-    .btn-mini{
-      padding: 8px 10px;
-      border-radius: 999px;
-      font-size: 13px;
-    }
-
-    .btn-edit{
-      background: linear-gradient(135deg, rgba(118,194,255,1), rgba(66,165,245,1));
-      color:#fff;
-      box-shadow: 0 10px 18px rgba(66,165,245,.18);
-    }
-    .btn-delete{
-      background: linear-gradient(135deg, rgba(255,130,178,1), rgba(236,64,122,1));
-      color:#fff;
-      box-shadow: 0 10px 18px rgba(236,64,122,.18);
-    }
-
-    /* ✅ BOTON "MAS PRO" PARA VOLVER */
-    .btn-back{
-      position: relative;
-      overflow: hidden;
-      border-radius: 999px;
-      padding: 9px 14px;
-      gap:10px;
-
-      color:#1f1024;
-      background: linear-gradient(135deg, rgba(255,219,112,.95), rgba(255,179,209,.92), rgba(179,157,219,.92));
-      border: 1px solid rgba(255,255,255,.72);
-
-      box-shadow:
-        0 12px 24px rgba(179,157,219,.18),
-        0 10px 22px rgba(255,199,44,.12),
-        inset 0 1px 0 rgba(255,255,255,.85);
-
-      backdrop-filter: blur(6px);
-      -webkit-backdrop-filter: blur(6px);
-
-      transform: translateZ(0);
-    }
-
-    /* iconito sin tocar el texto */
-    .btn-back::before{
-      content:"↩";
-      display:inline-grid;
-      place-items:center;
-      width: 22px;
-      height: 22px;
-      border-radius: 999px;
-      background: rgba(255,255,255,.55);
-      border: 1px solid rgba(255,255,255,.65);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.85);
-      font-weight: 900;
-      line-height: 1;
-    }
-
-    /* brillo animado */
-    .btn-back::after{
-      content:"";
-      position:absolute;
-      top:-40%;
-      left:-120%;
-      width: 70%;
-      height: 180%;
-      transform: rotate(20deg);
-      background: linear-gradient(
-        90deg,
-        transparent,
-        rgba(255,255,255,.55),
-        transparent
-      );
-      opacity: .9;
-      pointer-events:none;
-      filter: blur(.2px);
-    }
-
-    .btn-back:hover{
-      transform: translateY(-1px);
-      filter: brightness(1.03);
-      box-shadow:
-        0 16px 30px rgba(179,157,219,.22),
-        0 14px 26px rgba(255,199,44,.16),
-        0 0 0 6px rgba(255,179,209,.18),
-        inset 0 1px 0 rgba(255,255,255,.9);
-    }
-
-    .btn-back:hover::after{
-      animation: shimmer 1s ease forwards;
-    }
-
-    .btn-back:active{
-      transform: translateY(0px) scale(.99);
-      box-shadow:
-        0 10px 18px rgba(179,157,219,.16),
-        0 8px 16px rgba(255,199,44,.12),
-        inset 0 2px 10px rgba(0,0,0,.06);
-    }
-
-    .btn-back:focus{
-      outline: none;
-      box-shadow:
-        0 0 0 4px rgba(255,179,209,.30),
-        0 0 0 8px rgba(179,157,219,.18),
-        0 16px 30px rgba(179,157,219,.20);
-    }
-
-    @keyframes shimmer{
-      from{ left:-120%; }
-      to{ left:140%; }
-    }
-
+    /* ESTILOS DE LA TABLA CON DIFERENCIACIÓN */
     .table-wrap{
-      background: #fff7fb;
-      border-radius: 16px;
-      border: 2px solid var(--line);
-      padding: 10px;
+      background: white;
+      border-radius: 20px;
       overflow:auto;
+      padding: 10px;
+      border: 1px solid var(--line);
     }
 
     table{
@@ -277,182 +142,131 @@
       border-collapse: separate;
       border-spacing: 0 8px;
       font-size: 14px;
-      min-width: 980px;
+      min-width: 1000px;
     }
     thead th{
-      background: linear-gradient(145deg, #000000, #111111);
+      background: #2a1f2d;
       color:#fff;
-      padding: 12px 10px;
-      text-align:center;
+      padding: 15px;
       border-radius: 12px;
-      font-weight: 800;
+      font-weight: 600;
     }
-    tbody tr{
-      background:#fff;
-      box-shadow: 0 6px 14px rgba(255,170,200,.25);
-      transition:.18s ease;
-      border-radius: 14px;
-    }
-    tbody tr:hover{
-      background:#fff1fa;
-      transform: scale(1.004);
-    }
-    td{
-      padding: 12px 10px;
-      text-align:center;
-      vertical-align: top;
-      border-right: 1px solid rgba(255, 200, 220, 0.35);
-    }
-    td:last-child{ border-right:none; }
 
-    .saldo-ok{ color:#1b7f2a; font-weight:900; }
-    .saldo-pend{ color:#b00020; font-weight:900; }
+    /* Filas Alternas (Efecto Cebra Coquette) */
+    tbody tr:nth-child(odd) { background: #ffffff; }
+    tbody tr:nth-child(even) { background: #fff5f8; }
+
+    tbody tr:hover{
+      background: #f3edff !important;
+      transition: 0.2s;
+    }
+
+    td{
+      padding: 16px 10px;
+      text-align:center;
+      vertical-align: middle;
+      border-top: 1px solid rgba(255, 170, 200, 0.1);
+      border-bottom: 1px solid rgba(255, 170, 200, 0.1);
+    }
+
+    td:first-child { border-radius: 15px 0 0 15px; border-left: 1px solid rgba(255, 170, 200, 0.1); }
+    td:last-child { border-radius: 0 15px 15px 0; border-right: 1px solid rgba(255, 170, 200, 0.1); }
+
+    .badge-saldo{ padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 800; }
+    .saldo-ok{ background: #e8f5e9; color:#1b7f2a; }
+    .saldo-pend{ background: #ffebee; color:#b00020; }
+
+    /* --- BOTONES CON NOMBRE (ESTILO PROVEEDORES) --- */
+    .action-group {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 15px;
+      padding-top: 12px;
+      border-top: 1px solid #f5f5f5;
+    }
+
+    .btn-action-label {
+      padding: 8px 14px;
+      border-radius: 12px;
+      border: 1px solid #eee;
+      background: white;
+      text-decoration: none;
+      transition: 0.3s;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-edit-glow { color: #42a5f5; }
+    .btn-edit-glow:hover { background: #e3f2fd; border-color: #42a5f5; transform: translateY(-2px); }
+
+    .btn-delete-glow { color: #ec407a; }
+    .btn-delete-glow:hover { background: #fce4ec; border-color: #ec407a; transform: translateY(-2px); }
 
     details.historial{
       margin-top:10px;
-      text-align:left;
-      font-size:13px;
-      background: linear-gradient(135deg, #fff, #fff7fb);
-      border: 1px solid rgba(255, 170, 200, 0.45);
-      border-radius: 14px;
-      padding: 10px;
-      box-shadow: 0 6px 14px rgba(255, 170, 200, 0.18);
+      background: #fdfbff;
+      border-radius: 12px;
+      padding: 8px;
+      border: 1px solid #eee;
     }
-    details.historial summary{
-      cursor:pointer;
-      font-weight: 900;
-      user-select:none;
-      list-style:none;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      color:#6a1b9a;
-    }
-    details.historial summary::-webkit-details-marker{ display:none; }
+    details.historial summary{ cursor:pointer; font-weight: 700; color:#6a1b9a; font-size: 13px; list-style: none; }
 
-    .hist-pill{
-      display:inline-block;
-      padding: 4px 10px;
-      border-radius: 999px;
-      background: rgba(255, 179, 209, 0.35);
-      border: 1px solid rgba(255, 140, 180, 0.45);
-      font-size: 12px;
-      color:#8a005a;
-      white-space: nowrap;
-    }
-    .hist-item{
-      padding: 8px 0;
-      border-bottom: 1px dashed rgba(180,180,180,.35);
-    }
-    .hist-item:last-child{ border-bottom:none; }
-
-    .pill-pay{
-      display:inline-block;
-      padding: 2px 10px;
-      border-radius: 999px;
-      background: #f1f1f1;
-      border: 1px solid rgba(0,0,0,.06);
-      font-size: 12px;
-      margin-left: 6px;
-    }
-
-    .abonar-form{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      justify-content:center;
-      align-items:center;
-      margin-bottom: 8px;
-    }
-    .abonar-form input{ width: 120px; }
-    .abonar-form select{ width: 160px; }
-
-    .actions{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      justify-content:center;
-      margin-top:10px;
-    }
-
-    .muted{ color:var(--muted); font-size: 12px; }
-    .top-actions{
-      display:flex;
-      gap:10px;
-      justify-content:flex-end;
-      flex-wrap:wrap;
-      margin-top:10px;
-    }
-    .link{
-      text-decoration:none;
-      font-weight:900;
-      color:#6a1b9a;
-    }
+    .muted{ color:var(--muted); font-size: 11px; font-weight: 800; margin-bottom: 5px; display: block; }
   </style>
 </head>
 
 <body>
 
   <div class="hero">
-    <h1>
-      <span class="sparkle">🧾</span>
-      Módulo de Gastos — Pagos & Abonos
-    </h1>
-    <p>Arriendo, servicios, aseo y nómina. Registra pagos, abona por método y revisa historial 💜</p>
+    <h1><span class="sparkle">🧾</span> Módulo de Gastos ✨</h1>
+    <p>• Pagos & Abonos Impecables 💅</p>
 
     <div class="top-actions">
-      <a class="btn btn-back btn-mini" href="{{ url_for('proveedores') }}">
-    ← Volver a Costos
-</a>
-      <!-- ✅ NUEVO: Exportar Excel -->
-      <a class="btn btn-soft btn-mini" href="/exportar_gastos">📤 Exportar Excel</a>
+      <a class="btn-action-label" href="/" style="border-radius: 999px;">← Volver</a>
+      <a class="btn-primary" style="font-size: 12px; padding: 8px 18px; border-radius: 999px;" href="/exportar_gastos">📤 Exportar Excel</a>
     </div>
   </div>
 
   <div class="wrap">
-
-    <!-- Registrar gasto -->
     <div class="card">
-      <h2 class="card-title">💌 Registrar Gasto <span class="badge">nuevo</span></h2>
-
+      <h2 class="card-title">💌 Registrar Gasto</h2>
       <form method="POST" action="">
         <div class="form-row">
           <div>
-            <label class="muted">Categoría</label>
+            <label class="muted">CATEGORÍA</label>
             <select name="categoria" required>
               <option value="">Seleccionar…</option>
               <option value="Arriendo">Arriendo</option>
               <option value="Servicios">Servicios</option>
               <option value="Aseo">Aseo</option>
               <option value="Nómina">Nómina</option>
+              <option value="Otros">Otros</option>
             </select>
           </div>
-
           <div>
-            <label class="muted">Concepto de pago</label>
-            <input type="text" name="concepto" placeholder="Ej: Arriendo local Enero" required>
+            <label class="muted">CONCEPTO</label>
+            <input type="text" name="concepto" placeholder="Ej: Arriendo Local" required>
           </div>
-
           <div>
-            <label class="muted">Valor</label>
+            <label class="muted">VALOR TOTAL</label>
             <input type="number" step="0.01" name="total" placeholder="0.00" required>
           </div>
-
           <div>
-            <label class="muted">Fecha (opcional)</label>
+            <label class="muted">FECHA</label>
             <input type="date" name="fecha">
           </div>
-
-          <button class="btn btn-primary" type="submit">💾 Guardar</button>
+          <button class="btn-primary" type="submit">💾 GUARDAR</button>
         </div>
       </form>
     </div>
 
-    <!-- Tabla gastos -->
     <div class="card">
-      <h2 class="card-title">📌 Gastos / Historial <span class="badge">con abonos</span></h2>
-
+      <h2 class="card-title" style="color: #b39ddb;">📌 Historial Detallado</h2>
       <div class="table-wrap">
         <table>
           <thead>
@@ -464,128 +278,85 @@
               <th>Total</th>
               <th>Abonado</th>
               <th>Saldo</th>
-              <th>Abonar + Historial + Acciones</th>
+              <th>Gestión y Acciones</th>
             </tr>
           </thead>
-
           <tbody>
             {% for g in gastos %}
-              {% set total = g["total"] if "total" in g.keys() else g[3] %}
-              {% set abonado = g["abonado"] if "abonado" in g.keys() else g[4] %}
+              {% set total = g.total if g.total is defined else g[3] %}
+              {% set abonado = g.abonado if g.abonado is defined else g[4] %}
               {% set saldo = total - abonado %}
-
-              {% set gasto_id = g["id"] if "id" in g.keys() else g[0] %}
-              {% set categoria = g["categoria"] if "categoria" in g.keys() else g[1] %}
-              {% set concepto = g["concepto"] if "concepto" in g.keys() else g[2] %}
-              {% set fecha_gasto = g["fecha_gasto"] if "fecha_gasto" in g.keys() else g[5] %}
-              {% set fecha_ultimo_abono = g["fecha_ultimo_abono"] if "fecha_ultimo_abono" in g.keys() else g[6] %}
+              {% set gasto_id = g.id if g.id is defined else g[0] %}
 
               <tr>
-                <td>{{ fecha_gasto if fecha_gasto else "—" }}</td>
-                <td>{{ fecha_ultimo_abono if fecha_ultimo_abono else "—" }}</td>
-                <td><b>{{ categoria }}</b></td>
-                <td>{{ concepto }}</td>
-
-                <td>${{ "%.2f"|format(total) }}</td>
-                <td>${{ "%.2f"|format(abonado) }}</td>
-
-                <td class="{{ 'saldo-ok' if saldo <= 0 else 'saldo-pend' }}">
-                  ${{ "%.2f"|format(saldo) }}
+                <td>{{ (g.fecha_gasto if g.fecha_gasto is defined else g[5]) or '—' }}</td>
+                <td>{{ (g.fecha_ultimo_abono if g.fecha_ultimo_abono is defined else g[6]) or '—' }}</td>
+                <td><strong>{{ g.categoria if g.categoria is defined else g[1] }}</strong></td>
+                <td>{{ g.concepto if g.concepto is defined else g[2] }}</td>
+                <td style="font-weight: 700;">${{ "%.2f"|format(total) }}</td>
+                <td style="color: #2e7d32; font-weight: 700;">${{ "%.2f"|format(abonado) }}</td>
+                <td>
+                  <span class="badge-saldo {{ 'saldo-ok' if saldo <= 0 else 'saldo-pend' }}">
+                    ${{ "%.2f"|format(saldo) }}
+                  </span>
                 </td>
 
-                <td>
+                <td style="min-width: 350px;">
                   {% if saldo > 0 %}
-                    <form class="abonar-form" method="POST" action="/abonar_gasto/{{ gasto_id }}">
-                      <input type="number"
-                             step="0.01"
-                             name="monto"
-                             min="0.01"
-                             max="{{ saldo }}"
-                             placeholder="Abonar"
-                             required>
-
-                      <select name="medio" required>
+                    <form method="POST" action="/abonar_gasto/{{ gasto_id }}" style="display:flex; gap:5px; justify-content:center; margin-bottom:10px;">
+                      <input type="number" step="0.01" name="monto" max="{{ saldo }}" placeholder="Monto" required style="width:90px; padding:8px;">
+                      <select name="medio" required style="padding:8px; font-size:12px;">
                         <option value="Efectivo">Efectivo</option>
                         <option value="Transferencia">Transferencia</option>
-                        <option value="Tarjeta">Tarjeta</option>
                         <option value="Nequi">Nequi</option>
-                        <option value="Daviplata">Daviplata</option>
                       </select>
-
-                      <button class="btn btn-soft btn-mini" type="submit">💖 Abonar</button>
+                      <button class="btn-primary" type="submit" style="font-size: 11px; padding: 6px 12px;">Abonar o Saldar</button>
                     </form>
                   {% else %}
-                    <div class="saldo-ok">Pagado ✅</div>
+                    <div style="color: #2e7d32; font-weight: 800; margin-bottom:10px;">PAGADO ✅</div>
                   {% endif %}
 
-                  <!-- Historial -->
                   <details class="historial">
-                    <summary>
-                      🧁 Historial de abonos
-                      <span class="hist-pill">Ver / Ocultar</span>
-                    </summary>
-
-                    {% set tiene_abonos = false %}
+                    <summary>📋 Ver Abonos</summary>
+                    {% set ns = namespace(found=false) %}
                     {% for a in abonos_gastos %}
-                      {% set a_gasto_id = a["gasto_id"] if "gasto_id" in a.keys() else a[0] %}
+                      {% set a_gasto_id = a.gasto_id if a.gasto_id is defined else a[0] %}
                       {% if a_gasto_id == gasto_id %}
-                        {% set tiene_abonos = true %}
-                        {% set a_monto = a["monto"] if "monto" in a.keys() else a[1] %}
-                        {% set a_medio = a["medio_pago"] if "medio_pago" in a.keys() else a[2] %}
-                        {% set a_fecha = a["fecha"] if "fecha" in a.keys() else a[3] %}
-
+                        {% set ns.found = true %}
                         <div class="hist-item">
-                          📅 {{ a_fecha if a_fecha else "—" }}
-                          <span class="pill-pay">💳 {{ a_medio }}</span><br>
-                          💰 <b>${{ "%.2f"|format(a_monto) }}</b>
+                          <span>{{ a.fecha if a.fecha is defined else a[3] }}</span>
+                          <strong>${{ "%.2f"|format(a.monto if a.monto is defined else a[1]) }}</strong>
+                          <span style="color: #666;">({{ a.medio_pago if a.medio_pago is defined else a[2] }})</span>
                         </div>
                       {% endif %}
                     {% endfor %}
-
-                    {% if not tiene_abonos %}
-                      <div class="hist-item">— Sin abonos aún —</div>
-                    {% endif %}
+                    {% if not ns.found %}<div style="padding: 5px; color:#999;">Sin abonos</div>{% endif %}
                   </details>
 
-                  <!-- Acciones -->
-                  <div class="actions">
-                    <a class="btn btn-edit btn-mini" href="/editar_gasto/{{ gasto_id }}">✏️ Editar</a>
-
+                  <div class="action-group">
+                    <a href="/editar_gasto/{{ gasto_id }}" class="btn-action-label btn-edit-glow">
+                      ✏️ Editar
+                    </a>
                     <form method="POST" action="/eliminar_gasto/{{ gasto_id }}" style="display:inline;">
-                      <button class="btn btn-delete btn-mini"
-                              type="submit"
-                              data-confirm="¿Seguro que deseas eliminar este gasto? Se borrarán también sus abonos y no se puede deshacer.">
+                      <button type="submit" class="btn-action-label btn-delete-glow" onclick="return confirm('¿Borrar este gasto?')">
                         🗑️ Eliminar
                       </button>
                     </form>
                   </div>
                 </td>
               </tr>
-
-            {% else %}
-              <tr>
-                <td colspan="8" style="padding:18px; text-align:center; color:#6b5a6e;">
-                  No hay gastos todavía 🫶
-                </td>
-              </tr>
             {% endfor %}
           </tbody>
         </table>
       </div>
-
     </div>
-
   </div>
 
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       document.querySelectorAll("[data-confirm]").forEach((el) => {
         el.addEventListener("click", (e) => {
-          const msg = el.getAttribute("data-confirm") || "¿Seguro?";
-          if (!confirm(msg)) {
-            e.preventDefault();
-            e.stopPropagation();
-          }
+          if (!confirm(el.getAttribute("data-confirm") || "¿Seguro?")) e.preventDefault();
         });
       });
     });
