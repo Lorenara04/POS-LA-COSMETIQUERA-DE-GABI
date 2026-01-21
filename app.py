@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, url_for, request, flash, abort, jsonify
+from flask import Flask, render_template, redirect, url_for, request, flash, abort, jsonify, send_file
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user, UserMixin
 from flask_sqlalchemy import SQLAlchemy
 import sqlalchemy
@@ -19,12 +19,9 @@ import pytz
 import traceback
 import pandas as pd  # Importado para manejo de Excel
 from dotenv import load_dotenv
-from flask import send_file
-from io import BytesIO
 from openpyxl import Workbook
 
 load_dotenv()  # carga .env automáticamente
-
 
 # ✅ Envío de correo (usa el archivo enviar_correo.py / enviar_Correo.py)
 #    IMPORTANTE: NO definas funciones SMTP dentro del template .html
@@ -104,6 +101,7 @@ def rango_fechas_local_a_utc(fecha_inicio_str: str, fecha_fin_str: str):
         datetime.strptime(fecha_fin_str, "%Y-%m-%d").replace(hour=23, minute=59, second=59)
     )
     return fi_local.astimezone(pytz.UTC), ff_local.astimezone(pytz.UTC)
+
 # =================================================================
 def obtener_rango_turno_por_fecha_comercial(fecha_comercial: date):
     """
@@ -214,6 +212,7 @@ def cerrar_turno_anterior_si_pendiente(usuario_id: int):
     except Exception as e:
         db.session.rollback()
         return False, str(e)
+
 # =================================================================
 # CLASE AUXILIAR PARA MANEJO DE ERRORES DE DB
 # =================================================================
@@ -552,8 +551,9 @@ def dashboard():
         valor_venta_total=valor_venta_total
     )
 
-
+#==================================================================
 # -------------------- RUTAS CLIENTES --------------------
+#==================================================================
 @app.route('/clientes')
 @login_required
 def clientes():
@@ -634,7 +634,9 @@ def editar_cliente(cliente_id):
         flash(f'Error al editar cliente: {e}', 'danger')
     return redirect(url_for('clientes'))
 
+#==================================================================
 # -------------------- RUTAS INVENTARIO --------------------
+#==================================================================
 @app.route('/inventario')
 @login_required
 def inventario():
@@ -835,100 +837,108 @@ def generar_barcode_api(producto_id):
         return jsonify({"error": str(e)}), 500
 
 
+# -------------------- RUTAS DE CIERRE Y REPORTES --------------------
 
-# -------------------- API: Datos (para gestion_ventas.html) --------------------
-@app.route("/api/todos_los_productos")
+@app.route('/ejecutar_cierre_caja', methods=['POST'])
 @login_required
-def api_todos_los_productos():
-    """Lista completa de productos en JSON."""
-    try:
-        productos = Producto.query.order_by(Producto.id.desc()).all()
-        return jsonify([{
-            "id": p.id,
-            "codigo": p.codigo,
-            "nombre": p.nombre,
-            "descripcion": p.descripcion,
-            "marca": p.marca,
-            "cantidad": p.cantidad,
-            "valor_venta": p.valor_venta,
-            "valor_interno": p.valor_interno,
-            "stock_minimo": p.stock_minimo,
-        } for p in productos])
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+def ejecutar_cierre_caja():
+    if current_user.rol.lower() not in ['administrador', 'vendedora', 'administradora']:
+        flash('Permiso denegado.', 'danger')
+        return redirect(url_for('reportes'))
 
+    fecha_comercial, inicio_utc, fin_utc = obtener_rango_turno_colombia()
+    cierre_existente = CierreCaja.query.filter_by(fecha_cierre=fecha_comercial).first()
 
-@app.route("/api/todos_los_clientes")
-@login_required
-def api_todos_los_clientes():
-    """Lista completa de clientes en JSON."""
-    try:
-        clientes = Cliente.query.order_by(Cliente.id.desc()).all()
-        return jsonify([{
-            "id": c.id,
-            "nombre": c.nombre,
-            "telefono": c.telefono,
-            "direccion": c.direccion,
-            "email": c.email,
-        } for c in clientes])
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    # 1. PROCESAR INGRESOS (VENTAS)
+    ventas_turno = Venta.query.filter(and_(Venta.fecha >= inicio_utc, Venta.fecha <= fin_utc)).all()
+    
+    total_venta = 0.0
+    total_efectivo = 0.0
+    # Diccionario con nombres exactos para que el HTML los lea (Nequi, Daviplata, etc.)
+    gen = {'Nequi':0.0, 'Daviplata':0.0, 'Transferencia':0.0, 'Tarjeta/Bold':0.0, 'Efectivo':0.0}
+    vend_data = {}
 
-
-@app.route("/api/todos_los_usuarios")
-@login_required
-def api_todos_los_usuarios():
-    """Lista completa de usuarios en JSON."""
-    try:
-        usuarios = Usuario.query.order_by(Usuario.id.asc()).all()
-        return jsonify([{
-            "id": u.id,
-            "username": u.username,
-            "nombre": u.nombre,
-            "apellido": u.apellido,
-            "cedula": u.cedula,
-            "rol": u.rol,
-        } for u in usuarios])
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-
-@app.route("/api/venta/<int:venta_id>")
-@login_required
-def api_detalle_venta(venta_id):
-    """Detalle de una venta (cabecera + items) en JSON."""
-    try:
-        venta = Venta.query.get_or_404(venta_id)
-        detalles = VentaDetalle.query.filter_by(venta_id=venta_id).all()
-
+    for v in ventas_turno:
+        total_venta += v.total
         try:
-            detalle_pago = json.loads(venta.detalle_pago) if venta.detalle_pago else {}
-        except Exception:
-            detalle_pago = venta.detalle_pago or ""
+            pagos = json.loads(v.detalle_pago)
+            ef_v = float(pagos.get('Efectivo', 0) or 0)
+            total_efectivo += ef_v
+            
+            for m in gen.keys():
+                if m in pagos:
+                    gen[m] += float(pagos[m] or 0)
+            
+            nom_v = v.vendedor.username if v.vendedor else "Sistema"
+            if nom_v not in vend_data:
+                vend_data[nom_v] = {'total_venta': 0.0, 'Efectivo': 0.0}
+            
+            vend_data[nom_v]['total_venta'] += float(v.total)
+            vend_data[nom_v]['Efectivo'] += ef_v
+        except:
+            continue
 
-        data = {
-            "id": venta.id,
-            "fecha": venta.fecha.isoformat() if venta.fecha else None,
-            "total": venta.total,
-            "usuario_id": venta.usuario_id,
-            "cliente_id": venta.cliente_id,
-            "tipo_pago": venta.tipo_pago,
-            "detalle_pago": detalle_pago,
-            "items": [{
-                "id": d.id,
-                "producto_id": d.producto_id,
-                "producto_nombre": d.producto.nombre if d.producto else None,
-                "cantidad": d.cantidad,
-                "precio_unitario": d.precio_unitario,
-                "subtotal": d.subtotal,
-            } for d in detalles]
-        }
-        return jsonify(data)
+    # 2. PROCESAR EGRESOS (GASTOS) - Para que dejen de salir en $0
+    # Asegúrate que el modelo se llame Gasto en tu proyecto
+    egresos_hoy = Gasto.query.filter(and_(Gasto.fecha >= inicio_utc, Gasto.fecha <= fin_utc)).all()
+    tot_egresos = sum(float(e.total) for e in egresos_hoy)
+    lista_egresos = [{'concepto':e.concepto, 'medio':e.medio_pago, 'monto':float(e.total)} for e in egresos_hoy]
+
+    # 3. CONSOLIDAR SNAPSHOT (La clave para la imagen b6e2a0.png)
+    snapshot = {
+        'GENERAL': gen,
+        'EGRESOS_TOTAL': tot_egresos,
+        'EGRESOS_LISTA': lista_egresos,
+        'hora_cierre_real': obtener_hora_colombia().strftime('%I:%M %p')
+    }
+    
+    # Añadir vendedores al mismo nivel para evitar la "sopa" en la tabla
+    for nom, datos in vend_data.items():
+        snapshot[nom] = datos
+
+    try:
+        if cierre_existente:
+            c = cierre_existente
+            c.total_venta = total_venta
+            c.total_efectivo = total_efectivo
+            c.total_electronico = total_venta - total_efectivo
+            c.detalles_json = json.dumps(snapshot)
+            c.usuario_id = current_user.id
+        else:
+            nuevo = CierreCaja(
+                fecha_cierre=fecha_comercial,
+                total_venta=total_venta,
+                total_efectivo=total_efectivo,
+                total_electronico=total_venta - total_efectivo,
+                usuario_id=current_user.id,
+                detalles_json=json.dumps(snapshot),
+                hora_ejecucion=datetime.utcnow()
+            )
+            db.session.add(nuevo)
+        
+        db.session.commit()
+        flash('✅ Cierre de caja procesado correctamente.', 'success')
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        db.session.rollback()
+        flash(f'Error: {str(e)}', 'danger')
 
+    return redirect(url_for('reportes'))
 
+# --- RUTA DEL HISTORIAL ---
+@app.route('/cierre_caja/historial')
+@login_required
+def historial_cierres():
+    if current_user.rol.lower() not in ['administrador', 'vendedora', 'administradora']:
+        flash('Permiso denegado.', 'danger')
+        return redirect(url_for('dashboard'))
+
+    cierres = CierreCaja.query.order_by(CierreCaja.fecha_cierre.desc()).all()
+    # Verifica que el archivo en templates sea exactamente historial_cierres.html
+    return render_template('historial_cierres.html', cierres=cierres)
+
+#==================================================================
 # -------------------- RUTAS VENTAS --------------------
+#==================================================================
 @app.route('/ventas/nueva', methods=['GET', 'POST'])
 @login_required
 def nueva_venta():
@@ -1083,100 +1093,6 @@ def imprimir_comprobante(venta_id):
     )
 
 
-# -------------------- RUTAS CIERRE DE CAJA --------------------
-@app.route('/ejecutar_cierre_caja', methods=['GET', 'POST'])
-@login_required
-def ejecutar_cierre_caja():
-    if current_user.rol.lower() not in ['administrador', 'vendedora']:
-        flash('Permiso denegado.', 'danger')
-        return redirect(url_for('reportes'))
-
-    if request.method == 'POST':
-        fecha_comercial, inicio_utc, fin_utc = obtener_rango_turno_colombia()
-
-        cierre_existente = CierreCaja.query.filter_by(fecha_cierre=fecha_comercial).first()
-
-        if cierre_existente and current_user.rol.lower() == 'vendedora':
-            flash(f'La caja del día {fecha_comercial} ya fue cerrada. No puedes modificarla.', 'warning')
-            return redirect(url_for('reportes'))
-
-        ventas_turno = Venta.query.filter(
-            and_(Venta.fecha >= inicio_utc, Venta.fecha <= fin_utc)
-        ).all()
-
-        total_venta = 0.0
-        total_efectivo = 0.0
-        detalle_metodos = defaultdict(float)
-        detalle_vendedor = defaultdict(lambda: {'total': 0.0, 'efectivo': 0.0})
-
-        for v in ventas_turno:
-            total_venta += v.total
-            try:
-                pagos = json.loads(v.detalle_pago)
-                efectivo_v = float(pagos.get('Efectivo', 0) or 0)
-                total_efectivo += efectivo_v
-
-                for metodo, monto in pagos.items():
-                    if metodo not in ['Ref_Codigo', 'Ref_Fecha', 'Efectivo_Recibido', 'Vuelto'] and isinstance(monto, (int, float)):
-                        detalle_metodos[metodo] += float(monto or 0)
-
-                v_user = v.vendedor.username if v.vendedor else "N/A"
-                detalle_vendedor[v_user]['total'] += v.total
-                detalle_vendedor[v_user]['efectivo'] += efectivo_v
-            except Exception:
-                pass
-
-        total_electronico = total_venta - total_efectivo
-
-        snapshot = {
-            'metodos': dict(detalle_metodos),
-            'vendedores': dict(detalle_vendedor),
-            'hora_cierre_real': obtener_hora_colombia().strftime('%I:%M %p')
-        }
-
-        try:
-            if cierre_existente:
-                cierre = cierre_existente
-                cierre.usuario_id = current_user.id
-                cierre.total_venta = total_venta
-                cierre.total_efectivo = total_efectivo
-                cierre.total_electronico = total_electronico
-                cierre.detalles_json = json.dumps(snapshot)
-                cierre.hora_ejecucion = datetime.utcnow()
-            else:
-                nuevo = CierreCaja(
-                    fecha_cierre=fecha_comercial,
-                    hora_ejecucion=datetime.utcnow(),
-                    usuario_id=current_user.id,
-                    total_venta=total_venta,
-                    total_efectivo=total_efectivo,
-                    total_electronico=total_electronico,
-                    detalles_json=json.dumps(snapshot)
-                )
-                db.session.add(nuevo)
-
-            db.session.commit()
-            flash(f'✅ Cierre de Caja registrado ({fecha_comercial}). Total: ${total_venta:,.0f}', 'success')
-            return redirect(url_for('reportes'))
-        except Exception as e:
-            db.session.rollback()
-            flash(f'Error al procesar el cierre de caja: {e}', 'danger')
-            return redirect(url_for('reportes'))
-
-    flash('Acción inválida. Usa el botón de la página de reportes.', 'warning')
-    return redirect(url_for('reportes'))
-
-
-@app.route('/cierre_caja/historial')
-@login_required
-def historial_cierres():
-    if current_user.rol.lower() not in ['administrador', 'vendedora']:
-        flash('Permiso denegado.', 'danger')
-        return redirect(url_for('dashboard'))
-
-    cierres = CierreCaja.query.order_by(CierreCaja.fecha_cierre.desc()).all()
-    return render_template('historial_cierres.html', cierres=cierres)
-
 #=========================REPORTES========================
 @app.route('/reportes')
 @login_required
@@ -1289,16 +1205,6 @@ def reportes():
     )
 
 #================================================================
-from flask import render_template
-
-from sqlalchemy import func, and_
-from datetime import datetime, timedelta
-
-from sqlalchemy import func, and_
-from datetime import datetime, timedelta
-from collections import defaultdict
-import json
-import pytz
 
 @app.route("/enviar-informe-rango", methods=["POST"])
 @login_required
@@ -1418,7 +1324,7 @@ def enviar_informe_rango():
     total_electronico = pago_metodos["Nequi"] + pago_metodos["Daviplata"] + pago_metodos["Transferencia"] + pago_metodos["Tarjeta"]
 
     # =========================
-      # =========================
+    # =========================
     # 7) MES(ES) DENTRO DEL PERIODO + ACUMULADO DEL MES COMPLETO
     #    (Aunque el rango sea solo una semana, total_mes será del mes entero)
     # =========================
@@ -1426,7 +1332,7 @@ def enviar_informe_rango():
 
     for v in ventas:
         dt = v.fecha
-        # v.fecha normalmente está en UTC (a veces naive). Normalizamos:
+        # v.fecha normally está en UTC (a veces naive). Normalizamos:
         if dt and (dt.tzinfo is None or dt.tzinfo.utcoffset(dt) is None):
             dt = pytz.UTC.localize(dt)
 
@@ -1961,10 +1867,6 @@ def importar_acumulado_mes_excel():
         return redirect(url_for("reportes"))
 
 # -------------------- EXPORTAR EXCEL (ADMIN) --------------------
-from flask import send_file
-from io import BytesIO
-import pandas as pd
-
 
 @app.route('/exportar_productos_excel')
 @login_required
@@ -2131,8 +2033,6 @@ def exportar_acumulados_excel():
 #=================================================================
 # PROVEEDORES
 #=================================================================
-from sqlalchemy import func
-
 @app.route("/proveedores", methods=["GET", "POST"])
 @login_required
 def proveedores():
@@ -2536,6 +2436,165 @@ def exportar_gastos():
         download_name="gastos.xlsx",
         mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
+
+# =============================================================================
+#  RUTAS NUEVAS: API PARA EL MODAL DE EDICIÓN DE VENTAS
+# =============================================================================
+
+@app.route('/api/venta/<int:venta_id>', methods=['GET'])
+@login_required
+def obtener_detalle_venta_api(venta_id):
+    """
+    Retorna la info completa de una venta (encabezado + items) en JSON
+    para que el modal de 'gestion_ventas' pueda mostrarla.
+    """
+    if current_user.rol.lower() != 'administrador':
+        return jsonify({'error': 'No autorizado'}), 403
+
+    venta = Venta.query.get_or_404(venta_id)
+    detalles = VentaDetalle.query.filter_by(venta_id=venta.id).all()
+
+    items_list = []
+    for d in detalles:
+        items_list.append({
+            'producto_id': d.producto_id,
+            'producto_nombre': d.producto.nombre if d.producto else 'Producto Eliminado',
+            'cantidad': d.cantidad,
+            'descripcion': d.producto.descripcion if d.producto else '',
+            'precio_unitario': d.precio_unitario,
+            'subtotal': d.subtotal
+        })
+
+    pagos = {}
+    try:
+        pagos = json.loads(venta.detalle_pago or '{}')
+    except:
+        pass
+
+    data = {
+        'id': venta.id,
+        'fecha': venta.fecha.isoformat(),  # o strftime si prefieres
+        'vendedor_id': venta.usuario_id,
+        'cliente_id': venta.cliente_id,
+        'total': venta.total,
+        'items': items_list,
+        'pagos': pagos
+    }
+    return jsonify(data)
+
+
+@app.route('/api/venta/editar_items/<int:venta_id>', methods=['POST'])
+@login_required
+def editar_items_venta(venta_id):
+    """
+    Recibe JSON con la nueva lista de items.
+    Restaura stock antiguo, aplica stock nuevo y recalcula total.
+    """
+    if current_user.rol.lower() != 'administrador':
+        return jsonify({'error': 'No autorizado'}), 403
+
+    venta = Venta.query.get_or_404(venta_id)
+    data = request.json
+    nuevos_items = data.get('items', [])
+
+    try:
+        # 1. Revertir stock de items actuales
+        detalles_actuales = VentaDetalle.query.filter_by(venta_id=venta.id).all()
+        for d in detalles_actuales:
+            prod = Producto.query.get(d.producto_id)
+            if prod:
+                prod.cantidad += d.cantidad  # Devolvemos al inventario
+        
+        # Borramos detalles viejos
+        VentaDetalle.query.filter_by(venta_id=venta.id).delete()
+
+        # 2. Insertar nuevos items y descontar stock
+        nuevo_total = 0.0
+        for item in nuevos_items:
+            pid = int(item['id'])
+            cant = int(item['cantidad'])
+            precio = float(item['precio'])
+            sub = float(item['subtotal'])
+
+            prod = Producto.query.get(pid)
+            if not prod:
+                raise Exception(f"Producto ID {pid} no existe")
+            
+            if prod.cantidad < cant:
+                raise Exception(f"Stock insuficiente para {prod.nombre} (Hay {prod.cantidad})")
+            
+            prod.cantidad -= cant  # Descontamos nuevo stock
+            
+            nuevo_det = VentaDetalle(
+                venta_id=venta.id,
+                producto_id=pid,
+                cantidad=cant,
+                precio_unitario=precio,
+                subtotal=sub
+            )
+            db.session.add(nuevo_det)
+            nuevo_total += sub
+
+        venta.total = nuevo_total
+        db.session.commit()
+        return jsonify({'ok': True, 'nuevo_total': nuevo_total})
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 400
+
+
+@app.route('/api/venta/editar_info/<int:venta_id>', methods=['POST'])
+@login_required
+def editar_info_venta(venta_id):
+    """
+    Actualiza vendedor, cliente y el desglose de pagos (JSON) sin tocar stock.
+    """
+    if current_user.rol.lower() != 'administrador':
+        return jsonify({'error': 'No autorizado'}), 403
+
+    venta = Venta.query.get_or_404(venta_id)
+    data = request.json
+
+    try:
+        venta.usuario_id = int(data.get('vendedor_id'))
+        venta.cliente_id = int(data.get('cliente_id'))
+        venta.detalle_pago = json.dumps(data.get('pagos', {}))
+        
+        db.session.commit()
+        return jsonify({'ok': True})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 400
+
+
+# ✅ NUEVA FUNCIÓN AGREGADA PARA LA PISTOLA Y EL BUSCADOR
+@app.route('/api/productos/buscar')
+@login_required
+def buscar_productos_api():
+    query = request.args.get('q', '').strip()
+    if not query:
+        return jsonify([])
+
+    # Busca por Nombre (parecido) O por Código exacto
+    # Limitamos a 10 resultados para que sea rápido
+    productos = Producto.query.filter(
+        (Producto.nombre.ilike(f'%{query}%')) |
+        (Producto.codigo.ilike(f'{query}%'))
+    ).limit(10).all()
+
+    resultados = []
+    for p in productos:
+        resultados.append({
+            'id': p.id,
+            'codigo': p.codigo,
+            'nombre': p.nombre,
+            'descripcion': p.descripcion or '',
+            'precio': p.valor_venta,
+            'stock': p.cantidad
+        })
+    
+    return jsonify(resultados)
 
 
 if __name__ == "__main__":
