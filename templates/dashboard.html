@@ -1,240 +1,161 @@
 {% extends "base.html" %}
-{% block title %}Dashboard - POS Cosmetiquería{% endblock %}
+{% block title %}Dashboard Premium - La Cosmetiquera{% endblock %}
 
 {% block content %}
-
-<div class="dashboard-container">
-
+<div class="luxury-dashboard">
     <div class="fondo-particulas"></div>
 
-    <div class="welcome-card">
-        <h2>¡Bienvenido/a, {{ current_user.username }}!</h2>
-        <p>Rol: <span>{{ current_user.rol | capitalize }}</span></p>
-    </div>
+    <header class="welcome-header">
+        <div class="user-badge">
+            <span class="role-dot"></span> {{ current_user.rol | upper }}
+        </div>
+        <h1>Hola, <span class="gradient-text">{{ current_user.username }}</span> ✨</h1>
+        <p class="date-now" id="currentDate"></p>
+    </header>
 
-    <div class="dashboard-buttons">
-        
+    <nav class="quick-access">
         {% if current_user.rol.lower() in ['administradora', 'administrador'] %}
-        <a href="{{ url_for('reportes') }}" class="btn-dashboard reports">
-            <i class="bi bi-bar-chart-fill"></i> Ver Informes
-        </a>
-
-        <a href="{{ url_for('gestion_ventas') }}" class="btn-dashboard manage-sales">
-            <i class="bi bi-collection-fill"></i> Gestión Ventas
-        </a>
+        <a href="{{ url_for('reportes') }}" class="glass-btn purple">Informes</a>
+        <a href="{{ url_for('gestion_ventas') }}" class="glass-btn pink">Gestión</a>
         {% endif %}
+        <a href="{{ url_for('nueva_venta') }}" class="glass-btn gold">Nueva Venta</a>
+    </nav>
 
-        <a href="{{ url_for('nueva_venta') }}" class="btn-dashboard new-sale">
-            <i class="bi bi-cart-check-fill"></i> Nueva Venta
-        </a>
-
-        {% if current_user.rol.lower() == 'vendedora' %}
-        <a href="{{ url_for('reportes') }}" class="btn-dashboard" 
-           style="background: linear-gradient(135deg, #E040FB, #ff43d0);">
-            <i class="bi bi-cash-stack"></i> Cierre de Caja
-        </a>
-        {% endif %}
-    </div>
-
-   
-    <div class="stats-section">
-
-        <div class="stat-card sales-today">
-            <h3>Ventas de Hoy</h3>
-            <p class="stat-value">${{ ventas_hoy | default(0.00) | format_number }}</p> 
+    <main class="stats-grid">
+        <div class="premium-card">
+            <p class="label">Ventas de Hoy</p>
+            <h2 class="val">${{ ventas_hoy | default(0.00) | format_number }}</h2>
         </div>
 
-        <div class="stat-card total-inventory"> 
-            <h3>Total de Inventario</h3>
-            <p class="stat-value">
-                {{ total_inventario | default(0) | format_number }} 
-                <span style="font-size: 0.5em; display: block;">unidades</span>
-            </p>
+        <div class="premium-card">
+            <p class="label">Stock Total</p>
+            <h2 class="val">{{ total_inventario | default(0) | format_number }}</h2>
+            <p class="sub">unidades</p>
         </div>
-        
-        {% if current_user.rol.lower() == 'administrador' %}
-        <div class="stat-card pending-balances" style="border-bottom: 5px solid #ff8c94;">
-            <h3>Saldos Pendientes (Deudas)</h3>
+
+        <div class="premium-card highlight-red">
+            <p class="label">Saldos Pendientes (Deudas)</p>
             {% set total_deuda = (total_facturas_pendiente | default(0)) + (total_gastos_pendiente | default(0)) %}
-            <p class="stat-value" style="color: #b00020;">${{ total_deuda | format_number }}</p>
-            <span style="font-size: 0.8em; color: #888;">Facturas + Gastos ✨</span>
-        </div>
-        {% else %}
-        <div class="stat-card new-clients">
-            <h3>Clientes Nuevos</h3>
-            <p class="stat-value">{{ clientes_nuevos_mes | default(0) }}</p>
-        </div>
-        {% endif %}
-
-        {% if current_user.rol.lower() == 'administrador' %}
-        <div class="stat-card inventory-value">
-            <h3>Valor Interno Total</h3>
-            <p class="stat-value">${{ valor_interno_total | format_number }}</p>
+            <h2 class="val text-danger">${{ total_deuda | format_number }}</h2>
+            <p class="sub">Facturas + Gastos ✨</p>
         </div>
 
-        <div class="stat-card inventory-value2">
-            <h3>Valor Total a la Venta</h3>
-            <p class="stat-value">${{ valor_venta_total | format_number }}</p>
+        <div class="premium-card">
+            <p class="label">Valor Interno Total</p>
+            <h2 class="val">${{ valor_interno_total | format_number }}</h2>
         </div>
-        {% endif %}
 
-    </div>
+        <div class="premium-card full-span sale-value">
+            <p class="label">Valor Total a la Venta</p>
+            <h2 class="val-large">${{ valor_venta_total | format_number }}</h2>
+        </div>
+    </main>
 </div>
 
-
 <style>
-
-/* Fondo general */
-.dashboard-container {
-    position: relative;
-    z-index: 1;
+/* Fondo Rosado Coquette Profesional */
+.luxury-dashboard {
     min-height: 100vh;
     padding: 40px 20px;
-    background: #fff0f7;
+    background: #fff0f5; /* Un rosado pastel muy elegante */
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 45px;
+    z-index: 1;
 }
 
-/* Fondo partículas */
+/* Partículas */
 .fondo-particulas {
     position: fixed;
     inset: 0;
-    z-index: 0;
-    overflow: hidden;
+    z-index: -1;
     pointer-events: none;
 }
-
 .fondo-particulas span {
     position: absolute;
-    animation: flotar 18s linear infinite;
-    opacity: 0.2;
-    user-select: none;
+    opacity: 0.4;
+    animation: flotar 12s infinite ease-in-out;
 }
 
-@keyframes flotar {
-    0% { transform: translateY(0) rotate(0deg); }
-    50% { transform: translateY(-120px) rotate(180deg); }
-    100% { transform: translateY(0) rotate(360deg); }
+/* Header y Textos */
+.welcome-header { text-align: center; margin-bottom: 30px; }
+.gradient-text {
+    background: linear-gradient(90deg, #ff1493, #9c0277);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 800;
 }
-
-/* Bienvenida */
-.welcome-card {
-    background: linear-gradient(135deg, #ffb6e1, #ffb6e1, #ff1493);
-    color: #fff;
-    padding: 25px 35px;
-    border-radius: 25px;
-    text-align: center;
-    box-shadow: 0 15px 35px rgba(0,0,0,0.2);
-    max-width: 600px;
-    width: 100%;
-    animation: gradientMove 10s ease infinite;
-}
-
-@keyframes gradientMove {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
+.user-badge {
+    background: white;
+    padding: 5px 15px;
+    border-radius: 50px;
+    font-size: 10px;
+    font-weight: 800;
+    color: #c71585;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
 }
 
 /* Botones */
-.dashboard-buttons {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 22px;
-    max-width: 780px;
-    width: 100%;
-}
-
-.btn-dashboard {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    padding: 18px 32px;
-    border-radius: 25px;
-    font-weight: 700;
+.quick-access { display: flex; gap: 15px; margin-bottom: 40px; }
+.glass-btn {
+    padding: 12px 25px;
+    border-radius: 15px;
     text-decoration: none;
-    color: #fff;
-    min-width: 250px;
-    background: linear-gradient(135deg, #d63384, #e754a3);
-    transition: .3s ease;
-    box-shadow: 0 6px 18px rgba(0,0,0,0.2);
+    color: white;
+    font-weight: 700;
+    transition: 0.3s;
 }
+.purple { background: #E040FB; }
+.pink { background: #ec407a; }
+.gold { background: #d81b60; }
+.glass-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
 
-.btn-dashboard:hover {
-    transform: translateY(-6px) scale(1.05);
-}
-
-/* Stats */
-.stats-section {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 25px;
-    justify-content: center;
+/* Tarjetas */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    width: 100%;
     max-width: 1000px;
 }
-
-.stat-card {
-    background: #fff;
-    padding: 20px;
-    border-radius: 22px;
-    min-width: 210px;
-    flex: 1;
+.premium-card {
+    background: white;
+    padding: 25px;
+    border-radius: 25px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
     text-align: center;
-    box-shadow: 0 5px 18px rgba(0,0,0,0.12);
-    transition: .3s ease;
 }
+.full-span { grid-column: 1 / -1; }
+.label { font-size: 12px; font-weight: 700; color: #c71585; text-transform: uppercase; margin-bottom: 10px; }
+.val { font-size: 1.8rem; font-weight: 800; margin: 0; }
+.val-large { font-size: 3rem; font-weight: 800; color: #c71585; margin: 0; }
+.highlight-red { border-bottom: 6px solid #ff8c94; }
+.sale-value { border-bottom: 6px solid #9c0277; }
+.sub { font-size: 12px; color: #888; margin: 0; }
 
-.stat-card:hover {
-    transform: translateY(-5px);
+@keyframes flotar {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-30px) rotate(15deg); }
 }
-
-.stat-card h3 {
-    font-size: 1.05rem;
-    color: #d63384;
-    font-weight: 700;
-}
-
-.stat-value {
-    margin-top: 6px;
-    font-size: 2rem;
-    font-weight: 900;
-}
-
-.inventory-value {
-    border-bottom: 5px solid #6a1b9a;
-}
-
-.inventory-value2 {
-    border-bottom: 5px solid #c71585;
-}
-
-/* Responsive */
-@media (max-width: 780px) {
-    .dashboard-buttons { flex-direction: column; }
-    .btn-dashboard { width: 100%; }
-}
-
 </style>
 
-
 <script>
-const fondo = document.querySelector('.fondo-particulas');
-const emojis = ['💄','💅','✨','💖','🎀','🦋','🌸','⭐'];
-const cantidad = 35;
+// Fecha
+document.getElementById('currentDate').innerText = new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
-for (let i = 0; i < cantidad; i++) {
+// Generar Partículas
+const fondo = document.querySelector('.fondo-particulas');
+const emojis = ['💄','✨','💖','🦋','🌸','🎀'];
+for (let i = 0; i < 25; i++) {
     const span = document.createElement('span');
     span.innerText = emojis[Math.floor(Math.random() * emojis.length)];
-    span.style.top = Math.random() * 100 + 'vh';
     span.style.left = Math.random() * 100 + 'vw';
-    span.style.animationDuration = 12 + Math.random() * 15 + 's';
-    span.style.fontSize = 20 + Math.random() * 38 + 'px';
+    span.style.top = Math.random() * 100 + 'vh';
+    span.style.fontSize = Math.random() * 20 + 15 + 'px';
+    span.style.animationDelay = Math.random() * 5 + 's';
     fondo.appendChild(span);
 }
 </script>
-
 {% endblock %}

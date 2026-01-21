@@ -2030,9 +2030,10 @@ def exportar_acumulados_excel():
         as_attachment=True,
         mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
-#=================================================================
-# PROVEEDORES
-#=================================================================
+
+# =================================================================
+# SECCIÓN MEJORADA: PROVEEDORES (CON MENSAJES FLASH) ✨
+# =================================================================
 @app.route("/proveedores", methods=["GET", "POST"])
 @login_required
 def proveedores():
@@ -2047,12 +2048,15 @@ def proveedores():
         fecha_str = (request.form.get("fecha") or "").strip()
 
         if not numero or not proveedor:
-            abort(400, description="Número y proveedor son obligatorios.")
+            # MEJORA: En vez de abort(400), usamos flash para no romper la pagina
+            flash("Error: Número de factura y Proveedor son obligatorios.", "danger")
+            return redirect(url_for("proveedores"))
 
         try:
             total = float(total_raw)
         except ValueError:
-            abort(400, description="Total inválido.")
+            flash("Error: El total debe ser un número válido.", "danger")
+            return redirect(url_for("proveedores"))
 
         try:
             fecha_factura = datetime.strptime(fecha_str, "%Y-%m-%d").date() if fecha_str else date.today()
@@ -2062,9 +2066,9 @@ def proveedores():
         f = Factura(numero=numero, proveedor=proveedor, total=total, fecha=fecha_factura)
         db.session.add(f)
         db.session.commit()
+        flash("Proveedor agregado exitosamente.", "success")
         return redirect(url_for("proveedores"))
 
-    # Facturas con: abonado, saldo, fecha_ultimo_abono
     rows = db.session.query(
         Factura,
         func.coalesce(func.sum(Abono.monto), 0).label("abonado"),
@@ -2089,10 +2093,7 @@ def proveedores():
         })
 
     abonos = db.session.query(Abono).order_by(Abono.fecha.asc(), Abono.id.asc()).all()
-
-    # Si tu template espera sqlite Row, esto igual funciona porque mandamos dicts + objetos.
     return render_template("proveedores.html", facturas=facturas, abonos=abonos)
-
 
 @app.route("/abonar/<int:factura_id>", methods=["POST"])
 @login_required
@@ -2107,20 +2108,26 @@ def abonar(factura_id):
     try:
         monto = float(monto_raw)
     except ValueError:
+        flash("Monto inválido.", "danger")
         return redirect(url_for("proveedores"))
 
     if monto <= 0 or not medio:
+        flash("El monto debe ser positivo y el medio de pago es obligatorio.", "danger")
         return redirect(url_for("proveedores"))
 
     factura = Factura.query.get(factura_id)
     if not factura:
+        flash("Factura no encontrada.", "danger")
         return redirect(url_for("proveedores"))
 
     abonado = db.session.query(func.coalesce(func.sum(Abono.monto), 0)) \
         .filter(Abono.factura_id == factura_id).scalar() or 0
 
     saldo = float(factura.total or 0) - float(abonado or 0)
-    if saldo <= 0:
+    
+    # Tolerancia pequeña para errores de flotante
+    if saldo <= 0.01:
+        flash("Esta factura ya está pagada.", "warning")
         return redirect(url_for("proveedores"))
 
     if monto > saldo:
@@ -2128,8 +2135,8 @@ def abonar(factura_id):
 
     db.session.add(Abono(factura_id=factura_id, monto=monto, medio_pago=medio, fecha=date.today()))
     db.session.commit()
+    flash(f"Abono de ${monto:,.0f} registrado.", "success")
     return redirect(url_for("proveedores"))
-
 
 @app.route("/eliminar_factura/<int:factura_id>", methods=["POST"])
 @login_required
@@ -2137,12 +2144,11 @@ def eliminar_factura(factura_id):
     if current_user.rol.lower() != "administrador":
         flash("Permiso denegado.", "danger")
         return redirect(url_for("dashboard"))
-
     factura = Factura.query.get_or_404(factura_id)
-    db.session.delete(factura)  # cascade borra abonos
+    db.session.delete(factura)
     db.session.commit()
+    flash("Factura eliminada.", "success")
     return redirect(url_for("proveedores"))
-
 
 @app.route("/editar_factura/<int:factura_id>", methods=["GET", "POST"])
 @login_required
@@ -2160,13 +2166,15 @@ def editar_factura(factura_id):
         fecha_str = (request.form.get("fecha") or "").strip()
 
         if not numero or not proveedor:
-            abort(400, description="Número y proveedor son obligatorios.")
-
+            flash("Número y proveedor son obligatorios.", "danger")
+            return redirect(url_for("editar_factura", factura_id=factura_id))
+            
         try:
             total = float(total_raw)
         except ValueError:
-            abort(400, description="Total inválido.")
-
+             flash("Total inválido.", "danger")
+             return redirect(url_for("editar_factura", factura_id=factura_id))
+        
         try:
             fecha_factura = datetime.strptime(fecha_str, "%Y-%m-%d").date() if fecha_str else date.today()
         except Exception:
@@ -2176,7 +2184,8 @@ def editar_factura(factura_id):
             .filter(Abono.factura_id == factura_id).scalar() or 0
 
         if total < float(abonado or 0):
-            abort(400, description=f"El total no puede ser menor que lo abonado ({float(abonado):.2f}).")
+            flash(f"Error: El nuevo total no puede ser menor que lo ya abonado (${float(abonado):,.0f}).", "danger")
+            return redirect(url_for("editar_factura", factura_id=factura_id))
 
         factura.numero = numero
         factura.proveedor = proveedor
@@ -2184,13 +2193,14 @@ def editar_factura(factura_id):
         factura.fecha = fecha_factura
 
         db.session.commit()
+        flash("Factura actualizada correctamente.", "success")
         return redirect(url_for("proveedores"))
 
     return render_template("editar_factura.html", factura=factura)
- 
- #=================================================================
- #GASTOS
- #================================================================
+
+#=================================================================
+# SECCIÓN MEJORADA: GASTOS (CON MENSAJES FLASH) ✨
+#=================================================================
 @app.route("/gastos", methods=["GET", "POST"])
 @login_required
 def gastos():
@@ -2205,12 +2215,14 @@ def gastos():
         fecha_str = (request.form.get("fecha") or "").strip()
 
         if not categoria or not concepto:
-            abort(400, description="Categoría y concepto son obligatorios.")
+            flash("Categoría y concepto son obligatorios.", "danger")
+            return redirect(url_for("gastos"))
 
         try:
             total = float(total_raw)
         except ValueError:
-            abort(400, description="Total inválido.")
+            flash("Total inválido.", "danger")
+            return redirect(url_for("gastos"))
 
         try:
             fecha_gasto = datetime.strptime(fecha_str, "%Y-%m-%d").date() if fecha_str else date.today()
@@ -2220,6 +2232,7 @@ def gastos():
         g = Gasto(categoria=categoria, concepto=concepto, total=total, fecha=fecha_gasto)
         db.session.add(g)
         db.session.commit()
+        flash("Gasto registrado exitosamente.", "success")
         return redirect(url_for("gastos"))
 
     rows = db.session.query(
@@ -2246,7 +2259,6 @@ def gastos():
         })
 
     abonos_gastos = db.session.query(AbonoGasto).order_by(AbonoGasto.fecha.asc(), AbonoGasto.id.asc()).all()
-
     return render_template("modulo_gastos.html", gastos=gastos_list, abonos_gastos=abonos_gastos)
 
 
@@ -2263,20 +2275,25 @@ def abonar_gasto(gasto_id):
     try:
         monto = float(monto_raw)
     except ValueError:
+        flash("Monto inválido.", "danger")
         return redirect(url_for("gastos"))
 
     if monto <= 0 or not medio:
+        flash("Monto positivo y medio de pago requeridos.", "danger")
         return redirect(url_for("gastos"))
 
     gasto = Gasto.query.get(gasto_id)
     if not gasto:
+        flash("Gasto no encontrado.", "danger")
         return redirect(url_for("gastos"))
 
     abonado = db.session.query(func.coalesce(func.sum(AbonoGasto.monto), 0)) \
         .filter(AbonoGasto.gasto_id == gasto_id).scalar() or 0
 
     saldo = float(gasto.total or 0) - float(abonado or 0)
-    if saldo <= 0:
+    
+    if saldo <= 0.01:
+        flash("Este gasto ya está pagado.", "warning")
         return redirect(url_for("gastos"))
 
     if monto > saldo:
@@ -2284,8 +2301,8 @@ def abonar_gasto(gasto_id):
 
     db.session.add(AbonoGasto(gasto_id=gasto_id, monto=monto, medio_pago=medio, fecha=date.today()))
     db.session.commit()
+    flash(f"Abono de ${monto:,.0f} registrado.", "success")
     return redirect(url_for("gastos"))
-
 
 @app.route("/eliminar_gasto/<int:gasto_id>", methods=["POST"])
 @login_required
@@ -2293,12 +2310,11 @@ def eliminar_gasto(gasto_id):
     if current_user.rol.lower() != "administrador":
         flash("Permiso denegado.", "danger")
         return redirect(url_for("dashboard"))
-
     gasto = Gasto.query.get_or_404(gasto_id)
-    db.session.delete(gasto)  # cascade borra abonos_gastos
+    db.session.delete(gasto)
     db.session.commit()
+    flash("Gasto eliminado.", "success")
     return redirect(url_for("gastos"))
-
 
 @app.route("/editar_gasto/<int:gasto_id>", methods=["GET", "POST"])
 @login_required
@@ -2316,12 +2332,14 @@ def editar_gasto(gasto_id):
         fecha_str = (request.form.get("fecha") or "").strip()
 
         if not categoria or not concepto:
-            abort(400, description="Categoría y concepto son obligatorios.")
+            flash("Categoría y concepto son obligatorios.", "danger")
+            return redirect(url_for("editar_gasto", gasto_id=gasto_id))
 
         try:
             total = float(total_raw)
         except ValueError:
-            abort(400, description="Total inválido.")
+            flash("Total inválido.", "danger")
+            return redirect(url_for("editar_gasto", gasto_id=gasto_id))
 
         try:
             fecha_gasto = datetime.strptime(fecha_str, "%Y-%m-%d").date() if fecha_str else date.today()
@@ -2332,7 +2350,8 @@ def editar_gasto(gasto_id):
             .filter(AbonoGasto.gasto_id == gasto_id).scalar() or 0
 
         if total < float(abonado or 0):
-            abort(400, description=f"El total no puede ser menor que lo abonado ({float(abonado):.2f}).")
+             flash(f"Error: El nuevo total no puede ser menor que lo ya abonado (${float(abonado):,.0f}).", "danger")
+             return redirect(url_for("editar_gasto", gasto_id=gasto_id))
 
         gasto.categoria = categoria
         gasto.concepto = concepto
@@ -2340,12 +2359,11 @@ def editar_gasto(gasto_id):
         gasto.fecha = fecha_gasto
 
         db.session.commit()
+        flash("Gasto actualizado correctamente.", "success")
         return redirect(url_for("gastos"))
 
     return render_template("editar_gasto.html", gasto=gasto)
-#==================================================================
-#EXPORTA PROVEEDORES Y GASTOS A EXCEL
-#==================================================================
+
 @app.route("/exportar_proveedores")
 @login_required
 def exportar_proveedores():
@@ -2390,7 +2408,6 @@ def exportar_proveedores():
         download_name="proveedores.xlsx",
         mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
-
 
 @app.route("/exportar_gastos")
 @login_required
@@ -2437,17 +2454,9 @@ def exportar_gastos():
         mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
 
-# =============================================================================
-#  RUTAS NUEVAS: API PARA EL MODAL DE EDICIÓN DE VENTAS
-# =============================================================================
-
 @app.route('/api/venta/<int:venta_id>', methods=['GET'])
 @login_required
 def obtener_detalle_venta_api(venta_id):
-    """
-    Retorna la info completa de una venta (encabezado + items) en JSON
-    para que el modal de 'gestion_ventas' pueda mostrarla.
-    """
     if current_user.rol.lower() != 'administrador':
         return jsonify({'error': 'No autorizado'}), 403
 
@@ -2473,7 +2482,7 @@ def obtener_detalle_venta_api(venta_id):
 
     data = {
         'id': venta.id,
-        'fecha': venta.fecha.isoformat(),  # o strftime si prefieres
+        'fecha': venta.fecha.isoformat(),
         'vendedor_id': venta.usuario_id,
         'cliente_id': venta.cliente_id,
         'total': venta.total,
@@ -2482,14 +2491,9 @@ def obtener_detalle_venta_api(venta_id):
     }
     return jsonify(data)
 
-
 @app.route('/api/venta/editar_items/<int:venta_id>', methods=['POST'])
 @login_required
 def editar_items_venta(venta_id):
-    """
-    Recibe JSON con la nueva lista de items.
-    Restaura stock antiguo, aplica stock nuevo y recalcula total.
-    """
     if current_user.rol.lower() != 'administrador':
         return jsonify({'error': 'No autorizado'}), 403
 
@@ -2498,17 +2502,14 @@ def editar_items_venta(venta_id):
     nuevos_items = data.get('items', [])
 
     try:
-        # 1. Revertir stock de items actuales
         detalles_actuales = VentaDetalle.query.filter_by(venta_id=venta.id).all()
         for d in detalles_actuales:
             prod = Producto.query.get(d.producto_id)
             if prod:
-                prod.cantidad += d.cantidad  # Devolvemos al inventario
+                prod.cantidad += d.cantidad
         
-        # Borramos detalles viejos
         VentaDetalle.query.filter_by(venta_id=venta.id).delete()
 
-        # 2. Insertar nuevos items y descontar stock
         nuevo_total = 0.0
         for item in nuevos_items:
             pid = int(item['id'])
@@ -2523,7 +2524,7 @@ def editar_items_venta(venta_id):
             if prod.cantidad < cant:
                 raise Exception(f"Stock insuficiente para {prod.nombre} (Hay {prod.cantidad})")
             
-            prod.cantidad -= cant  # Descontamos nuevo stock
+            prod.cantidad -= cant
             
             nuevo_det = VentaDetalle(
                 venta_id=venta.id,
@@ -2543,13 +2544,9 @@ def editar_items_venta(venta_id):
         db.session.rollback()
         return jsonify({'error': str(e)}), 400
 
-
 @app.route('/api/venta/editar_info/<int:venta_id>', methods=['POST'])
 @login_required
 def editar_info_venta(venta_id):
-    """
-    Actualiza vendedor, cliente y el desglose de pagos (JSON) sin tocar stock.
-    """
     if current_user.rol.lower() != 'administrador':
         return jsonify({'error': 'No autorizado'}), 403
 
@@ -2567,8 +2564,6 @@ def editar_info_venta(venta_id):
         db.session.rollback()
         return jsonify({'error': str(e)}), 400
 
-
-# ✅ NUEVA FUNCIÓN AGREGADA PARA LA PISTOLA Y EL BUSCADOR
 @app.route('/api/productos/buscar')
 @login_required
 def buscar_productos_api():
@@ -2576,8 +2571,6 @@ def buscar_productos_api():
     if not query:
         return jsonify([])
 
-    # Busca por Nombre (parecido) O por Código exacto
-    # Limitamos a 10 resultados para que sea rápido
     productos = Producto.query.filter(
         (Producto.nombre.ilike(f'%{query}%')) |
         (Producto.codigo.ilike(f'{query}%'))
@@ -2595,7 +2588,6 @@ def buscar_productos_api():
         })
     
     return jsonify(resultados)
-
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)

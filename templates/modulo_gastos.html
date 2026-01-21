@@ -1,366 +1,173 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Módulo de Gastos • ✨</title>
+{% extends 'base.html' %}
 
-  <style>
-    :root{
-      --pink-1:#ff8c94;
-      --pink-2:#ffb3d1;
-      --pink-3:#ffe2f0;
-      --lila-1:#b39ddb;
-      --lila-2:#e6ceff;
-      --gold-1:#ffc72c;
-      --gold-2:#ffdb70;
-      --ink:#2a1f2d;
-      --muted:#6b5a6e;
-      --card:#ffffff;
-      --line:rgba(255, 170, 200, 0.35);
-      --shadow: 0 10px 28px rgba(255, 140, 180, 0.22);
-      --shadow-soft: 0 6px 18px rgba(255, 140, 180, 0.16);
-    }
-
-    *{ box-sizing:border-box; }
-    body{
-      margin:0;
-      font-family: 'Quicksand', 'Segoe UI', Arial, sans-serif;
-      color:var(--ink);
-      background:
-        radial-gradient(circle at 10% 10%, rgba(255,180,210,.35), transparent 40%),
-        radial-gradient(circle at 90% 20%, rgba(230,206,255,.45), transparent 45%),
-        radial-gradient(circle at 50% 90%, rgba(255,219,112,.25), transparent 45%),
-        #faf7fb;
-      padding: 20px;
-    }
-
-    .hero{
-      max-width: 1200px;
-      margin: 0 auto 16px auto;
-      padding: 20px 25px;
-      border-radius: 20px;
-      background: linear-gradient(135deg, rgba(255,140,148,.25), rgba(179,157,219,.25));
-      border: 2px solid var(--line);
-      box-shadow: var(--shadow);
-      position: relative;
-      overflow:hidden;
-    }
-    .hero h1{
-      margin:0;
-      font-size: 24px;
-      display:flex;
-      align-items:center;
-      gap:12px;
-    }
-    .sparkle{
-      display:inline-grid;
-      place-items:center;
-      width:38px; height:38px;
-      border-radius: 12px;
-      background: white;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-    }
-    .hero p{
-      margin:8px 0 0 50px;
-      color: var(--muted);
-      font-size: 14px;
-    }
-
-    .wrap{
-      max-width: 1200px;
-      margin: 0 auto;
-      display:grid;
-      gap:20px;
-    }
-
-    .card{
-      background: var(--card);
-      border-radius: 20px;
-      border: 2px solid var(--line);
-      box-shadow: var(--shadow-soft);
-      padding: 24px;
-    }
-
-    .card-title{
-      margin: 0 0 15px 0;
-      font-size: 18px;
-      font-weight: 700;
-      color: #9c0277;
-      display:flex;
-      align-items:center;
-      gap:10px;
-    }
-
-    .form-row{
-      display:grid;
-      grid-template-columns: 1.2fr 1.8fr 1fr 1fr auto;
-      gap:15px;
-      align-items:end;
-    }
-
-    input, select, button{
-      padding: 12px;
-      border-radius: 12px;
-      border: 1px solid rgba(0,0,0,0.08);
-      outline: none;
-      font-size: 14px;
-      background:#fff;
-      transition: 0.3s;
-    }
-    input:focus, select:focus{
-      border-color: var(--pink-1);
-      box-shadow: 0 0 0 4px rgba(255, 179, 209, 0.2);
-    }
-
-    .btn-primary{
-      background: linear-gradient(135deg, #ff7fc8, #9c0277);
-      color:#fff;
-      font-weight: 700;
-      cursor: pointer;
-      border: none;
-      box-shadow: 0 5px 15px rgba(156,2,119,0.2);
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 12px 25px;
-      text-decoration: none;
-    }
-    .btn-primary:hover{ transform: translateY(-2px); filter: brightness(1.1); }
-
-    /* ESTILOS DE LA TABLA CON DIFERENCIACIÓN */
-    .table-wrap{
-      background: white;
-      border-radius: 20px;
-      overflow:auto;
-      padding: 10px;
-      border: 1px solid var(--line);
-    }
-
-    table{
-      width:100%;
-      border-collapse: separate;
-      border-spacing: 0 8px;
-      font-size: 14px;
-      min-width: 1000px;
-    }
-    thead th{
-      background: #2a1f2d;
-      color:#fff;
-      padding: 15px;
-      border-radius: 12px;
-      font-weight: 600;
-    }
-
-    /* Filas Alternas (Efecto Cebra Coquette) */
-    tbody tr:nth-child(odd) { background: #ffffff; }
-    tbody tr:nth-child(even) { background: #fff5f8; }
-
-    tbody tr:hover{
-      background: #f3edff !important;
-      transition: 0.2s;
-    }
-
-    td{
-      padding: 16px 10px;
-      text-align:center;
-      vertical-align: middle;
-      border-top: 1px solid rgba(255, 170, 200, 0.1);
-      border-bottom: 1px solid rgba(255, 170, 200, 0.1);
-    }
-
-    td:first-child { border-radius: 15px 0 0 15px; border-left: 1px solid rgba(255, 170, 200, 0.1); }
-    td:last-child { border-radius: 0 15px 15px 0; border-right: 1px solid rgba(255, 170, 200, 0.1); }
-
-    .badge-saldo{ padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 800; }
-    .saldo-ok{ background: #e8f5e9; color:#1b7f2a; }
-    .saldo-pend{ background: #ffebee; color:#b00020; }
-
-    /* --- BOTONES CON NOMBRE (ESTILO PROVEEDORES) --- */
-    .action-group {
-      display: flex;
-      justify-content: center;
-      gap: 12px;
-      margin-top: 15px;
-      padding-top: 12px;
-      border-top: 1px solid #f5f5f5;
-    }
-
-    .btn-action-label {
-      padding: 8px 14px;
-      border-radius: 12px;
-      border: 1px solid #eee;
-      background: white;
-      text-decoration: none;
-      transition: 0.3s;
-      cursor: pointer;
-      font-size: 12px;
-      font-weight: 700;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .btn-edit-glow { color: #42a5f5; }
-    .btn-edit-glow:hover { background: #e3f2fd; border-color: #42a5f5; transform: translateY(-2px); }
-
-    .btn-delete-glow { color: #ec407a; }
-    .btn-delete-glow:hover { background: #fce4ec; border-color: #ec407a; transform: translateY(-2px); }
-
-    details.historial{
-      margin-top:10px;
-      background: #fdfbff;
-      border-radius: 12px;
-      padding: 8px;
-      border: 1px solid #eee;
-    }
-    details.historial summary{ cursor:pointer; font-weight: 700; color:#6a1b9a; font-size: 13px; list-style: none; }
-
-    .muted{ color:var(--muted); font-size: 11px; font-weight: 800; margin-bottom: 5px; display: block; }
-  </style>
-</head>
-
-<body>
-
-  <div class="hero">
-    <h1><span class="sparkle">🧾</span> Módulo de Gastos ✨</h1>
-    <p>• Pagos & Abonos Impecables 💅</p>
-
-    <div class="top-actions">
-      <a class="btn-action-label" href="/" style="border-radius: 999px;">← Volver</a>
-      <a class="btn-primary" style="font-size: 12px; padding: 8px 18px; border-radius: 999px;" href="/exportar_gastos">📤 Exportar Excel</a>
-    </div>
-  </div>
-
-  <div class="wrap">
-    <div class="card">
-      <h2 class="card-title">💌 Registrar Gasto</h2>
-      <form method="POST" action="">
-        <div class="form-row">
-          <div>
-            <label class="muted">CATEGORÍA</label>
-            <select name="categoria" required>
-              <option value="">Seleccionar…</option>
-              <option value="Arriendo">Arriendo</option>
-              <option value="Servicios">Servicios</option>
-              <option value="Aseo">Aseo</option>
-              <option value="Nómina">Nómina</option>
-              <option value="Otros">Otros</option>
-            </select>
-          </div>
-          <div>
-            <label class="muted">CONCEPTO</label>
-            <input type="text" name="concepto" placeholder="Ej: Arriendo Local" required>
-          </div>
-          <div>
-            <label class="muted">VALOR TOTAL</label>
-            <input type="number" step="0.01" name="total" placeholder="0.00" required>
-          </div>
-          <div>
-            <label class="muted">FECHA</label>
-            <input type="date" name="fecha">
-          </div>
-          <button class="btn-primary" type="submit">💾 GUARDAR</button>
-        </div>
-      </form>
-    </div>
-
-    <div class="card">
-      <h2 class="card-title" style="color: #b39ddb;">📌 Historial Detallado</h2>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Fecha Gasto</th>
-              <th>Último Abono</th>
-              <th>Categoría</th>
-              <th>Concepto</th>
-              <th>Total</th>
-              <th>Abonado</th>
-              <th>Saldo</th>
-              <th>Gestión y Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for g in gastos %}
-              {% set total = g.total if g.total is defined else g[3] %}
-              {% set abonado = g.abonado if g.abonado is defined else g[4] %}
-              {% set saldo = total - abonado %}
-              {% set gasto_id = g.id if g.id is defined else g[0] %}
-
-              <tr>
-                <td>{{ (g.fecha_gasto if g.fecha_gasto is defined else g[5]) or '—' }}</td>
-                <td>{{ (g.fecha_ultimo_abono if g.fecha_ultimo_abono is defined else g[6]) or '—' }}</td>
-                <td><strong>{{ g.categoria if g.categoria is defined else g[1] }}</strong></td>
-                <td>{{ g.concepto if g.concepto is defined else g[2] }}</td>
-                <td style="font-weight: 700;">${{ "%.2f"|format(total) }}</td>
-                <td style="color: #2e7d32; font-weight: 700;">${{ "%.2f"|format(abonado) }}</td>
-                <td>
-                  <span class="badge-saldo {{ 'saldo-ok' if saldo <= 0 else 'saldo-pend' }}">
-                    ${{ "%.2f"|format(saldo) }}
-                  </span>
-                </td>
-
-                <td style="min-width: 350px;">
-                  {% if saldo > 0 %}
-                    <form method="POST" action="/abonar_gasto/{{ gasto_id }}" style="display:flex; gap:5px; justify-content:center; margin-bottom:10px;">
-                      <input type="number" step="0.01" name="monto" max="{{ saldo }}" placeholder="Monto" required style="width:90px; padding:8px;">
-                      <select name="medio" required style="padding:8px; font-size:12px;">
-                        <option value="Efectivo">Efectivo</option>
-                        <option value="Transferencia">Transferencia</option>
-                        <option value="Nequi">Nequi</option>
-                      </select>
-                      <button class="btn-primary" type="submit" style="font-size: 11px; padding: 6px 12px;">Abonar o Saldar</button>
-                    </form>
-                  {% else %}
-                    <div style="color: #2e7d32; font-weight: 800; margin-bottom:10px;">PAGADO ✅</div>
-                  {% endif %}
-
-                  <details class="historial">
-                    <summary>📋 Ver Abonos</summary>
-                    {% set ns = namespace(found=false) %}
-                    {% for a in abonos_gastos %}
-                      {% set a_gasto_id = a.gasto_id if a.gasto_id is defined else a[0] %}
-                      {% if a_gasto_id == gasto_id %}
-                        {% set ns.found = true %}
-                        <div class="hist-item">
-                          <span>{{ a.fecha if a.fecha is defined else a[3] }}</span>
-                          <strong>${{ "%.2f"|format(a.monto if a.monto is defined else a[1]) }}</strong>
-                          <span style="color: #666;">({{ a.medio_pago if a.medio_pago is defined else a[2] }})</span>
-                        </div>
-                      {% endif %}
-                    {% endfor %}
-                    {% if not ns.found %}<div style="padding: 5px; color:#999;">Sin abonos</div>{% endif %}
-                  </details>
-
-                  <div class="action-group">
-                    <a href="/editar_gasto/{{ gasto_id }}" class="btn-action-label btn-edit-glow">
-                      ✏️ Editar
+{% block content %}
+<div class="container-fluid mt-4 px-4" style="background-color: #fef7f9; min-height: 100vh; font-family: 'Quicksand', sans-serif;">
+    
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="p-4 shadow-sm border-0 d-flex justify-content-between align-items-center" 
+                 style="background: linear-gradient(135deg, #fff0f5 0%, #ffe4e1 100%); border-radius: 20px; border: 1px solid #ffd1dc !important;">
+                <div>
+                    <h2 style="color: #d63384; font-weight: 800; margin: 0;">🧾 Gestión de Gastos ✨</h2>
+                    <p class="text-muted mb-0">Control de egresos, pagos y servicios de la tienda</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-light fw-bold text-secondary shadow-sm" style="border-radius: 50px; border: 1px solid #eee;">
+                        <i class="fas fa-arrow-left me-1"></i> Volver
                     </a>
-                    <form method="POST" action="/eliminar_gasto/{{ gasto_id }}" style="display:inline;">
-                      <button type="submit" class="btn-action-label btn-delete-glow" onclick="return confirm('¿Borrar este gasto?')">
-                        🗑️ Eliminar
-                      </button>
-                    </form>
-                  </div>
-                </td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
+                    <a href="{{ url_for('exportar_gastos') }}" class="btn text-white fw-bold shadow-sm" 
+                       style="background: #28a745; border-radius: 50px; border: none;">
+                        <i class="fas fa-file-excel me-1"></i> EXPORTAR A EXCEL
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
 
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      document.querySelectorAll("[data-confirm]").forEach((el) => {
-        el.addEventListener("click", (e) => {
-          if (!confirm(el.getAttribute("data-confirm") || "¿Seguro?")) e.preventDefault();
-        });
-      });
-    });
-  </script>
+    <div class="row">
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow-sm border-0 p-4" style="border-radius: 25px;">
+                <h4 class="mb-4" style="color: #c71585; font-weight: 700; border-bottom: 2px solid #f8bbd0; padding-bottom: 10px;">
+                    💌 Nuevo Gasto
+                </h4>
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-uppercase text-muted">Categoría</label>
+                        <select name="categoria" class="form-select border-0 bg-light" required style="border-radius: 12px; padding: 12px;">
+                            <option value="">Seleccionar...</option>
+                            <option value="Arriendo">Arriendo</option>
+                            <option value="Servicios">Servicios</option>
+                            <option value="Aseo">Aseo</option>
+                            <option value="Nómina">Nómina</option>
+                            <option value="Otros">Otros</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-uppercase text-muted">Concepto</label>
+                        <input type="text" name="concepto" class="form-control border-0 bg-light" placeholder="Ej: Pago Luz" required style="border-radius: 12px; padding: 12px;">
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-uppercase text-muted">Total ($)</label>
+                            <input type="number" step="0.01" name="total" class="form-control border-0 bg-light" placeholder="0.00" required style="border-radius: 12px; padding: 12px;">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-uppercase text-muted">Fecha</label>
+                            <input type="date" name="fecha" class="form-control border-0 bg-light" style="border-radius: 12px; padding: 12px;">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn w-100 text-white fw-bold py-3 mt-2 shadow" 
+                            style="background: linear-gradient(45deg, #ff69b4, #c71585); border-radius: 50px; border: none;">
+                        💾 GUARDAR GASTO
+                    </button>
+                </form>
+            </div>
+        </div>
 
-</body>
-</html>
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0 p-0" style="border-radius: 25px; overflow: hidden;">
+                <div class="p-4 bg-white">
+                    <h4 style="color: #c71585; font-weight: 700; margin: 0;">📌 Historial de Gastos</h4>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead style="background-color: #2a1f2d; color: white;">
+                            <tr>
+                                <th class="ps-4">Fecha</th>
+                                <th>Categoría</th>
+                                <th>Concepto</th>
+                                <th class="text-center">Total</th>
+                                <th class="text-center">Saldo</th>
+                                <th class="text-center pe-4">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody style="background-color: white;">
+                            {% for g in gastos %}
+                            {% set total = g.total %}
+                            {% set abonado = g.abonado %}
+                            {% set saldo = total - abonado %}
+                            <tr>
+                                <td class="ps-4 small text-muted">
+                                    {{ g.fecha_gasto }}<br>
+                                    <span style="font-size: 10px;">Ult: {{ g.fecha_ultimo_abono or 'N/A' }}</span>
+                                </td>
+                                <td><span class="badge rounded-pill" style="background-color: #ffe4e1; color: #d63384;">{{ g.categoria }}</span></td>
+                                <td class="fw-bold">{{ g.concepto }}</td>
+                                <td class="text-center fw-bold text-dark">${{ total | format_number }}</td>
+                                <td class="text-center">
+                                    {% if saldo <= 0 %}
+                                        <span class="badge bg-success rounded-pill px-3">PAGADO ✅</span>
+                                    {% else %}
+                                        <span class="badge rounded-pill px-3" style="background-color: #fff0f5; color: #dc3545; border: 1px solid #ffb6c1;">
+                                            Pend: ${{ saldo | format_number }}
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center pe-4">
+                                    <div class="d-flex justify-content-center gap-2">
+                                        <button class="btn btn-sm shadow-sm" style="background-color: #f3f4f6; border-radius: 10px;" 
+                                                type="button" data-bs-toggle="collapse" data-bs-target="#abono{{ g.id }}">
+                                            <i class="fas fa-hand-holding-usd text-primary"></i>
+                                        </button>
+                                        <a href="{{ url_for('editar_gasto', gasto_id=g.id) }}" class="btn btn-sm shadow-sm" style="background-color: #f3f4f6; border-radius: 10px;">
+                                            <i class="fas fa-edit text-info"></i>
+                                        </a>
+                                        <form method="POST" action="{{ url_for('eliminar_gasto', gasto_id=g.id) }}" style="display:inline;">
+                                            <button type="submit" class="btn btn-sm shadow-sm" style="background-color: #f3f4f6; border-radius: 10px;" onclick="return confirm('¿Eliminar gasto?')">
+                                                <i class="fas fa-trash text-danger"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr class="collapse" id="abono{{ g.id }}">
+                                <td colspan="6" class="bg-light p-3" style="border-radius: 15px;">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-6">
+                                            <h6 class="fw-bold small mb-2 text-primary">HISTORIAL DE ABONOS</h6>
+                                            {% for a in abonos_gastos if a.gasto_id == g.id %}
+                                                <div class="small text-muted mb-1">
+                                                    📅 {{ a.fecha }} - <b>${{ a.monto | format_number }}</b> ({{ a.medio_pago }})
+                                                </div>
+                                            {% else %}
+                                                <div class="small text-muted italic">No hay abonos registrados</div>
+                                            {% endfor %}
+                                        </div>
+                                        <div class="col-md-6 border-start">
+                                            {% if saldo > 0 %}
+                                            <form method="POST" action="/abonar_gasto/{{ g.id }}">
+                                                <div class="input-group input-group-sm">
+                                                    <input type="number" step="0.01" name="monto" max="{{ saldo }}" class="form-control" placeholder="Monto" required>
+                                                    <select name="medio" class="form-select">
+                                                        <option value="Efectivo">Efectivo</option>
+                                                        <option value="Transferencia">Transferencia</option>
+                                                        <option value="Nequi">Nequi</option>
+                                                    </select>
+                                                    <button class="btn btn-primary" type="submit">Saldar</button>
+                                                </div>
+                                            </form>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .table th { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
+    .table td { border-bottom: 1px solid #f9f9f9; padding-top: 15px; padding-bottom: 15px; }
+    .form-control:focus, .form-select:focus {
+        background-color: #fff !important;
+        box-shadow: 0 0 0 0.25rem rgba(255, 105, 180, 0.25) !important;
+        border: 1px solid #ff69b4 !important;
+    }
+    .btn:hover { transform: translateY(-2px); transition: 0.2s; }
+</style>
+{% endblock %}

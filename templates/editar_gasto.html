@@ -1,238 +1,233 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Editar Gasto • ✨</title>
+{% extends 'base.html' %}
 
-  <style>
+{% block content %}
+<style>
     :root {
-      --pink-glow: #ff8c94;
-      --pink-soft: #ffb3d1;
-      --pink-bg: #ffe2f0;
-      --purple-nails: #9c0277;
-      --purple-vibes: #b39ddb;
-      --glass: rgba(255, 255, 255, 0.9);
-      --shadow-color: rgba(255, 140, 180, 0.25);
+        --pink-glow: #ff8c94;
+        --pink-soft: #ffb3d1;
+        --pink-bg: #ffe2f0;
+        --purple-nails: #9c0277;
+        --purple-vibes: #b39ddb;
+        --glass: rgba(255, 255, 255, 0.9);
+        --shadow-color: rgba(255, 140, 180, 0.25);
     }
 
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: 'Quicksand', 'Segoe UI', sans-serif;
-      background: 
-        radial-gradient(circle at 15% 15%, var(--pink-bg), transparent 35%),
-        radial-gradient(circle at 85% 25%, var(--purple-vibes), transparent 40%),
-        radial-gradient(circle at 50% 85%, #fff9c4, transparent 40%),
-        #faf7fb;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    /* Fondo general suave */
+    .edit-page-container {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #fef7f9;
+        font-family: 'Quicksand', sans-serif;
+        padding: 20px;
     }
 
     .card-edit {
-      max-width: 500px;
-      width: 90%;
-      background: var(--glass);
-      backdrop-filter: blur(15px);
-      -webkit-backdrop-filter: blur(15px);
-      border-radius: 30px;
-      padding: 35px;
-      border: 3px solid white;
-      box-shadow: 
-        0 20px 40px var(--shadow-color),
-        inset 0 0 15px rgba(255, 255, 255, 0.5);
-      position: relative;
+        max-width: 500px;
+        width: 100%;
+        background: var(--glass);
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        border-radius: 35px;
+        padding: 40px;
+        border: 4px solid white;
+        box-shadow: 0 20px 40px var(--shadow-color);
+        position: relative;
     }
 
+    /* El tag de moñitos que tanto te gusta 🎀 */
     .header-tag {
-      position: absolute;
-      top: -15px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: white;
-      padding: 6px 20px;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 800;
-      color: var(--pink-glow);
-      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-      white-space: nowrap;
-      border: 1px solid var(--pink-soft);
+        position: absolute;
+        top: -18px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: white;
+        padding: 8px 25px;
+        border-radius: 999px;
+        font-size: 13px;
+        font-weight: 800;
+        color: var(--purple-nails);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        border: 2px solid #ffe4e1;
+        white-space: nowrap;
     }
 
     h2 {
-      margin-top: 10px;
-      color: var(--purple-nails);
-      font-size: 24px;
-      text-align: center;
-      letter-spacing: -0.5px;
+        color: var(--purple-nails);
+        font-weight: 800;
+        text-align: center;
+        margin-top: 10px;
+        margin-bottom: 5px;
     }
 
     .subtitle {
-      text-align: center;
-      font-size: 13px;
-      color: #7a7a7a;
-      margin-bottom: 25px;
+        text-align: center;
+        font-size: 14px;
+        color: #888;
+        margin-bottom: 30px;
     }
 
-    .input-box { margin-bottom: 20px; }
-
     label {
-      display: block;
-      font-weight: 700;
-      color: #6a1b9a;
-      font-size: 13px;
-      margin-bottom: 8px;
-      margin-left: 10px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+        display: block;
+        font-weight: 700;
+        color: #9c0277;
+        font-size: 12px;
+        margin-bottom: 8px;
+        margin-left: 10px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
     }
 
     input, select {
-      width: 100%;
-      padding: 14px 18px;
-      border-radius: 18px;
-      border: 1px solid rgba(0, 0, 0, 0.05);
-      background: #fdfbff;
-      outline: none;
-      font-size: 15px;
-      box-sizing: border-box;
-      transition: 0.3s;
-      color: #444;
+        width: 100%;
+        padding: 15px 20px;
+        border-radius: 20px;
+        border: 2px solid transparent;
+        background: #fdf2f7;
+        outline: none;
+        font-size: 15px;
+        transition: 0.3s;
+        color: #444;
+        margin-bottom: 20px;
     }
 
     input:focus, select:focus {
-      border-color: var(--pink-soft);
-      background: white;
-      box-shadow: 0 0 0 5px rgba(255, 179, 209, 0.3);
+        border-color: var(--pink-soft);
+        background: white;
+        box-shadow: 0 0 0 5px rgba(255, 179, 209, 0.3);
     }
 
     .grid-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 15px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
     }
 
     .actions {
-      display: flex;
-      gap: 15px;
-      margin-top: 30px;
+        display: flex;
+        gap: 15px;
+        margin-top: 20px;
     }
 
-    .btn {
-      flex: 1;
-      padding: 14px;
-      border-radius: 18px;
-      border: none;
-      cursor: pointer;
-      font-weight: 800;
-      font-size: 14px;
-      transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      text-align: center;
-      text-decoration: none;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
+    .btn-custom {
+        flex: 1;
+        padding: 15px;
+        border-radius: 50px;
+        border: none;
+        font-weight: 800;
+        font-size: 14px;
+        text-align: center;
+        text-decoration: none;
+        transition: 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        cursor: pointer;
     }
 
-    .btn-save {
-      background: linear-gradient(135deg, #ff7fc8, #9c0277);
-      color: white;
-      box-shadow: 0 10px 25px rgba(156, 2, 119, 0.3);
-    }
-
-    .btn-save:hover {
-      transform: translateY(-3px) scale(1.02);
-      filter: brightness(1.1);
-    }
-
+    /* Botón Cancelar - Limpio y seguro */
     .btn-cancel {
-      background: #fff;
-      color: #888;
-      border: 1px solid #eee;
+        background: #f8f9fa;
+        color: #888;
+        border: 1px solid #eee;
     }
 
     .btn-cancel:hover {
-      background: #f5f5f5;
-      color: #444;
+        background: #eee;
+        color: #444;
+        transform: translateY(-2px);
+    }
+
+    /* Botón Guardar - Degradado espectacular */
+    .btn-save {
+        background: linear-gradient(135deg, #ff69b4, #9c0277);
+        color: white;
+        box-shadow: 0 10px 20px rgba(156, 2, 119, 0.2);
+    }
+
+    .btn-save:hover {
+        transform: translateY(-3px);
+        filter: brightness(1.1);
+        box-shadow: 0 12px 25px rgba(156, 2, 119, 0.3);
     }
 
     .id-footer {
-      text-align: center;
-      font-size: 10px;
-      color: #ccc;
-      margin-top: 20px;
-      text-transform: uppercase;
-      letter-spacing: 2px;
+        text-align: center;
+        font-size: 11px;
+        color: #bbb;
+        margin-top: 25px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
     }
 
     @media(max-width:500px){
-      .grid-row { grid-template-columns: 1fr; }
+        .grid-row { grid-template-columns: 1fr; }
     }
-  </style>
-</head>
+</style>
 
-<body>
-  <div class="card-edit">
-    <div class="header-tag">🎀EDICION🎀</div>
-    
-    <h2>Editar Gasto ✨</h2>
-    <div class="subtitle">Ajusta los detalles para mantener tus cuentas impecables</div>
+<div class="edit-page-container">
+    <div class="card-edit">
+        <div class="header-tag">🎀 EDICIÓN DE GASTO 🎀</div>
+        
+        <h2>Editar Gasto ✨</h2>
+        <div class="subtitle">Ajusta los detalles para tus cuentas impecables</div>
 
-    <form method="POST">
-      <div class="grid-row">
-        <div class="input-box">
-          <label>Categoría</label>
-          <select name="categoria" required>
-            {# Extraemos la categoría actual con seguridad #}
-            {% set cat = gasto['categoria'] if gasto.categoria is defined else gasto[1] %}
-            
-            <option value="Arriendo" {{ "selected" if cat == "Arriendo" else "" }}>Arriendo</option>
-            <option value="Servicios" {{ "selected" if cat == "Servicios" else "" }}>Servicios</option>
-            <option value="Aseo" {{ "selected" if cat == "Aseo" else "" }}>Aseo</option>
-            <option value="Nómina" {{ "selected" if cat == "Nómina" else "" }}>Nómina</option>
-            <option value="Otros" {{ "selected" if cat == "Otros" else "" }}>Otros ✨</option>
-          </select>
-        </div>
+        <form method="POST">
+            <div class="grid-row">
+                <div class="input-box">
+                    <label>Categoría</label>
+                    <select name="categoria" required>
+                        {# Manejo de datos para que siempre cargue la categoría correcta #}
+                        {% set cat = gasto.categoria if gasto.categoria is defined else gasto[1] %}
+                        <option value="Arriendo" {{ "selected" if cat == "Arriendo" else "" }}>Arriendo</option>
+                        <option value="Servicios" {{ "selected" if cat == "Servicios" else "" }}>Servicios</option>
+                        <option value="Aseo" {{ "selected" if cat == "Aseo" else "" }}>Aseo</option>
+                        <option value="Nómina" {{ "selected" if cat == "Nómina" else "" }}>Nómina</option>
+                        <option value="Otros" {{ "selected" if cat == "Otros" else "" }}>Otros ✨</option>
+                    </select>
+                </div>
 
-        <div class="input-box">
-          <label>Fecha</label>
-          {% set fecha = gasto['fecha_gasto'] if gasto.fecha_gasto is defined else gasto[5] %}
-          <input type="date" name="fecha" value="{{ fecha or '' }}">
-        </div>
-      </div>
+                <div class="input-box">
+                    <label>Fecha</label>
+                    {% set fecha = gasto.fecha if gasto.fecha is defined else gasto[5] %}
+                    <input type="date" name="fecha" value="{{ fecha }}">
+                </div>
+            </div>
 
-      <div class="input-box">
-        <label>Concepto de Pago</label>
-        {% set conc = gasto['concepto'] if gasto.concepto is defined else gasto[2] %}
-        <input type="text" name="concepto" value="{{ conc }}" placeholder="¿Qué pagamos hoy?" required>
-      </div>
+            <div class="input-box">
+                <label>Concepto de Pago</label>
+                {% set conc = gasto.concepto if gasto.concepto is defined else gasto[2] %}
+                <input type="text" name="concepto" value="{{ conc }}" placeholder="¿Qué pagamos hoy?" required>
+            </div>
 
-      <div class="input-box">
-        <label>Valor Total ($)</label>
-        {% set tot = gasto['total'] if gasto.total is defined else gasto[3] %}
-        <input type="number" step="0.01" name="total" value="{{ tot }}" placeholder="0.00" required>
-      </div>
+            <div class="input-box">
+                <label>Valor Total ($)</label>
+                {% set tot = gasto.total if gasto.total is defined else gasto[3] %}
+                <input type="number" step="0.01" name="total" value="{{ tot }}" placeholder="0.00" required>
+            </div>
 
-      <div class="actions">
-        <a href="{{ url_for('gastos') }}" class="btn btn-cancel">Cancelar</a>
-        <button type="submit" class="btn btn-save">💾 Guardar Cambios</button>
-      </div>
-    </form>
+            <div class="actions">
+                <a href="{{ url_for('gastos') }}" class="btn-custom btn-cancel">
+                    <i class="fas fa-times"></i> Cancelar
+                </a>
+                <button type="submit" class="btn-custom btn-save">
+                    <i class="fas fa-save"></i> Guardar Cambios
+                </button>
+            </div>
+        </form>
 
-    <div class="id-footer">Registro ID #{{ gasto['id'] or gasto[0] }}</div>
-  </div>
+        <div class="id-footer">Registro ID #{{ gasto.id if gasto.id is defined else gasto[0] }}</div>
+    </div>
+</div>
 
-  <script>
-    // Pequeño script para asegurar que el botón de guardar brille al hacer clic
+<script>
+    // Efecto visual al guardar
     document.querySelector('form').addEventListener('submit', function() {
-      const btn = document.querySelector('.btn-save');
-      btn.innerHTML = '✨ Guardando...';
-      btn.style.opacity = '0.7';
+        const btn = document.querySelector('.btn-save');
+        btn.innerHTML = '<i class="fas fa-magic"></i> Guardando...';
+        btn.style.opacity = '0.8';
     });
-  </script>
-</body>
-</html>l>
+</script>
+{% endblock %}

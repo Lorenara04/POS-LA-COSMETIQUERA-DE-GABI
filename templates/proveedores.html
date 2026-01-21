@@ -1,248 +1,170 @@
-{% extends "base.html" %}
-
-{% block title %}Módulo de Costos • Facturas{% endblock %}
-{% block page %}Gastos y Costos{% endblock %}
+{% extends 'base.html' %}
 
 {% block content %}
-
-<style>
-  :root{
-    --pink-1:#ff8c94;
-    --pink-2:#ffb3d1;
-    --pink-3:#ffe2f0;
-    --lila-1:#b39ddb;
-    --lila-2:#e6ceff;
-    --purple-nails:#9c0277;
-    --ink:#2a1f2d;
-    --line:rgba(255, 170, 200, 0.35);
-  }
-
-  .page-costos{
-    font-family: 'Quicksand', 'Segoe UI', sans-serif;
-    background: radial-gradient(circle at 10% 10%, rgba(255,180,210,.35), transparent 40%), #faf7fb;
-    padding: 20px;
-    border-radius: 18px;
-  }
-
-  /* HERO HEADER */
-  .hero{
-    max-width: 1200px;
-    margin: 0 auto 16px auto;
-    padding: 25px;
-    border-radius: 20px;
-    background: linear-gradient(135deg, rgba(255,140,148,.25), rgba(179,157,219,.25));
-    border: 2px solid var(--line);
-    box-shadow: 0 10px 25px rgba(255, 140, 180, 0.15);
-  }
-
-  .top-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 15px; }
-  
-  .btn-nav {
-    padding: 10px 18px;
-    border-radius: 15px;
-    font-weight: 700;
-    font-size: 13px;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    transition: 0.3s;
-    border: 1px solid white;
-    background: white;
-    color: #444;
-  }
-
-  /* --- ESTILOS DE LA TABLA CON COLORES DIFERENCIADOS --- */
-  .table-wrap{ 
-    background: white; 
-    border-radius: 20px; 
-    padding: 15px; 
-    overflow:auto;
-    border: 1px solid var(--line);
-  }
-
-  table{ width:100%; border-collapse: separate; border-spacing: 0 8px; min-width: 1000px; }
-
-  thead th{ 
-    background: #2a1f2d; 
-    color:#fff; 
-    padding: 15px; 
-    border-radius: 12px; 
-    font-size: 12px; 
-    text-transform: uppercase;
-  }
-
-  /* Filas Impares (Blancas) */
-  tbody tr:nth-child(odd) {
-    background: #ffffff;
-  }
-
-  /* Filas Pares (Rosa/Lila muy suave para diferenciar) */
-  tbody tr:nth-child(even) {
-    background: #fff5f8; /* Un rosa sutil */
-  }
-
-  /* Efecto al pasar el mouse */
-  tbody tr:hover {
-    background: #f3edff !important; /* Un lila suave al resaltar */
-    transform: scale(1.002);
-    transition: 0.2s;
-  }
-
-  td {
-    padding: 15px 10px;
-    text-align: center;
-    border-top: 1px solid rgba(255, 170, 200, 0.1);
-    border-bottom: 1px solid rgba(255, 170, 200, 0.1);
-  }
-
-  /* Bordes redondeados para las celdas de los extremos */
-  td:first-child { border-left: 1px solid rgba(255, 170, 200, 0.1); border-radius: 15px 0 0 15px; }
-  td:last-child { border-right: 1px solid rgba(255, 170, 200, 0.1); border-radius: 0 15px 15px 0; }
-
-  /* BOTONES DE ACCIÓN */
-  .action-group {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    margin-top: 15px;
-    padding-top: 10px;
-    border-top: 1px solid #f5f5f5;
-  }
-
-  .btn-label {
-    padding: 8px 14px;
-    border-radius: 12px;
-    background: white;
-    border: 1px solid #eee;
-    font-size: 12px;
-    font-weight: 700;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    text-decoration: none;
-    color: #444;
-  }
-</style>
-
-<div class="page-costos">
-
-  <div class="hero">
-    <h1><span style="background:white; padding:8px; border-radius:12px;">✨</span> Módulo de Costos</h1>
-    <p style="color:#666; margin-left:55px;">Facturas & Abonos</p>
-
-    <div class="top-actions">
-      <a class="btn-nav" href="{{ url_for('dashboard') }}">🏠 Menú Principal</a>
-      <a class="btn-nav" href="{{ url_for('gastos') }}">💸 Gastos Diarios</a>
-      <a class="btn-nav" style="background: linear-gradient(135deg, #ff7fc8, #9c0277); color:white; border:none;" href="{{ url_for('exportar_proveedores') }}">📤 Exportar Excel</a>
-    </div>
-  </div>
-
-  <div class="wrap" style="max-width:1200px; margin:0 auto;">
+<div class="container-fluid mt-4 px-4" style="background-color: #fef7f9; min-height: 100vh; font-family: 'Quicksand', sans-serif;">
     
-    <div class="card" style="background:white; border-radius:22px; padding:25px; margin-bottom:20px; border:2px solid var(--line); box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
-      <h2 style="margin:0 0 20px 0; font-size:18px; color:var(--purple-nails);">💌 Registrar Factura</h2>
-      <form method="POST" action="">
-        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr auto; gap:15px; align-items:end;">
-          <div>
-            <label style="font-size:11px; font-weight:800; color:#888;">N° FACTURA</label>
-            <input type="text" name="numero" required style="width:100%; border-radius:12px; padding:10px; border:1px solid #eee;">
-          </div>
-          <div>
-            <label style="font-size:11px; font-weight:800; color:#888;">PROVEEDOR</label>
-            <input type="text" name="proveedor" required style="width:100%; border-radius:12px; padding:10px; border:1px solid #eee;">
-          </div>
-          <div>
-            <label style="font-size:11px; font-weight:800; color:#888;">TOTAL</label>
-            <input type="number" step="0.01" name="total" required style="width:100%; border-radius:12px; padding:10px; border:1px solid #eee;">
-          </div>
-          <div>
-            <label style="font-size:11px; font-weight:800; color:#888;">FECHA</label>
-            <input type="date" name="fecha" style="width:100%; border-radius:12px; padding:10px; border:1px solid #eee;">
-          </div>
-          <button type="submit" style="background: linear-gradient(135deg, #ff7fc8, #9c0277); color:white; border:none; padding:12px 25px; border-radius:12px; font-weight:700; cursor:pointer;">💾 GUARDAR</button>
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="p-4 shadow-sm border-0 d-flex justify-content-between align-items-center" 
+                 style="background: linear-gradient(135deg, #fff0f5 0%, #f3e5f5 100%); border-radius: 20px; border: 1px solid #ffd1dc !important;">
+                <div>
+                    <h2 style="color: #9c0277; font-weight: 800; margin: 0;">✨ Módulo de Costos</h2>
+                    <p class="text-muted mb-0">Gestión impecable de Facturas y Proveedores 💅</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-light fw-bold text-secondary shadow-sm" style="border-radius: 50px; border: 1px solid #eee;">
+                        <i class="fas fa-home me-1"></i> Inicio
+                    </a>
+                    <a href="{{ url_for('gastos') }}" class="btn btn-light fw-bold text-secondary shadow-sm" style="border-radius: 50px; border: 1px solid #eee;">
+                        <i class="fas fa-receipt me-1"></i> Gastos Diarios
+                    </a>
+                    <a href="{{ url_for('exportar_proveedores') }}" class="btn text-white fw-bold shadow-sm" 
+                       style="background: #28a745; border-radius: 50px; border: none;">
+                        <i class="fas fa-file-excel me-1"></i> EXPORTAR EXCEL
+                    </a>
+                </div>
+            </div>
         </div>
-      </form>
     </div>
 
-    <div class="card" style="background:white; border-radius:22px; padding:25px; border:2px solid var(--line); box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
-      <h2 style="margin:0 0 20px 0; font-size:18px; color:#b39ddb;">🧾 Listado General de Facturas</h2>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Fecha</th>
-              <th>N° Factura</th>
-              <th>Proveedor</th>
-              <th>Total</th>
-              <th>Abonado</th>
-              <th>Saldo</th>
-              <th>Gestión y Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for f in facturas %}
-              {% set total = f.total if f.total is defined else f[3] %}
-              {% set abonado = f.abonado if f.abonado is defined else f[4] %}
-              {% set saldo = total - abonado %}
-              {% set f_id = f.id if f.id is defined else f[0] %}
-              
-              <tr>
-                <td>{{ (f.fecha_factura if f.fecha_factura is defined else f[5]) or '—' }}</td>
-                <td><b>{{ f.numero if f.numero is defined else f[1] }}</b></td>
-                <td>{{ f.proveedor if f.proveedor is defined else f[2] }}</td>
-                <td style="font-weight:700;">${{ "%.2f"|format(total) }}</td>
-                <td style="color:#2e7d32; font-weight:700;">${{ "%.2f"|format(abonado) }}</td>
-                <td>
-                  <span style="padding:5px 12px; border-radius:20px; font-size:11px; font-weight:800; {{ 'background:#e8f5e9; color:#2e7d32;' if saldo <= 0 else 'background:#ffebee; color:#c62828;' }}">
-                    ${{ "%.2f"|format(saldo) }}
-                  </span>
-                </td>
-                <td style="min-width:350px;">
-                  {% if saldo > 0 %}
-                    <form method="POST" action="{{ url_for('abonar', factura_id=f_id) }}" style="display:flex; gap:5px; justify-content:center; margin-bottom:10px;">
-                      <input type="number" step="0.01" name="monto" max="{{ saldo }}" placeholder="Monto" required style="width:80px; padding:6px; border-radius:8px; border:1px solid #ddd;">
-                      <select name="medio" required style="padding:6px; border-radius:8px; border:1px solid #ddd; font-size:11px;">
-                        <option value="Efectivo">Efectivo</option>
-                        <option value="Transferencia">Transferencia</option>
-                        <option value="Nequi">Nequi</option>
-                        <option value="Nequi">Daviplata</option>
-                      </select>
-                      <button type="submit" style="background:linear-gradient(135deg, #ff7fc8, #9c0277); color:white; border:none; padding:6px 12px; border-radius:8px; font-size:11px; cursor:pointer;">Abonar o Saldar</button>
-                    </form>
-                  {% else %}
-                    <div style="color:#1b7f2a; font-weight:800; margin-bottom:5px;">PAGADA ✅</div>
-                  {% endif %}
-
-                  <details style="background:rgba(255,255,255,0.5); border-radius:12px; padding:8px; border:1px solid #eee; text-align:left;">
-                    <summary style="cursor:pointer; font-weight:700; font-size:12px; color:#6a1b9a;">Ver abonos</summary>
-                    {% set ns = namespace(found=false) %}
-                    {% for a in abonos %}
-                      {% set a_f_id = a.factura_id if a.factura_id is defined else a[0] %}
-                      {% if a_f_id == f_id %}
-                        {% set ns.found = true %}
-                        <div style="font-size:11px; padding:4px 0; border-bottom: 1px dashed #eee;">
-                          {{ a.fecha if a.fecha is defined else a[3] }}: <b>${{ "%.2f"|format(a.monto if a.monto is defined else a[1]) }}</b>
+    <div class="row">
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow-sm border-0 p-4" style="border-radius: 25px;">
+                <h4 class="mb-4" style="color: #c71585; font-weight: 700; border-bottom: 2px solid #f8bbd0; padding-bottom: 10px;">
+                    💌 Registrar Factura
+                </h4>
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-uppercase text-muted">N° Factura</label>
+                        <input type="text" name="numero" class="form-control border-0 bg-light" placeholder="Ej: FAC-001" required style="border-radius: 12px; padding: 12px;">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-uppercase text-muted">Proveedor</label>
+                        <input type="text" name="proveedor" class="form-control border-0 bg-light" placeholder="Nombre del proveedor" required style="border-radius: 12px; padding: 12px;">
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-uppercase text-muted">Total ($)</label>
+                            <input type="number" step="0.01" name="total" class="form-control border-0 bg-light" placeholder="0.00" required style="border-radius: 12px; padding: 12px;">
                         </div>
-                      {% endif %}
-                    {% endfor %}
-                    {% if not ns.found %}<div style="color:#999; font-size:11px;">Sin abonos</div>{% endif %}
-                  </details>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-uppercase text-muted">Fecha</label>
+                            <input type="date" name="fecha" class="form-control border-0 bg-light" style="border-radius: 12px; padding: 12px;">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn w-100 text-white fw-bold py-3 mt-2 shadow" 
+                            style="background: linear-gradient(45deg, #ff69b4, #c71585); border-radius: 50px; border: none;">
+                        💾 GUARDAR FACTURA
+                    </button>
+                </form>
+            </div>
+        </div>
 
-                  <div class="action-group">
-                    <a href="{{ url_for('editar_factura', factura_id=f_id) }}" class="btn-label btn-edit-glow">✏️ Editar</a>
-                    <form method="POST" action="{{ url_for('eliminar_factura', factura_id=f_id) }}" style="display:inline;">
-                      <button type="submit" class="btn-label btn-delete-glow" onclick="return confirm('¿Borrar factura?')">🗑️ Eliminar</button>
-                    </form>
-                  </div>
-                </td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0 p-0" style="border-radius: 25px; overflow: hidden;">
+                <div class="p-4 bg-white">
+                    <h4 style="color: #9c0277; font-weight: 700; margin: 0;">🧾 Listado General de Facturas</h4>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead style="background-color: #2a1f2d; color: white;">
+                            <tr>
+                                <th class="ps-4">Fecha</th>
+                                <th>N° Factura</th>
+                                <th>Proveedor</th>
+                                <th class="text-center">Total</th>
+                                <th class="text-center">Saldo</th>
+                                <th class="text-center pe-4">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody style="background-color: white;">
+                            {% for f in facturas %}
+                            {% set total = f.total %}
+                            {% set abonado = f.abonado %}
+                            {% set saldo = total - abonado %}
+                            <tr>
+                                <td class="ps-4 small text-muted">
+                                    {{ f.fecha_factura }}<br>
+                                    <span style="font-size: 10px;">Ult: {{ f.fecha_ultimo_abono or '—' }}</span>
+                                </td>
+                                <td><b class="text-dark">{{ f.numero }}</b></td>
+                                <td><span class="badge rounded-pill" style="background-color: #f3e5f5; color: #7b1fa2;">{{ f.proveedor }}</span></td>
+                                <td class="text-center fw-bold">${{ total | format_number }}</td>
+                                <td class="text-center">
+                                    {% if saldo <= 0 %}
+                                        <span class="badge bg-success rounded-pill px-3">PAGADA ✅</span>
+                                    {% else %}
+                                        <span class="badge rounded-pill px-3" style="background-color: #fff0f5; color: #dc3545; border: 1px solid #ffb6c1;">
+                                            Pend: ${{ saldo | format_number }}
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center pe-4">
+                                    <div class="d-flex justify-content-center gap-2">
+                                        <button class="btn btn-sm shadow-sm" style="background-color: #f3f4f6; border-radius: 10px;" 
+                                                type="button" data-bs-toggle="collapse" data-bs-target="#abonoF{{ f.id }}">
+                                            <i class="fas fa-dollar-sign text-success"></i>
+                                        </button>
+                                        <a href="{{ url_for('editar_factura', factura_id=f.id) }}" class="btn btn-sm shadow-sm" style="background-color: #f3f4f6; border-radius: 10px;">
+                                            <i class="fas fa-edit text-info"></i>
+                                        </a>
+                                        <form method="POST" action="{{ url_for('eliminar_factura', factura_id=f.id) }}" style="display:inline;">
+                                            <button type="submit" class="btn btn-sm shadow-sm" style="background-color: #f3f4f6; border-radius: 10px;" onclick="return confirm('¿Eliminar factura?')">
+                                                <i class="fas fa-trash text-danger"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr class="collapse" id="abonoF{{ f.id }}">
+                                <td colspan="6" class="bg-light p-3" style="border-radius: 15px;">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-6">
+                                            <h6 class="fw-bold small mb-2 text-primary">HISTORIAL DE ABONOS A PROVEEDOR</h6>
+                                            {% for a in abonos if a.factura_id == f.id %}
+                                                <div class="small text-muted mb-1">
+                                                    📅 {{ a.fecha }} - <b>${{ a.monto | format_number }}</b> ({{ a.medio_pago }})
+                                                </div>
+                                            {% else %}
+                                                <div class="small text-muted italic">No hay abonos aún</div>
+                                            {% endfor %}
+                                        </div>
+                                        <div class="col-md-6 border-start">
+                                            {% if saldo > 0 %}
+                                            <form method="POST" action="{{ url_for('abonar', factura_id=f.id) }}">
+                                                <div class="input-group input-group-sm">
+                                                    <input type="number" step="0.01" name="monto" max="{{ saldo }}" class="form-control" placeholder="Monto" required>
+                                                    <select name="medio" class="form-select">
+                                                        <option value="Efectivo">Efectivo</option>
+                                                        <option value="Transferencia">Transferencia</option>
+                                                        <option value="Nequi">Nequi</option>
+                                                        <option value="Daviplata">Daviplata</option>
+                                                    </select>
+                                                    <button class="btn btn-dark" type="submit">Abonar</button>
+                                                </div>
+                                            </form>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
 </div>
 
+<style>
+    .table th { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
+    .table td { border-bottom: 1px solid #f9f9f9; padding-top: 15px; padding-bottom: 15px; }
+    .form-control:focus, .form-select:focus {
+        background-color: #fff !important;
+        box-shadow: 0 0 0 0.25rem rgba(156, 2, 119, 0.1) !important;
+        border: 1px solid #9c0277 !important;
+    }
+    .btn:hover { transform: translateY(-2px); transition: 0.2s; }
+</style>
 {% endblock %}
