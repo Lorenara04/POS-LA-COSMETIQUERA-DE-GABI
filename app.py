@@ -503,54 +503,42 @@ def logout():
 @login_required
 def dashboard():
     fecha_comercial, inicio_utc, fin_utc = obtener_rango_turno_colombia()
+    
+    # --- TUS CALCULOS ACTUALES (Mantenlos o pega estos) ---
+    productos_bajos = Producto.query.filter(Producto.cantidad <= Producto.stock_minimo).count()
+    total_inventario = db.session.query(func.sum(Producto.cantidad)).scalar() or 0
+    ventas_hoy = db.session.query(func.sum(Venta.total)).filter(and_(Venta.fecha >= inicio_utc, Venta.fecha <= fin_utc)).scalar() or 0
+    inicio_mes = datetime.utcnow().replace(day=1, hour=0, minute=0, second=0)
+    clientes_nuevos_mes = Cliente.query.filter(Cliente.fecha_registro >= inicio_mes).count()
+    
+    productos_lista = Producto.query.all()
+    valor_interno_total = sum((p.valor_interno or 0) * (p.cantidad or 0) for p in productos_lista)
+    valor_venta_total = sum((p.valor_venta or 0) * (p.cantidad or 0) for p in productos_lista)
 
-    try:
-        productos_bajos = Producto.query.filter(Producto.cantidad <= Producto.stock_minimo).count()
-    except OperationalError:
-        productos_bajos = 0
-        flash('Advertencia: Problema de conexión/tabla de base de datos.', 'warning')
-    except Exception:
-        productos_bajos = 0
+    # ✅ CORRECCIÓN DE DEUDAS (Cálculo real de saldos)
+    # Facturas
+    total_f_pendiente = 0
+    for f in Factura.query.all():
+        abonado = db.session.query(func.sum(Abono.monto)).filter(Abono.factura_id == f.id).scalar() or 0
+        total_f_pendiente += (f.total - abonado)
 
-    try:
-        total_inventario_query = db.session.query(func.sum(Producto.cantidad)).scalar()
-        total_inventario = int(total_inventario_query) if total_inventario_query is not None else 0
-    except Exception:
-        total_inventario = 0
-
-    try:
-        ventas_hoy_query = db.session.query(func.sum(Venta.total)).filter(
-            and_(Venta.fecha >= inicio_utc, Venta.fecha <= fin_utc)
-        ).scalar()
-        ventas_hoy = ventas_hoy_query if ventas_hoy_query is not None else 0.00
-    except Exception:
-        ventas_hoy = 0.00
-
-    try:
-        inicio_mes = datetime.utcnow().replace(day=1, hour=0, minute=0, second=0)
-        clientes_nuevos_mes = Cliente.query.filter(Cliente.fecha_registro >= inicio_mes).count()
-    except Exception:
-        clientes_nuevos_mes = 0
-
-    try:
-        productos_lista = Producto.query.all()
-        valor_interno_total = sum((p.valor_interno or 0) * (p.cantidad or 0) for p in productos_lista)
-        valor_venta_total = sum((p.valor_venta or 0) * (p.cantidad or 0) for p in productos_lista)
-    except Exception:
-        valor_interno_total = 0
-        valor_venta_total = 0
+    # Gastos
+    total_g_pendiente = 0
+    for g in Gasto.query.all():
+        abonado_g = db.session.query(func.sum(AbonoGasto.monto)).filter(AbonoGasto.gasto_id == g.id).scalar() or 0
+        total_g_pendiente += (g.total - abonado_g)
 
     return render_template(
         'dashboard.html',
-        current_user=current_user,
         productos_stock_bajo=productos_bajos,
         total_inventario=total_inventario,
         ventas_hoy=ventas_hoy,
         clientes_nuevos_mes=clientes_nuevos_mes,
         valor_interno_total=valor_interno_total,
-        valor_venta_total=valor_venta_total
+        valor_venta_total=valor_venta_total,
+        total_facturas_pendiente=total_f_pendiente,
+        total_gastos_pendiente=total_g_pendiente
     )
-
 #==================================================================
 # -------------------- RUTAS CLIENTES --------------------
 #==================================================================
@@ -2261,6 +2249,43 @@ def gastos():
     abonos_gastos = db.session.query(AbonoGasto).order_by(AbonoGasto.fecha.asc(), AbonoGasto.id.asc()).all()
     return render_template("modulo_gastos.html", gastos=gastos_list, abonos_gastos=abonos_gastos)
 
+@app.route("/editar_abono_proveedor/<int:abono_id>", methods=["POST"])
+@login_required
+def editar_abono_proveedor(abono_id):
+    if current_user.rol.lower() != "administrador":
+        flash("Permiso denegado.", "danger")
+        return redirect(url_for("proveedores"))
+    abono = Abono.query.get_or_404(abono_id)
+    try:
+        nuevo_monto = request.form.get("monto")
+        nueva_fecha_str = request.form.get("fecha")
+        if nuevo_monto: abono.monto = float(nuevo_monto)
+        if nueva_fecha_str: abono.fecha = datetime.strptime(nueva_fecha_str, "%Y-%m-%d").date()
+        db.session.commit()
+        flash("Abono de proveedor actualizado ✨", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Error: {e}", "danger")
+    return redirect(url_for("proveedores"))
+
+@app.route("/editar_abono_gasto/<int:abono_id>", methods=["POST"])
+@login_required
+def editar_abono_gasto(abono_id):
+    if current_user.rol.lower() != "administrador":
+        flash("Permiso denegado.", "danger")
+        return redirect(url_for("gastos"))
+    abono = AbonoGasto.query.get_or_404(abono_id)
+    try:
+        nuevo_monto = request.form.get("monto")
+        nueva_fecha_str = request.form.get("fecha")
+        if nuevo_monto: abono.monto = float(nuevo_monto)
+        if nueva_fecha_str: abono.fecha = datetime.strptime(nueva_fecha_str, "%Y-%m-%d").date()
+        db.session.commit()
+        flash("Abono de gasto actualizado ✨", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Error: {e}", "danger")
+    return redirect(url_for("gastos"))
 
 @app.route("/abonar_gasto/<int:gasto_id>", methods=["POST"])
 @login_required

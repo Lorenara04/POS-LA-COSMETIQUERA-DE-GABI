@@ -1,9 +1,11 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container-fluid mt-4 px-4" style="background-color: #fef7f9; min-height: 100vh; font-family: 'Quicksand', sans-serif;">
+<div class="container-fluid mt-4 px-4" style="background-color: #fef7f9; min-height: 100vh; font-family: 'Quicksand', sans-serif; position: relative;">
     
-    <div class="row mb-4">
+    <div class="fondo-particulas"></div>
+
+    <div class="row mb-4" style="position: relative; z-index: 1;">
         <div class="col-12">
             <div class="p-4 shadow-sm border-0 d-flex justify-content-between align-items-center" 
                  style="background: linear-gradient(135deg, #fff0f5 0%, #ffe4e1 100%); border-radius: 20px; border: 1px solid #ffd1dc !important;">
@@ -24,7 +26,7 @@
         </div>
     </div>
 
-    <div class="row">
+    <div class="row" style="position: relative; z-index: 1;">
         <div class="col-lg-4 mb-4">
             <div class="card shadow-sm border-0 p-4" style="border-radius: 25px;">
                 <h4 class="mb-4" style="color: #c71585; font-weight: 700; border-bottom: 2px solid #f8bbd0; padding-bottom: 10px;">
@@ -122,30 +124,39 @@
                             </tr>
                             <tr class="collapse" id="abono{{ g.id }}">
                                 <td colspan="6" class="bg-light p-3" style="border-radius: 15px;">
-                                    <div class="row align-items-center">
-                                        <div class="col-md-6">
-                                            <h6 class="fw-bold small mb-2 text-primary">HISTORIAL DE ABONOS</h6>
+                                    <div class="row">
+                                        <div class="col-md-7 border-end">
+                                            <h6 class="fw-bold small mb-3 text-primary">📋 HISTORIAL / EDITAR ABONOS</h6>
                                             {% for a in abonos_gastos if a.gasto_id == g.id %}
-                                                <div class="small text-muted mb-1">
-                                                    📅 {{ a.fecha }} - <b>${{ a.monto | format_number }}</b> ({{ a.medio_pago }})
-                                                </div>
+                                                <form method="POST" action="{{ url_for('editar_abono_gasto', abono_id=a.id) }}" class="mb-2">
+                                                    <div class="input-group input-group-sm">
+                                                        <span class="input-group-text bg-white border-0"><i class="fas fa-calendar-alt text-muted"></i></span>
+                                                        <input type="date" name="fecha" value="{{ a.fecha }}" class="form-control border-0" style="max-width: 130px;">
+                                                        <span class="input-group-text bg-white border-0"><b>$</b></span>
+                                                        <input type="number" step="0.01" name="monto" value="{{ a.monto }}" class="form-control border-0">
+                                                        <button class="btn btn-outline-success border-0" type="submit" title="Guardar cambios"><i class="fas fa-save"></i></button>
+                                                    </div>
+                                                </form>
                                             {% else %}
                                                 <div class="small text-muted italic">No hay abonos registrados</div>
                                             {% endfor %}
                                         </div>
-                                        <div class="col-md-6 border-start">
+                                        <div class="col-md-5 ps-3">
+                                            <h6 class="fw-bold small mb-3 text-success">➕ NUEVO ABONO</h6>
                                             {% if saldo > 0 %}
                                             <form method="POST" action="/abonar_gasto/{{ g.id }}">
-                                                <div class="input-group input-group-sm">
-                                                    <input type="number" step="0.01" name="monto" max="{{ saldo }}" class="form-control" placeholder="Monto" required>
-                                                    <select name="medio" class="form-select">
+                                                <div class="mb-2">
+                                                    <input type="number" step="0.01" name="monto" max="{{ saldo }}" class="form-control form-control-sm mb-2" placeholder="Monto a abonar" required>
+                                                    <select name="medio" class="form-select form-select-sm mb-2">
                                                         <option value="Efectivo">Efectivo</option>
                                                         <option value="Transferencia">Transferencia</option>
                                                         <option value="Nequi">Nequi</option>
                                                     </select>
-                                                    <button class="btn btn-primary" type="submit">Saldar</button>
                                                 </div>
+                                                <button class="btn btn-primary btn-sm w-100" type="submit">Saldar / Abonar</button>
                                             </form>
+                                            {% else %}
+                                                <div class="text-center text-success fw-bold py-2">GASTO PAGADO COMPLETAMENTE ✅</div>
                                             {% endif %}
                                         </div>
                                     </div>
@@ -163,11 +174,46 @@
 <style>
     .table th { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
     .table td { border-bottom: 1px solid #f9f9f9; padding-top: 15px; padding-bottom: 15px; }
+    
     .form-control:focus, .form-select:focus {
         background-color: #fff !important;
         box-shadow: 0 0 0 0.25rem rgba(255, 105, 180, 0.25) !important;
         border: 1px solid #ff69b4 !important;
     }
+    
     .btn:hover { transform: translateY(-2px); transition: 0.2s; }
+
+    /* Partículas de fondo */
+    .fondo-particulas {
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+        overflow: hidden;
+    }
+    .fondo-particulas span {
+        position: absolute;
+        opacity: 0.3;
+        animation: flotar 15s infinite ease-in-out;
+    }
+    @keyframes flotar {
+        0%, 100% { transform: translateY(0) rotate(0); }
+        50% { transform: translateY(-30px) rotate(20deg); }
+    }
 </style>
+
+<script>
+    // Generador de emojis flotantes
+    const fondo = document.querySelector('.fondo-particulas');
+    const emojis = ['💄','✨','💖','🦋','🌸','🎀'];
+    for (let i = 0; i < 20; i++) {
+        const span = document.createElement('span');
+        span.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+        span.style.left = Math.random() * 100 + 'vw';
+        span.style.top = Math.random() * 100 + 'vh';
+        span.style.fontSize = Math.random() * 20 + 10 + 'px';
+        span.style.animationDelay = Math.random() * 5 + 's';
+        fondo.appendChild(span);
+    }
+</script>
 {% endblock %}
