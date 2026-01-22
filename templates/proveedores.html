@@ -38,24 +38,24 @@
                 <form method="POST">
                     <div class="mb-3">
                         <label class="form-label fw-bold small text-uppercase text-muted">N° Factura</label>
-                        <input type="text" name="numero" class="form-control border-0 bg-light" placeholder="Ej: FAC-001" required style="border-radius: 12px; padding: 12px;">
+                        <input type="text" name="numero" class="form-control border-0 bg-light" required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-bold small text-uppercase text-muted">Proveedor</label>
-                        <input type="text" name="proveedor" class="form-control border-0 bg-light" placeholder="Nombre del proveedor" required style="border-radius: 12px; padding: 12px;">
+                        <input type="text" name="proveedor" class="form-control border-0 bg-light" required>
                     </div>
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label class="form-label fw-bold small text-uppercase text-muted">Total ($)</label>
-                            <input type="number" step="0.01" name="total" class="form-control border-0 bg-light" placeholder="0.00" required style="border-radius: 12px; padding: 12px;">
+                            <input type="number" step="0.01" name="total" class="form-control border-0 bg-light" required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-bold small text-uppercase text-muted">Fecha</label>
-                            <input type="date" name="fecha" class="form-control border-0 bg-light" style="border-radius: 12px; padding: 12px;">
+                            <input type="date" name="fecha" class="form-control border-0 bg-light">
                         </div>
                     </div>
-                    <button type="submit" class="btn w-100 text-white fw-bold py-3 mt-2 shadow" 
-                            style="background: linear-gradient(45deg, #ff69b4, #c71585); border-radius: 50px; border: none;">
+                    <button type="submit" class="btn w-100 text-white fw-bold py-3 mt-2 shadow"
+                            style="background: linear-gradient(45deg, #ff69b4, #c71585); border-radius: 50px;">
                         💾 GUARDAR FACTURA
                     </button>
                 </form>
@@ -67,6 +67,7 @@
                 <div class="p-4 bg-white">
                     <h4 style="color: #9c0277; font-weight: 700; margin: 0;">🧾 Listado General de Facturas</h4>
                 </div>
+
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
                         <thead style="background-color: #2a1f2d; color: white;">
@@ -79,78 +80,102 @@
                                 <th class="text-center pe-4">Acciones</th>
                             </tr>
                         </thead>
-                        <tbody style="background-color: white;">
-                            {% for f in facturas %}
-                            {% set total = f.total %}
-                            {% set abonado = f.abonado %}
-                            {% set saldo = total - abonado %}
+                        <tbody>
+                        {% for f in facturas %}
+                            {% set saldo = f.total - f.abonado %}
                             <tr>
                                 <td class="ps-4 small text-muted">
                                     {{ f.fecha_factura }}<br>
                                     <span style="font-size: 10px;">Ult: {{ f.fecha_ultimo_abono or '—' }}</span>
                                 </td>
-                                <td><b class="text-dark">{{ f.numero }}</b></td>
-                                <td><span class="badge rounded-pill" style="background-color: #f3e5f5; color: #7b1fa2;">{{ f.proveedor }}</span></td>
-                                <td class="text-center fw-bold">${{ total | format_number }}</td>
+                                <td><b>{{ f.numero }}</b></td>
+                                <td><span class="badge rounded-pill" style="background-color:#f3e5f5;color:#7b1fa2;">{{ f.proveedor }}</span></td>
+                                <td class="text-center fw-bold">${{ f.total | format_number }}</td>
                                 <td class="text-center">
                                     {% if saldo <= 0 %}
                                         <span class="badge bg-success rounded-pill px-3">PAGADA ✅</span>
                                     {% else %}
-                                        <span class="badge rounded-pill px-3" style="background-color: #fff0f5; color: #dc3545; border: 1px solid #ffb6c1;">
+                                        <span class="badge rounded-pill px-3" style="background:#fff0f5;color:#dc3545;border:1px solid #ffb6c1;">
                                             Pend: ${{ saldo | format_number }}
                                         </span>
                                     {% endif %}
                                 </td>
                                 <td class="text-center pe-4">
                                     <div class="d-flex justify-content-center gap-2">
-                                        <button class="btn btn-sm shadow-sm" style="background-color: #f3f4f6; border-radius: 10px;" 
+                                        <button class="btn btn-sm shadow-sm" style="background:#f3f4f6;border-radius:10px;"
                                                 type="button" data-bs-toggle="collapse" data-bs-target="#abonoF{{ f.id }}">
                                             <i class="fas fa-dollar-sign text-success"></i>
                                         </button>
-                                        <a href="{{ url_for('editar_factura', factura_id=f.id) }}" class="btn btn-sm shadow-sm" style="background-color: #f3f4f6; border-radius: 10px;">
+                                        <a href="{{ url_for('editar_factura', factura_id=f.id) }}"
+                                           class="btn btn-sm shadow-sm" style="background:#f3f4f6;border-radius:10px;">
                                             <i class="fas fa-edit text-info"></i>
                                         </a>
-                                        <form method="POST" action="{{ url_for('eliminar_factura', factura_id=f.id) }}" style="display:inline;">
-                                            <button type="submit" class="btn btn-sm shadow-sm" style="background-color: #f3f4f6; border-radius: 10px;" onclick="return confirm('¿Eliminar factura?')">
+                                        <form method="POST" action="{{ url_for('eliminar_factura', factura_id=f.id) }}">
+                                            <button type="submit" class="btn btn-sm shadow-sm"
+                                                    style="background:#f3f4f6;border-radius:10px;"
+                                                    onclick="return confirm('¿Eliminar factura?')">
                                                 <i class="fas fa-trash text-danger"></i>
                                             </button>
                                         </form>
                                     </div>
                                 </td>
                             </tr>
+
+                            <!-- ABONOS -->
                             <tr class="collapse" id="abonoF{{ f.id }}">
-                                <td colspan="6" class="bg-light p-3" style="border-radius: 15px;">
+                                <td colspan="6" class="bg-light p-3" style="border-radius:15px;">
                                     <div class="row">
                                         <div class="col-md-7 border-end">
                                             <h6 class="fw-bold small mb-3 text-primary">📋 HISTORIAL / EDITAR ABONOS</h6>
+
                                             {% for a in abonos if a.factura_id == f.id %}
-                                                <form method="POST" action="{{ url_for('editar_abono_proveedor', abono_id=a.id) }}" class="mb-2">
+                                            <div class="d-flex align-items-center mb-2">
+                                                <form method="POST"
+                                                      action="{{ url_for('editar_abono_proveedor', abono_id=a.id) }}"
+                                                      class="flex-grow-1 me-2">
                                                     <div class="input-group input-group-sm">
-                                                        <span class="input-group-text bg-white border-0"><i class="fas fa-calendar-alt text-muted"></i></span>
-                                                        <input type="date" name="fecha" value="{{ a.fecha }}" class="form-control border-0" style="max-width: 130px;">
+                                                        <span class="input-group-text bg-white border-0">
+                                                            <i class="fas fa-calendar-alt text-muted"></i>
+                                                        </span>
+                                                        <input type="date" name="fecha" value="{{ a.fecha }}"
+                                                               class="form-control border-0" style="max-width:130px;">
                                                         <span class="input-group-text bg-white border-0"><b>$</b></span>
-                                                        <input type="number" step="0.01" name="monto" value="{{ a.monto }}" class="form-control border-0">
-                                                        <button class="btn btn-outline-success border-0" type="submit" title="Guardar cambios"><i class="fas fa-save"></i></button>
+                                                        <input type="number" step="0.01" name="monto"
+                                                               value="{{ a.monto }}" class="form-control border-0">
+                                                        <button class="btn btn-outline-success border-0" type="submit">
+                                                            <i class="fas fa-save"></i>
+                                                        </button>
                                                     </div>
                                                 </form>
+
+                                                <!-- BOTÓN ELIMINAR ABONO -->
+                                                <form method="POST"
+                                                      action="{{ url_for('eliminar_abono_proveedor', abono_id=a.id) }}"
+                                                      onsubmit="return confirm('¿Eliminar este abono?');">
+                                                    <button type="submit" class="btn btn-sm shadow-sm"
+                                                            style="background:#f3f4f6;border-radius:10px;">
+                                                        <i class="fas fa-trash text-danger"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
                                             {% else %}
-                                                <div class="small text-muted italic">No hay abonos aún</div>
+                                                <div class="small text-muted fst-italic">No hay abonos aún</div>
                                             {% endfor %}
                                         </div>
+
                                         <div class="col-md-5 ps-3">
                                             <h6 class="fw-bold small mb-3 text-success">➕ NUEVO ABONO</h6>
                                             {% if saldo > 0 %}
                                             <form method="POST" action="{{ url_for('abonar', factura_id=f.id) }}">
-                                                <div class="mb-2">
-                                                    <input type="number" step="0.01" name="monto" max="{{ saldo }}" class="form-control form-control-sm mb-2" placeholder="Monto" required>
-                                                    <select name="medio" class="form-select form-select-sm mb-2">
-                                                        <option value="Efectivo">Efectivo</option>
-                                                        <option value="Transferencia">Transferencia</option>
-                                                        <option value="Nequi">Nequi</option>
-                                                        <option value="Daviplata">Daviplata</option>
-                                                    </select>
-                                                </div>
-                                                <button class="btn btn-dark btn-sm w-100" type="submit">Abonar</button>
+                                                <input type="number" step="0.01" name="monto" max="{{ saldo }}"
+                                                       class="form-control form-control-sm mb-2" placeholder="Monto" required>
+                                                <select name="medio" class="form-select form-select-sm mb-2">
+                                                    <option>Efectivo</option>
+                                                    <option>Transferencia</option>
+                                                    <option>Nequi</option>
+                                                    <option>Daviplata</option>
+                                                </select>
+                                                <button class="btn btn-dark btn-sm w-100">Abonar</button>
                                             </form>
                                             {% else %}
                                                 <div class="text-center text-success fw-bold py-2">FACTURA PAGADA ✅</div>
@@ -159,56 +184,13 @@
                                     </div>
                                 </td>
                             </tr>
-                            {% endfor %}
+                        {% endfor %}
                         </tbody>
                     </table>
                 </div>
+
             </div>
         </div>
     </div>
 </div>
-
-<style>
-    .table th { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
-    .table td { border-bottom: 1px solid #f9f9f9; padding-top: 15px; padding-bottom: 15px; }
-    .form-control:focus, .form-select:focus {
-        background-color: #fff !important;
-        box-shadow: 0 0 0 0.25rem rgba(156, 2, 119, 0.1) !important;
-        border: 1px solid #9c0277 !important;
-    }
-    .btn:hover { transform: translateY(-2px); transition: 0.2s; }
-
-    /* Partículas de fondo */
-    .fondo-particulas {
-        position: fixed;
-        inset: 0;
-        z-index: 0;
-        pointer-events: none;
-        overflow: hidden;
-    }
-    .fondo-particulas span {
-        position: absolute;
-        opacity: 0.3;
-        animation: flotar 15s infinite ease-in-out;
-    }
-    @keyframes flotar {
-        0%, 100% { transform: translateY(0) rotate(0); }
-        50% { transform: translateY(-30px) rotate(20deg); }
-    }
-</style>
-
-<script>
-    // Generador de emojis flotantes
-    const fondo = document.querySelector('.fondo-particulas');
-    const emojis = ['💄','✨','💖','🦋','🌸','🎀'];
-    for (let i = 0; i < 20; i++) {
-        const span = document.createElement('span');
-        span.innerText = emojis[Math.floor(Math.random() * emojis.length)];
-        span.style.left = Math.random() * 100 + 'vw';
-        span.style.top = Math.random() * 100 + 'vh';
-        span.style.fontSize = Math.random() * 20 + 10 + 'px';
-        span.style.animationDelay = Math.random() * 5 + 's';
-        fondo.appendChild(span);
-    }
-</script>
 {% endblock %}

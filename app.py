@@ -2020,7 +2020,7 @@ def exportar_acumulados_excel():
     )
 
 # =================================================================
-# SECCIÓN MEJORADA: PROVEEDORES (CON MENSAJES FLASH) ✨
+# PROVEEDORES
 # =================================================================
 @app.route("/proveedores", methods=["GET", "POST"])
 @login_required
@@ -2036,8 +2036,7 @@ def proveedores():
         fecha_str = (request.form.get("fecha") or "").strip()
 
         if not numero or not proveedor:
-            # MEJORA: En vez de abort(400), usamos flash para no romper la pagina
-            flash("Error: Número de factura y Proveedor son obligatorios.", "danger")
+            flash("Error: Número de factura y proveedor son obligatorios.", "danger")
             return redirect(url_for("proveedores"))
 
         try:
@@ -2051,10 +2050,17 @@ def proveedores():
         except Exception:
             fecha_factura = date.today()
 
-        f = Factura(numero=numero, proveedor=proveedor, total=total, fecha=fecha_factura)
-        db.session.add(f)
+        factura = Factura(
+            numero=numero,
+            proveedor=proveedor,
+            total=total,
+            fecha=fecha_factura
+        )
+
+        db.session.add(factura)
         db.session.commit()
-        flash("Proveedor agregado exitosamente.", "success")
+
+        flash("Factura registrada correctamente.", "success")
         return redirect(url_for("proveedores"))
 
     rows = db.session.query(
@@ -2062,10 +2068,14 @@ def proveedores():
         func.coalesce(func.sum(Abono.monto), 0).label("abonado"),
         (Factura.total - func.coalesce(func.sum(Abono.monto), 0)).label("saldo"),
         func.max(Abono.fecha).label("fecha_ultimo_abono")
-    ).outerjoin(Abono, Abono.factura_id == Factura.id) \
-     .group_by(Factura.id) \
-     .order_by(Factura.fecha.desc(), Factura.id.desc()) \
-     .all()
+    ).outerjoin(
+        Abono, Abono.factura_id == Factura.id
+    ).group_by(
+        Factura.id
+    ).order_by(
+        Factura.fecha.desc(),
+        Factura.id.desc()
+    ).all()
 
     facturas = []
     for f, abonado, saldo, fecha_ultimo_abono in rows:
@@ -2080,9 +2090,18 @@ def proveedores():
             "fecha_ultimo_abono": fecha_ultimo_abono
         })
 
-    abonos = db.session.query(Abono).order_by(Abono.fecha.asc(), Abono.id.asc()).all()
-    return render_template("proveedores.html", facturas=facturas, abonos=abonos)
+    abonos = Abono.query.order_by(Abono.fecha.asc(), Abono.id.asc()).all()
 
+    return render_template(
+        "proveedores.html",
+        facturas=facturas,
+        abonos=abonos
+    )
+
+
+# =================================================================
+# ABONAR FACTURA
+# =================================================================
 @app.route("/abonar/<int:factura_id>", methods=["POST"])
 @login_required
 def abonar(factura_id):
@@ -2103,17 +2122,16 @@ def abonar(factura_id):
         flash("El monto debe ser positivo y el medio de pago es obligatorio.", "danger")
         return redirect(url_for("proveedores"))
 
-    factura = Factura.query.get(factura_id)
-    if not factura:
-        flash("Factura no encontrada.", "danger")
-        return redirect(url_for("proveedores"))
+    factura = Factura.query.get_or_404(factura_id)
 
-    abonado = db.session.query(func.coalesce(func.sum(Abono.monto), 0)) \
-        .filter(Abono.factura_id == factura_id).scalar() or 0
+    abonado = db.session.query(
+        func.coalesce(func.sum(Abono.monto), 0)
+    ).filter(
+        Abono.factura_id == factura_id
+    ).scalar() or 0
 
     saldo = float(factura.total or 0) - float(abonado or 0)
-    
-    # Tolerancia pequeña para errores de flotante
+
     if saldo <= 0.01:
         flash("Esta factura ya está pagada.", "warning")
         return redirect(url_for("proveedores"))
@@ -2121,23 +2139,41 @@ def abonar(factura_id):
     if monto > saldo:
         monto = saldo
 
-    db.session.add(Abono(factura_id=factura_id, monto=monto, medio_pago=medio, fecha=date.today()))
+    db.session.add(
+        Abono(
+            factura_id=factura_id,
+            monto=monto,
+            medio_pago=medio,
+            fecha=date.today()
+        )
+    )
+
     db.session.commit()
     flash(f"Abono de ${monto:,.0f} registrado.", "success")
     return redirect(url_for("proveedores"))
 
-@app.route("/eliminar_factura/<int:factura_id>", methods=["POST"])
+
+# =================================================================
+# ELIMINAR ABONO
+# =================================================================
+@app.route("/eliminar_abono_proveedor/<int:abono_id>", methods=["POST"])
 @login_required
-def eliminar_factura(factura_id):
+def eliminar_abono_proveedor(abono_id):
     if current_user.rol.lower() != "administrador":
         flash("Permiso denegado.", "danger")
         return redirect(url_for("dashboard"))
-    factura = Factura.query.get_or_404(factura_id)
-    db.session.delete(factura)
+
+    abono = Abono.query.get_or_404(abono_id)
+    db.session.delete(abono)
     db.session.commit()
-    flash("Factura eliminada.", "success")
+
+    flash("Abono eliminado correctamente.", "success")
     return redirect(url_for("proveedores"))
 
+
+# =================================================================
+# EDITAR FACTURA
+# =================================================================
 @app.route("/editar_factura/<int:factura_id>", methods=["GET", "POST"])
 @login_required
 def editar_factura(factura_id):
@@ -2156,24 +2192,30 @@ def editar_factura(factura_id):
         if not numero or not proveedor:
             flash("Número y proveedor son obligatorios.", "danger")
             return redirect(url_for("editar_factura", factura_id=factura_id))
-            
+
         try:
             total = float(total_raw)
         except ValueError:
-             flash("Total inválido.", "danger")
-             return redirect(url_for("editar_factura", factura_id=factura_id))
-        
+            flash("Total inválido.", "danger")
+            return redirect(url_for("editar_factura", factura_id=factura_id))
+
+        abonado = db.session.query(
+            func.coalesce(func.sum(Abono.monto), 0)
+        ).filter(
+            Abono.factura_id == factura_id
+        ).scalar() or 0
+
+        if total < float(abonado):
+            flash(
+                f"El total no puede ser menor que lo ya abonado (${float(abonado):,.0f}).",
+                "danger"
+            )
+            return redirect(url_for("editar_factura", factura_id=factura_id))
+
         try:
             fecha_factura = datetime.strptime(fecha_str, "%Y-%m-%d").date() if fecha_str else date.today()
         except Exception:
             fecha_factura = date.today()
-
-        abonado = db.session.query(func.coalesce(func.sum(Abono.monto), 0)) \
-            .filter(Abono.factura_id == factura_id).scalar() or 0
-
-        if total < float(abonado or 0):
-            flash(f"Error: El nuevo total no puede ser menor que lo ya abonado (${float(abonado):,.0f}).", "danger")
-            return redirect(url_for("editar_factura", factura_id=factura_id))
 
         factura.numero = numero
         factura.proveedor = proveedor
@@ -2185,6 +2227,28 @@ def editar_factura(factura_id):
         return redirect(url_for("proveedores"))
 
     return render_template("editar_factura.html", factura=factura)
+
+
+# =================================================================
+# ELIMINAR FACTURA (🔥 LA QUE FALTABA 🔥)
+# =================================================================
+@app.route("/eliminar_factura/<int:factura_id>", methods=["POST"])
+@login_required
+def eliminar_factura(factura_id):
+    if current_user.rol.lower() != "administrador":
+        flash("Permiso denegado.", "danger")
+        return redirect(url_for("dashboard"))
+
+    factura = Factura.query.get_or_404(factura_id)
+
+    # Eliminar abonos asociados primero
+    Abono.query.filter_by(factura_id=factura_id).delete()
+
+    db.session.delete(factura)
+    db.session.commit()
+
+    flash("Factura eliminada correctamente.", "success")
+    return redirect(url_for("proveedores"))
 
 #=================================================================
 # SECCIÓN MEJORADA: GASTOS (CON MENSAJES FLASH) ✨
@@ -2286,6 +2350,22 @@ def editar_abono_gasto(abono_id):
         db.session.rollback()
         flash(f"Error: {e}", "danger")
     return redirect(url_for("gastos"))
+
+@app.route('/eliminar_abono_gasto/<int:abono_id>', methods=['POST'])
+@login_required # Si usas login, mantén esta línea
+def eliminar_abono_gasto(abono_id):
+    # Buscamos el abono por su ID
+    abono = AbonoGasto.query.get_or_404(abono_id)
+    
+    try:
+        db.session.delete(abono)
+        db.session.commit()
+        flash('Abono eliminado correctamente. El saldo se ha actualizado.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash('Error al eliminar el abono: ' + str(e), 'danger')
+        
+    return redirect(url_for('gastos')) # Asegúrate de que 'gastos' sea el nombre de tu función de la tabla
 
 @app.route("/abonar_gasto/<int:gasto_id>", methods=["POST"])
 @login_required
