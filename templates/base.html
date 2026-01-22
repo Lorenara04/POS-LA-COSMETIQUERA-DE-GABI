@@ -14,10 +14,28 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;800;900&display=swap" rel="stylesheet">
 
-  <!-- Tus estilos -->
+  <!-- Tus estilos externos -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 
   <style>
+    /* ===============================
+       🎨 PALETA OFICIAL – COQUETTE
+    ================================*/
+    :root {
+      --primary: #E52768;
+      --primary-2: #D66AA0;
+      --primary-3: #E698B4;
+      --deep: #A01273;
+
+      --dark: #080909;
+
+      --success: #278B5D;
+      --info: #97CCF4;
+      --danger: #FF5A7A;
+
+      --focus: rgba(229,39,104,.15);
+    }
+
     html, body {
       height: 100%;
       margin: 0;
@@ -31,46 +49,45 @@
       padding-bottom: 20px;
     }
 
-    /* NAVBAR ESTILO COQUETTE NEGRA */
+    /* ===============================
+       🖤 NAVBAR COQUETTE NEGRA
+    ================================*/
     .navbar-custom {
-      background-color: #000;
+      background-color: var(--dark);
       padding: 0.6rem 1.5rem;
-      border-bottom: 3px solid #ff69b4;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+      border-bottom: 3px solid var(--primary);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.45);
     }
 
-    /* Logo */
     .logo-barra {
       height: 55px !important;
-      width: auto;
-      object-fit: contain;
       transition: transform 0.25s ease;
       filter: drop-shadow(0 3px 6px rgba(0,0,0,0.5));
     }
+
     .logo-barra:hover {
       transform: scale(1.07);
     }
 
-    /* Título */
     .titulo-logo {
       font-family: 'Playfair Display', serif;
       font-weight: 900;
-      color: #fff;
+      color: white;
       font-size: 1.25rem;
       letter-spacing: 0.5px;
     }
 
-    /* Items del menú */
     .navbar-nav .nav-link {
       color: white !important;
       margin: 0 8px;
       font-weight: 500;
-      transition: 0.3s;
       font-size: 0.95rem;
+      transition: 0.3s;
     }
+
     .navbar-nav .nav-link:hover {
-      color: #ff69b4 !important;
-      text-shadow: 0 0 8px rgba(255,105,180,0.6);
+      color: var(--primary) !important;
+      text-shadow: 0 0 8px rgba(229,39,104,0.6);
     }
 
     .nav-emoji {
@@ -78,54 +95,30 @@
       margin-right: 5px;
     }
 
-    /* Centrado del menú */
     .navbar-collapse {
       flex-grow: 1 !important;
     }
+
     .navbar-nav {
       margin-left: auto;
       margin-right: auto;
     }
 
-    /* Footer */
-    footer {
-      background-color: #000;
-      color: #fff;
-      padding: 12px 0;
-      text-align: center;
-      margin-top: auto;
-      font-size: 0.9rem;
-      border-top: 3px solid #ff69b4;
-    }
-    footer a {
-      color: #ffb6e1;
-      font-weight: bold;
+    /* ===============================
+       🍞 BREADCRUMB
+    ================================*/
+    .breadcrumb-item a {
+      color: var(--primary);
       text-decoration: none;
-    }
-    footer a:hover {
-      text-decoration: underline;
-      color: #fff;
     }
 
-    /* Breadcrumb */
-    .breadcrumb-item a {
-      color: #ff69b4;
-      text-decoration: none;
-    }
     .breadcrumb-item a:hover {
       text-decoration: underline;
     }
 
-    /* Fade In */
-    .fade-in {
-      animation: fadeIn 0.7s ease-out;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(8px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    /* Card Principal */
+    /* ===============================
+       🧁 CARD PRINCIPAL
+    ================================*/
     .main-card {
       background: white;
       padding: 25px;
@@ -133,49 +126,83 @@
       box-shadow: 0 8px 25px rgba(0,0,0,0.08);
     }
 
-    /* Responsive */
+    /* ===============================
+       🌸 FOOTER
+    ================================*/
+    footer {
+      background-color: var(--dark);
+      color: white;
+      padding: 12px 0;
+      text-align: center;
+      margin-top: auto;
+      font-size: 0.9rem;
+      border-top: 3px solid var(--primary);
+    }
+
+    footer a {
+      color: var(--primary-3);
+      font-weight: bold;
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      color: white;
+      text-decoration: underline;
+    }
+
+    /* ===============================
+       ✨ ANIMACIONES
+    ================================*/
+    .fade-in {
+      animation: fadeIn 0.6s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ===============================
+       📱 RESPONSIVE
+    ================================*/
     @media (max-width: 576px) {
       .titulo-logo { display: none; }
       .logo-barra { height: 48px !important; }
     }
   </style>
-
 </head>
+
 <body>
 
 {% if current_user.is_authenticated %}
 <nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
   <div class="container-fluid">
 
-    <!-- LOGO + TÍTULO -->
     <a class="navbar-brand d-flex align-items-center" href="{{ url_for('dashboard') }}">
       <img src="{{ url_for('static', filename='img/LOGO.png') }}" class="logo-barra" alt="Logo">
       <span class="titulo-logo ms-2">LA COSMETIQUERA DE GABI</span>
     </a>
 
-    <!-- BOTÓN RESPONSIVE -->
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
       <span class="navbar-toggler-icon"></span>
     </button>
 
-    <!-- MENÚ -->
     <div class="collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav mx-auto">
 
-        <li class="nav-item"><a class="nav-link" href="{{ url_for('inventario') }}"><span class="nav-emoji">📦</span>Inventario</a></li>
-        <li class="nav-item"><a class="nav-link" href="{{ url_for('clientes') }}"><span class="nav-emoji">👥</span>Clientes</a></li>
-        <li class="nav-item"><a class="nav-link" href="{{ url_for('nueva_venta') }}"><span class="nav-emoji">💸</span>Ventas Diarias</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('inventario') }}">📦 Inventario</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('clientes') }}">👥 Clientes</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('nueva_venta') }}">💸 Ventas Diarias</a></li>
 
         {% if current_user.rol.lower() in ['administrador', 'vendedora'] %}
-        <li class="nav-item"><a class="nav-link" href="{{ url_for('reportes') }}"><span class="nav-emoji">📑</span>Cierre / Informes</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('reportes') }}">📑 Cierre / Informes</a></li>
         {% endif %}
 
         {% if current_user.rol.lower() == 'administrador' %}
-        <li class="nav-item"><a class="nav-link" href="{{ url_for('gestion_ventas') }}"><span class="nav-emoji">📈</span>Gestión de Ventas</a></li>
-        <li class="nav-item"><a class="nav-link" href="{{ url_for('usuarios') }}"><span class="nav-emoji">🔑</span>Gestión de Usuarios</a></li>
-        <li class="nav-item"><a class="nav-link" href="{{ url_for('proveedores') }}"><span class="nav-emoji">🧮</span>Gastos y Costos</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('gestion_ventas') }}">📈 Gestión de Ventas</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('usuarios') }}">🔑 Usuarios</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('proveedores') }}">🧮 Gastos</a></li>
         {% endif %}
-
 
       </ul>
 
@@ -184,8 +211,9 @@
         <span class="badge bg-light text-dark">{{ current_user.rol }}</span>
       </span>
 
-      <a class="btn btn-primary btn-sm" href="{{ url_for('logout') }}">Cerrar Sesión</a>
-
+      <a class="btn btn-sm" style="background:var(--primary); color:white;" href="{{ url_for('logout') }}">
+        Cerrar Sesión
+      </a>
     </div>
   </div>
 </nav>
@@ -197,7 +225,7 @@
   <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
       <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Inicio</a></li>
-      <li class="breadcrumb-item active" aria-current="page">{% block page %}{% endblock %}</li>
+      <li class="breadcrumb-item active">{% block page %}{% endblock %}</li>
     </ol>
   </nav>
   {% endblock %}
@@ -207,7 +235,6 @@
 <div class="content-wrapper container fade-in">
   <div class="main-card">
 
-    <!-- MENSAJES -->
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
         {% for category, message in messages %}
@@ -223,15 +250,18 @@
   </div>
 </div>
 
-<!-- FOOTER -->
 <footer>
-  <div>Creado por: Lorena Rodriguez Ramos</div>
-  <div>Email: <a href="mailto:lorenarodriguezr155@gmail.com">lorenarodriguezr155@gmail.com</a> · Tel: <a href="tel:+573222823687">3222823687</a></div>
+  <div>Creado por: <strong>Lorena Rodriguez Ramos</strong></div>
+  <div>
+    Email:
+    <a href="mailto:lorenarodriguezr155@gmail.com">lorenarodriguezr155@gmail.com</a>
+    · Tel:
+    <a href="tel:+573222823687">322 282 3687</a>
+  </div>
   &copy; 2025 LA COSMETIQUERA DE GABI
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 {% block scripts %}{% endblock %}
-
 </body>
 </html>
