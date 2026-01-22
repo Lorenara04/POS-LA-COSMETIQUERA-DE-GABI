@@ -5,217 +5,230 @@
 {% block content %}
 
 <style>
-    /* Estilos Coquette */
+    /* =========================
+       COQUETTE / ROCOCÓ REPORTES
+       ========================= */
+    .text-coquette { color: #9c0277; }
+    
     .card-metric {
         border: none;
-        border-radius: 15px;
+        border-radius: 18px;
         transition: transform 0.2s;
         color: white;
+        border: 2px solid rgba(248, 198, 221, 0.5);
     }
     .card-metric:hover {
         transform: translateY(-5px);
     }
 
-    .bg-gradient-pink { background: linear-gradient(45deg, #ff8c94, #ffb3b7); }
-    .bg-gradient-purple { background: linear-gradient(45deg, #b39ddb, #e6ceff); }
-    .bg-gradient-blue { background: linear-gradient(45deg, #ffc72c, #ffdb70); }
+    /* Degradados actualizados a la paleta intensa */
+    .bg-gradient-pink { background: linear-gradient(145deg, #ff82b2, #ec407a); }
+    .bg-gradient-purple { background: linear-gradient(145deg, #9c0277, #7b015d); }
+    .bg-gradient-blue { background: linear-gradient(145deg, #000000, #333333); } /* Negro elegante para contraste */
 
     .chart-container {
         background: white;
         border-radius: 20px;
         padding: 20px;
-        box-shadow: 0 6px 10px rgba(0,0,0,0.08);
+        box-shadow: 0 6px 16px rgba(255, 170, 200, 0.2);
         height: 350px;
         position: relative;
+        border: 2px solid #f8c6dd;
     }
 
     .card-informe {
         background: #fff;
         border-radius: 18px;
         padding: 18px;
-        box-shadow: 0 6px 10px rgba(0,0,0,0.08);
-        border: 2px solid rgba(255, 105, 180, 0.25);
+        box-shadow: 0 6px 16px rgba(255, 170, 200, 0.2);
+        border: 2px solid #f8c6dd;
     }
 
     .btn-pink {
-        background-color: #ff69b4;
-        border-color: #ff69b4;
+        background-color: #9c0277;
+        border-color: #9c0277;
         color: white;
         font-weight: 600;
-        border-radius: 12px;
+        border-radius: 25px; /* Más redondeado */
+        transition: .3s;
     }
     .btn-pink:hover {
-        background-color: #ff4fa7;
-        border-color: #ff4fa7;
+        background-color: #ec407a;
+        border-color: #ec407a;
         color: white;
+        transform: scale(1.02);
     }
 
     .form-label {
-        font-weight: 600;
-        color: #ff69b4;
+        font-weight: 700;
+        color: #9c0277;
+    }
+
+    /* Estilo de tabla unificado */
+    .table-coquette-header {
+        background: linear-gradient(145deg, #000000, #111111) !important;
+        color: #fff !important;
+    }
+    
+    .border-coquette {
+        border: 2px solid #f8c6dd !important;
+        border-radius: 15px;
     }
 </style>
 
 <div class="container mt-4">
-    <a class="btn btn-outline-success" href="{{ url_for('exportar_cierres_excel') }}">
-  Exportar cierres (Excel)
-</a>
+    <div class="d-flex gap-2 mb-3 flex-wrap">
+        <a class="btn btn-outline-dark rounded-pill px-3" href="{{ url_for('exportar_cierres_excel') }}">
+            <i class="fas fa-file-excel me-1"></i> Exportar cierres
+        </a>
+        <a class="btn btn-outline-dark rounded-pill px-3"
+           href="{{ url_for('exportar_acumulados_excel', fecha_inicio=hoy, fecha_fin=hoy) }}">
+            <i class="fas fa-file-invoice-dollar me-1"></i> Acumulado hoy
+        </a>
+    </div>
 
-<a class="btn btn-outline-success"
-   href="{{ url_for('exportar_acumulados_excel', fecha_inicio=hoy, fecha_fin=hoy) }}">
-  Exportar acumulado de hoy (Excel)
-</a>
+    <div class="card-informe mb-4 bg-light border-0">
+        <h6 class="fw-bold text-coquette mb-3"><i class="fas fa-upload me-2"></i>Mantenimiento de Datos</h6>
+        <div class="row">
+            <div class="col-md-6">
+                <form action="{{ url_for('importar_cierres_excel') }}" method="POST" enctype="multipart/form-data" class="mb-2">
+                    <label class="small fw-bold">Importar Cierres de Caja</label>
+                    <div class="input-group input-group-sm">
+                        <input type="file" name="excel_file" class="form-control" accept=".xlsx" required>
+                        <button type="submit" class="btn btn-dark">Subir</button>
+                    </div>
+                </form>
+            </div>
+            <div class="col-md-6">
+                <form action="{{ url_for('importar_acumulado_mes_excel') }}" method="POST" enctype="multipart/form-data">
+                    <label class="small fw-bold">Importar Acumulado Mensual</label>
+                    <div class="input-group input-group-sm">
+                        <input type="file" name="excel_file" class="form-control" accept=".xlsx" required>
+                        <button type="submit" class="btn btn-dark">Subir</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
-<hr>
-
-<h5>Importar Excel</h5>
-
-<form action="{{ url_for('importar_cierres_excel') }}" method="POST" enctype="multipart/form-data" style="margin-bottom: 12px;">
-  <label><b>Importar Cierres de Caja (hoja: CierresCaja)</b></label><br>
-  <input type="file" name="excel_file" accept=".xlsx" required>
-  <button type="submit" class="btn btn-primary btn-sm">Importar cierres</button>
-</form>
-
-<form action="{{ url_for('importar_acumulado_mes_excel') }}" method="POST" enctype="multipart/form-data">
-  <label><b>Importar Acumulado Mensual (hoja: AcumuladosMes)</b></label><br>
-  <input type="file" name="excel_file" accept=".xlsx" required>
-  <button type="submit" class="btn btn-primary btn-sm">Importar acumulado</button>
-</form>
-
-
+    <hr class="border-coquette opacity-25">
 
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 style="color: #ff69b4; font-weight: bold;">🎀 Reportes y Cierre ✨</h2>
+        <h2 class="text-coquette fw-bold">
+            <i class="fas fa-heart me-2"></i> Reportes y Cierre
+        </h2>
 
-        <form action="{{ url_for('ejecutar_cierre_caja') }}" method="POST" data-confirm="¿Estás segura de cerrar la caja?">
+        <form action="{{ url_for('ejecutar_cierre_caja') }}" method="POST" onsubmit="return confirm('¿Estás segura de cerrar la caja?');">
             {% if caja_cerrada_hoy %}
-                <button type="button" class="btn btn-secondary btn-lg" disabled>
-                    <i class="fas fa-lock"></i> Caja Cerrada Hoy
+                <button type="button" class="btn btn-secondary btn-lg rounded-pill" disabled>
+                    <i class="fas fa-lock"></i> Caja Cerrada
                 </button>
             {% else %}
-                <button type="submit" class="btn btn-danger btn-lg shadow" style="background-color: #ff69b4; border-color: #ff69b4;">
-                    <i class="fas fa-lock-open"></i> Cerrar Caja Ahora
+                <button type="submit" class="btn btn-danger btn-lg shadow rounded-pill bg-gradient-pink border-0">
+                    <i class="fas fa-lock-open me-2"></i> Cerrar Caja Ahora
                 </button>
             {% endif %}
 
-            <a href="{{ url_for('historial_cierres') }}" class="btn btn-outline-dark btn-lg ms-2">
-                <i class="fas fa-history"></i> Historial
+            <a href="{{ url_for('historial_cierres') }}" class="btn btn-outline-dark btn-lg rounded-pill ms-2">
+                <i class="fas fa-history"></i>
             </a>
         </form>
     </div>
 
     <div class="row mb-5">
         <div class="col-md-4 mb-3">
-            <div class="card card-metric bg-gradient-pink p-3 shadow">
+            <div class="card card-metric bg-gradient-pink p-3 shadow-sm">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h6 class="text-uppercase mb-1">Venta Hoy ({{ hoy }})</h6>
+                        <h6 class="text-uppercase mb-1 small">Venta Hoy ({{ hoy }})</h6>
                         <h2 class="mb-0 fw-bold">${{ "{:,.0f}".format(total_diario or 0) }}</h2>
                     </div>
-                    <i class="fas fa-calendar-day fa-3x" style="opacity: 0.3;"></i>
+                    <i class="fas fa-calendar-day fa-3x opacity-50"></i>
                 </div>
             </div>
         </div>
 
         <div class="col-md-4 mb-3">
-            <div class="card card-metric bg-gradient-purple p-3 shadow">
+            <div class="card card-metric bg-gradient-purple p-3 shadow-sm">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h6 class="text-uppercase mb-1">Acumulado Semana</h6>
+                        <h6 class="text-uppercase mb-1 small">Acumulado Semana</h6>
                         <h2 class="mb-0 fw-bold">${{ "{:,.0f}".format(total_semanal or 0) }}</h2>
                     </div>
-                    <i class="fas fa-calendar-week fa-3x" style="opacity: 0.3;"></i>
+                    <i class="fas fa-calendar-week fa-3x opacity-50"></i>
                 </div>
             </div>
         </div>
 
         <div class="col-md-4 mb-3">
-            <div class="card card-metric bg-gradient-blue p-3 shadow">
+            <div class="card card-metric bg-gradient-blue p-3 shadow-sm">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h6 class="text-uppercase mb-1">Acumulado Mes</h6>
+                        <h6 class="text-uppercase mb-1 small">Acumulado Mes</h6>
                         <h2 class="mb-0 fw-bold">${{ "{:,.0f}".format(total_mensual or 0) }}</h2>
                     </div>
-                    <i class="fas fa-calendar-alt fa-3x" style="opacity: 0.3;"></i>
+                    <i class="fas fa-calendar-alt fa-3x opacity-50"></i>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- ✅ NUEVO: Enviar informe por rango (sin tocar tu cierre) -->
     <div class="card-informe mb-4">
-        <div class="d-flex justify-content-between align-items-center flex-wrap">
-            <div>
-                <h4 class="mb-1" style="color:#ff69b4; font-weight:800;">
-                    📩 Enviar informe por rango
-                </h4>
-                <small class="text-muted">
-                    Selecciona fecha inicial y final para enviar el informe al correo de las administradoras.
-                </small>
-            </div>
-        </div>
+        <h4 class="mb-1 text-coquette fw-bold">📩 Enviar informe por rango</h4>
+        <p class="text-muted small">Selecciona las fechas para enviar el reporte detallado a las administradoras.</p>
 
-        <form method="POST" action="/enviar-informe-rango" class="row g-3 mt-2">
+        <form method="POST" action="/enviar-informe-rango" class="row g-3 mt-1">
             <div class="col-12 col-md-4">
                 <label class="form-label">Desde</label>
-                <input type="date" name="fecha_inicio" class="form-control" required>
+                <input type="date" name="fecha_inicio" class="form-control border-coquette" required>
             </div>
 
             <div class="col-12 col-md-4">
                 <label class="form-label">Hasta</label>
-                <input type="date" name="fecha_fin" class="form-control" required>
+                <input type="date" name="fecha_fin" class="form-control border-coquette" required>
             </div>
 
             <div class="col-12 col-md-4 d-grid">
                 <button type="submit" class="btn btn-pink btn-lg shadow mt-md-4">
-                    <i class="fas fa-paper-plane"></i> Enviar Informe
+                    <i class="fas fa-paper-plane me-2"></i> Enviar Correo
                 </button>
             </div>
         </form>
-
-        {# Si tu backend manda "mensaje", se muestra aquí (opcional) #}
-        {% if mensaje %}
-        <div class="alert alert-info mt-3 mb-0">
-            {{ mensaje }}
-        </div>
-        {% endif %}
     </div>
 
-    <hr class="my-4">
-
-    <div class="row mb-4">
+    <div class="row mb-5">
         <div class="col-12">
-            <h4 class="mb-3 text-muted"><i class="fas fa-receipt"></i> Desglose de Pagos de Hoy</h4>
-            <div class="table-responsive shadow-sm rounded">
-                <table class="table table-hover align-middle mb-0" style="background: white;">
-                    <thead style="background-color: #fce4ec; color: #ff69b4;">
+            <h4 class="mb-3 text-coquette fw-bold"><i class="fas fa-receipt me-2"></i>Desglose de Pagos</h4>
+            <div class="table-responsive-coquette">
+                <table class="table table-hover align-middle mb-0 bg-white shadow-sm">
+                    <thead class="table-coquette-header">
                         <tr>
-                            <th>Origen</th>
-                            <th>Método de Pago</th>
-                            <th class="text-end">Total Recibido</th>
+                            <th class="border-0">Origen</th>
+                            <th class="border-0">Método de Pago</th>
+                            <th class="text-end border-0">Total Recibido</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for origen, metodo, total in informe_diario %}
                         <tr>
-                            <td>{{ origen }}</td>
-                            <td><span class="badge bg-light text-dark border">{{ metodo }}</span></td>
-                            <td class="text-end fw-bold" style="color: #ff69b4;">
+                            <td class="fw-bold">{{ origen }}</td>
+                            <td><span class="badge rounded-pill bg-dark">{{ metodo }}</span></td>
+                            <td class="text-end fw-bold text-coquette">
                                 ${{ "{:,.0f}".format(total or 0) }}
                             </td>
                         </tr>
                         {% else %}
                         <tr>
-                            <td colspan="3" class="text-center text-muted py-4">No hay ventas registradas hoy todavía.</td>
+                            <td colspan="3" class="text-center text-muted py-4">No hay ventas registradas hoy todavía. 🌸</td>
                         </tr>
                         {% endfor %}
                     </tbody>
 
                     {% if (total_diario or 0) > 0 %}
-                    <tfoot style="background:#fff0f5;">
-                        <tr>
-                            <td colspan="2" class="text-end fw-bold">TOTAL GENERAL:</td>
-                            <td class="text-end fw-bold fs-5" style="color:#ff69b4;">
+                    <tfoot style="background:#fff7fb;">
+                        <tr class="border-top">
+                            <td colspan="2" class="text-end fw-bold text-dark">TOTAL GENERAL:</td>
+                            <td class="text-end fw-bold fs-5 text-coquette">
                                 ${{ "{:,.0f}".format(total_diario or 0) }}
                             </td>
                         </tr>
@@ -228,19 +241,18 @@
 
     <div class="row">
         <div class="col-md-6 mb-4">
-            <h5 class="text-center text-muted mb-3">Ventas del Día</h5>
+            <h5 class="text-center text-coquette fw-bold mb-3">Ventas por Vendedora</h5>
             <div class="chart-container">
                 <canvas id="chartVendedores"></canvas>
             </div>
         </div>
         <div class="col-md-6 mb-4">
-            <h5 class="text-center text-muted mb-3">Tendencia Reciente</h5>
+            <h5 class="text-center text-coquette fw-bold mb-3">Tendencia de Ventas</h5>
             <div class="chart-container">
                 <canvas id="chartTendencia"></canvas>
             </div>
         </div>
     </div>
-
 </div>
 
 {% endblock %}
@@ -250,8 +262,6 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-
-    // ✅ Forma segura: inyecta objetos JSON directos (sin JSON.parse doble)
     const datosVend = {{ (datos_vendedores or {"labels": [], "data": []}) | tojson }};
     const datosTend = {{ (datos_tendencia  or {"labels": [], "data": []}) | tojson }};
 
@@ -265,14 +275,17 @@ document.addEventListener("DOMContentLoaded", function () {
             y: {
                 beginAtZero: true,
                 grid: {
-                    color: 'rgba(255, 192, 203, 0.3)',
+                    color: 'rgba(248, 198, 221, 0.3)',
                     borderDash: [5, 5]
                 }
+            },
+            x: {
+                grid: { display: false }
             }
         }
     };
 
-    // GRAFICO 1 - VENTAS VENDEDOR
+    // GRAFICO 1 - VENTAS VENDEDOR (Color Rosa Coquette)
     const ctx1 = document.getElementById('chartVendedores');
     if (ctx1 && (datosVend.labels || []).length) {
         new Chart(ctx1, {
@@ -282,17 +295,17 @@ document.addEventListener("DOMContentLoaded", function () {
                 datasets: [{
                     label: 'Ventas ($)',
                     data: datosVend.data,
-                    backgroundColor: '#ff8c94',
-                    borderColor: '#ff69b4',
+                    backgroundColor: '#ec407a',
+                    borderColor: '#9c0277',
                     borderWidth: 2,
-                    borderRadius: 10
+                    borderRadius: 12
                 }]
             },
             options: commonOptions
         });
     }
 
-    // GRAFICO 2 - TENDENCIA
+    // GRAFICO 2 - TENDENCIA (Línea Púrpura elegante)
     const ctx2 = document.getElementById('chartTendencia');
     if (ctx2 && (datosTend.labels || []).length) {
         new Chart(ctx2, {
@@ -302,19 +315,18 @@ document.addEventListener("DOMContentLoaded", function () {
                 datasets: [{
                     label: 'Tendencia ($)',
                     data: datosTend.data,
-                    backgroundColor: 'rgba(179, 157, 219, 0.3)',
-                    borderColor: '#b39ddb',
+                    backgroundColor: 'rgba(156, 2, 119, 0.1)',
+                    borderColor: '#9c0277',
                     borderWidth: 4,
                     fill: true,
-                    tension: 0.6,
-                    pointBackgroundColor: '#ff8c94',
-                    pointRadius: 5
+                    tension: 0.4,
+                    pointBackgroundColor: '#000',
+                    pointRadius: 4
                 }]
             },
             options: commonOptions
         });
     }
-
 });
 </script>
 {% endblock %}

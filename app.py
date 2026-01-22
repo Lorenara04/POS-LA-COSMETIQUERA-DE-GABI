@@ -1547,27 +1547,39 @@ def gestion_ventas():
                            vendedores_full=vendedores_full)
 
 @app.route('/ventas/eliminar/<int:venta_id>')
+@app.route('/eliminar_venta/<int:venta_id>', methods=['POST', 'GET']) # Aceptamos ambos por compatibilidad, pero POST es mejor
 @login_required
 def eliminar_venta(venta_id):
+    # Verificación de rol
     if current_user.rol.lower() != 'administrador':
-        flash('Permiso denegado.', 'danger')
+        flash('Permiso denegado. Solo administradores pueden anular ventas.', 'danger')
         return redirect(url_for('gestion_ventas'))
+
     venta = Venta.query.get_or_404(venta_id)
+    
     try:
+        # 1. Recuperar el stock de los productos antes de borrar los detalles
         detalles = VentaDetalle.query.filter_by(venta_id=venta.id).all()
         for d in detalles:
             p = Producto.query.get(d.producto_id)
             if p:
-                p.cantidad += d.cantidad
+                p.cantidad += d.cantidad  # Devolvemos el stock
+        
+        # 2. Eliminar detalles de la venta
         VentaDetalle.query.filter_by(venta_id=venta.id).delete(synchronize_session='fetch')
+        
+        # 3. Eliminar la venta principal
         db.session.delete(venta)
+        
+        # 4. Confirmar cambios
         db.session.commit()
-        flash(f'Venta {venta_id} anulada y stock recuperado.', 'success')
+        flash(f'Venta #{venta_id} anulada exitosamente. El stock ha sido restaurado.', 'success')
+        
     except Exception as e:
         db.session.rollback()
-        flash(f'Error al anular venta: {e}', 'danger')
+        flash(f'Error al anular la venta: {str(e)}', 'danger')
+        
     return redirect(url_for('gestion_ventas'))
-
 # -------------------- IMPORTAR EXCEL (ADMIN) --------------------
 @app.route('/importar')
 @login_required

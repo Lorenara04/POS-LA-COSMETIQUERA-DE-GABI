@@ -3,325 +3,307 @@
 <head>
     <meta charset="UTF-8">
     <title>Comprobante Venta #{{ venta.id }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
 
     <style>
         :root {
             --magenta: #c71585;
-            --magenta-dark: #a3126d;
-            --magenta-light: #f7d9eb;
-            --negro: #000;
+            --magenta-dark: #8b0e5d;
+            --magenta-light: #fce4ec;
+            --coquette-pink: #f8bbd0;
+            --negro: #1a1a1a;
             --blanco: #fff;
-            --sombra-magenta: rgba(199, 21, 133, 0.45);
-            --fondo-recibo: #fdf0f8;
-            --fondo-info: #fff5fa;
+            --sombra: rgba(199, 21, 133, 0.25);
         }
 
         body {
             margin: 0;
             padding: 0;
-            background: var(--fondo-recibo);
-            font-family: "Poppins", Arial, sans-serif;
-            font-size: 15px;
+            background: #fff0f6;
+            font-family: "Poppins", sans-serif;
             color: var(--negro);
         }
 
-        /* ----- TARJETA PRINCIPAL ----- */
+        /* --- CONTENEDOR TIPO RECIBO DE BOUTIQUE --- */
         .main-wrapper {
-            max-width: 520px;
-            margin: 30px auto;
-            padding: 35px;
+            max-width: 450px;
+            margin: 40px auto;
+            padding: 40px;
             background: var(--blanco);
-            border-radius: 18px;
-            border: 3px solid var(--magenta);
-            box-shadow: 
-                0 0 12px var(--sombra-magenta),
-                0 0 25px rgba(199, 21, 133, 0.2);
-            animation: fadeUp 0.4s ease-out;
+            border-radius: 30px;
+            border: 2px solid var(--magenta-light);
+            box-shadow: 0 15px 35px var(--sombra);
+            position: relative;
+            overflow: hidden;
         }
 
-        @keyframes fadeUp {
-            from { transform: translateY(10px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+        /* Adorno de "encaje" superior e inferior */
+        .main-wrapper::before, .main-wrapper::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            width: 100%;
+            height: 15px;
+            background-image: radial-gradient(circle, var(--coquette-pink) 70%, transparent 70%);
+            background-size: 20px 20px;
         }
+        .main-wrapper::before { top: 0; }
+        .main-wrapper::after { bottom: 0; }
 
         /* ----- CABECERA ----- */
         .header {
             text-align: center;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
         }
 
         .header h3 {
-            font-size: 2.3em;
-            font-weight: 900;
+            font-family: 'Dancing Script', cursive;
+            font-size: 2.8em;
+            margin: 0;
             color: var(--magenta);
-            letter-spacing: 1px;
-            text-shadow: 0 0 6px rgba(199, 21, 133, 0.4);
+            text-shadow: 2px 2px 0px var(--magenta-light);
         }
 
-        .mariposas {
-            font-size: 24px;
-            letter-spacing: 12px;
-            margin-bottom: 10px;
-        }
-
-        /* --- DIVISOR GLAM ---- */
-        .divider {
-            height: 3px;
-            margin: 20px 0;
-            background: linear-gradient(
-                90deg,
-                rgba(199,21,133,0) 0%,
-                var(--magenta) 50%,
-                rgba(199,21,133,0) 100%
-            );
-            border-radius: 50px;
-            box-shadow:
-                0 0 6px var(--magenta),
-                0 0 14px rgba(199,21,133,0.45);
-        }
-
-        /* ----- INFO CLIENTE ----- */
-        .info-details {
-            padding: 15px;
-            border-radius: 14px;
-            background: var(--fondo-info);
-            border: 2px solid var(--magenta-light);
-            box-shadow: inset 0 0 8px rgba(199,21,133,0.15);
-            text-align: center;
-        }
-
-        .info-details-title {
-            font-size: 20px;
-            color: var(--magenta-dark);
-            font-weight: 900;
-            text-shadow: 0 0 3px var(--sombra-magenta);
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
+        .header .store-info {
+            font-size: 13px;
+            color: #555;
+            line-height: 1.4;
             margin-top: 10px;
         }
 
+        /* --- DIVISORES ESTILIZADOS ---- */
+        .divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            margin: 20px 0;
+            color: var(--coquette-pink);
+        }
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 2px dotted var(--coquette-pink);
+        }
+        .divider i {
+            padding: 0 10px;
+            font-size: 1.2rem;
+        }
+
+        /* ----- INFO VENTA ----- */
+        .info-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            font-size: 13px;
+            background: #fff9fb;
+            padding: 15px;
+            border-radius: 15px;
+            border: 1px solid var(--magenta-light);
+        }
+        .info-details div b { color: var(--magenta-dark); }
+
+        .client-box {
+            grid-column: span 2;
+            border-top: 1px solid var(--magenta-light);
+            padding-top: 8px;
+            margin-top: 5px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        /* ----- TABLA DE PRODUCTOS ----- */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
         thead th {
-            border-bottom: 3px solid var(--magenta);
-            padding-bottom: 8px;
-            font-weight: 700;
+            text-align: left;
+            font-size: 12px;
+            text-transform: uppercase;
             color: var(--magenta-dark);
-            font-size: 0.95rem;
+            border-bottom: 2px solid var(--magenta-light);
+            padding: 10px 5px;
         }
 
         tbody td {
-            padding: 8px 0;
-            border-bottom: 1px dashed var(--magenta-light);
+            padding: 12px 5px;
+            font-size: 13px;
+            border-bottom: 1px solid #fef0f5;
         }
 
-        .summary {
-            margin-top: 20px;
+        .prod-name { font-weight: 600; display: block; }
+        .prod-desc { font-size: 11px; color: #777; }
+
+        /* ----- TOTALES ----- */
+        .summary-box {
             text-align: right;
+            margin-top: 10px;
+        }
+        .total-amount {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--magenta);
+            display: block;
         }
 
-        .summary p {
-            font-size: 26px;
-            font-weight: 900;
-            color: var(--magenta-dark);
-            background: var(--fondo-info);
-            padding: 8px 12px;
-            border-radius: 12px;
-            display: inline-block;
-            box-shadow: 0 0 8px rgba(199,21,133,0.2) inset;
-        }
-
-        .payment-details {
-            background: var(--fondo-recibo);
-            border-radius: 12px;
-            border: 2px solid var(--magenta);
+        /* ----- PAGOS ----- */
+        .payment-card {
+            background: var(--magenta-light);
             padding: 15px;
+            border-radius: 15px;
             margin-top: 20px;
-            box-shadow: inset 0 0 10px rgba(199,21,133,0.2);
         }
-
-        .payment-details .title {
-            font-weight: 900;
-            font-size: 1.15rem;
+        .payment-card .title {
+            font-size: 12px;
+            font-weight: 800;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            display: block;
             color: var(--magenta-dark);
-            margin-bottom: 12px;
         }
-
-        .pago-item {
+        .pago-row {
             display: flex;
             justify-content: space-between;
-            padding: 5px 0;
-            font-weight: bold;
-        }
-
-        .pago-ref {
-            font-size: 0.8rem;
-            color: #333;
-            margin-bottom: 8px;
-            margin-left: 10px;
+            font-size: 14px;
+            margin-bottom: 4px;
         }
 
         /* ----- FOOTER ----- */
         .footer {
             text-align: center;
-            margin-top: 35px;
+            margin-top: 30px;
+            font-size: 12px;
         }
-
-        .sello {
-            margin-top: 15px;
-            font-size: 16px;
-            color: var(--magenta-dark);
-            font-weight: 900;
-            text-shadow: 0 0 4px rgba(199,21,133,0.3);
+        .sello-digital {
+            font-family: 'Dancing Script', cursive;
+            font-size: 20px;
+            color: var(--magenta);
+            margin: 10px 0;
         }
 
         /* ----- BOTONES ----- */
         .no-print {
+            margin-top: 30px;
             display: flex;
+            gap: 10px;
             justify-content: center;
-            gap: 15px;
-            padding-top: 20px;
-            flex-wrap: wrap;
         }
-
-        .action-btn {
-            min-width: 160px;
-            padding: 12px 25px;
-            border-radius: 9px;
+        .btn {
+            padding: 12px 20px;
+            border-radius: 50px;
             text-decoration: none;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: .5px;
-            transition: .25s ease;
+            font-weight: bold;
+            font-size: 14px;
+            transition: 0.3s;
+            cursor: pointer;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
-
-        .btn-new-sale {
-            background: var(--magenta);
-            color: white;
-        }
-
-        .btn-new-sale:hover {
-            background: var(--magenta-dark);
-            transform: scale(1.05);
-        }
-
-        .btn-print {
-            background: black;
-            color: white;
-        }
-
-        .btn-print:hover {
-            background: #444;
-            transform: scale(1.05);
-        }
+        .btn-pink { background: var(--magenta); color: white; }
+        .btn-dark { background: var(--negro); color: white; }
+        .btn:hover { transform: translateY(-3px); opacity: 0.9; }
 
         @media print {
-            body { background: white; }
-            .main-wrapper {
-                border: 2px solid var(--magenta);
-                box-shadow: none;
-                margin: 0;
-                width: 100%;
-            }
+            body { background: white; padding: 0; }
+            .main-wrapper { margin: 0; box-shadow: none; border: 1px solid #eee; width: 100%; max-width: 100%; }
             .no-print { display: none !important; }
         }
     </style>
-
 </head>
 <body>
 
 <div class="main-wrapper">
-
-    <!-- MARIPOSAS ARRIBA -->
-    <div class="mariposas"></div>
-
     <div class="header">
-        <h3>LA COSMETIQUERA DE GABI</h3>
-        <p>NIT: 1007135662-2<br>Tel: 3208245828<br>Dirección: Calle 145 128 40 local 19</p>
+        <h3>La Cosmetiquera de Gabi</h3>
+        <div class="store-info">
+            <i class="bi bi-geo-alt"></i> Calle 145 128 40 local 19<br>
+            <i class="bi bi-telephone"></i> 320 824 5828 | NIT: 1007135662-2
+        </div>
     </div>
 
-    <div class="divider"></div>
+    <div class="divider"><i class="bi bi-stars"></i></div>
 
     <div class="info-details">
-        <p class="info-details-title">💖 COMPROBANTE DE VENTA 💖</p>
-        <p><strong>N°:</strong> {{ venta.id }}</p>
-        <p><strong>FECHA:</strong> {{ fecha_local.strftime('%d/%m/%Y %I:%M %p') }}</p>
-        <p><strong>CAJERO:</strong> {{ venta.vendedor.username }}</p>
-        <p><strong>CLIENTE:</strong>
+        <div><b>N° Recibo:</b> #{{ venta.id }}</div>
+        <div style="text-align: right;"><b>Fecha:</b> {{ fecha_local.strftime('%d/%m/%Y') }}</div>
+        <div><b>Hora:</b> {{ fecha_local.strftime('%I:%M %p') }}</div>
+        <div style="text-align: right;"><b>Atendió:</b> {{ venta.vendedor.username }}</div>
+        <div class="client-box">
+            <i class="bi bi-person-heart"></i> Cliente: 
             {% if venta.comprador and venta.comprador.nombre != 'Contado / Genérico' %}
                 {{ venta.comprador.nombre }}
             {% else %}
                 Contado / Genérico
             {% endif %}
-        </p>
+        </div>
     </div>
-
-    <div class="divider"></div>
 
     <table>
         <thead>
             <tr>
-                <th style="text-align: left;">PRODUCTO</th>
-                <th>CANT</th>
-                <th style="text-align: right;">PRECIO U.</th>
-                <th style="text-align: right;">TOTAL</th>
+                <th>Detalle</th>
+                <th style="text-align: center;">Cant</th>
+                <th style="text-align: right;">Total</th>
             </tr>
         </thead>
         <tbody>
             {% for detalle in detalles %}
             <tr>
-                <td>{{ detalle.producto.nombre }} - {{ detalle.producto.descripcion }}</td>
-                <td style="text-align:center;">{{ detalle.cantidad }}</td>
-                <td style="text-align:right;">{{ "{:,.0f}".format(detalle.precio_unitario) }}</td>
-                <td style="text-align:right;">{{ "{:,.0f}".format(detalle.subtotal) }}</td>
+                <td>
+                    <span class="prod-name">{{ detalle.producto.nombre }}</span>
+                    <span class="prod-desc">{{ detalle.producto.descripcion }}</span>
+                </td>
+                <td style="text-align: center;">{{ detalle.cantidad }}</td>
+                <td style="text-align: right;">${{ "{:,.0f}".format(detalle.subtotal) }}</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 
-    <div class="divider"></div>
-
-    <div class="summary">
-        <p>TOTAL: ${{ "{:,.0f}".format(venta.total) }}</p>
+    <div class="summary-box">
+        <span style="font-size: 12px; font-weight: bold; color: #888;">TOTAL A PAGAR</span>
+        <span class="total-amount">${{ "{:,.0f}".format(venta.total) }}</span>
     </div>
 
-    <div class="divider"></div>
-
-    <div class="payment-details">
-        <p class="title">DETALLE DE PAGO:</p>
-
+    <div class="payment-card">
+        <span class="title"><i class="bi bi-credit-card-2-back"></i> Forma de Pago</span>
         {% for metodo, detalle in pagos.items() %}
             {% if detalle.monto > 0 %}
-                <div class="pago-item">
-                    <span>{{ metodo }}:</span>
-                    <span>${{ "{:,.0f}".format(detalle.monto) }}</span>
+                <div class="pago-row">
+                    <span>{{ metodo }}</span>
+                    <b>${{ "{:,.0f}".format(detalle.monto) }}</b>
                 </div>
-
                 {% if detalle.cod %}
-                    <p class="pago-ref">
-                        Ref: {{ detalle.cod }}
-                    </p>
+                    <div style="font-size: 10px; color: var(--magenta-dark); margin-bottom: 5px;">
+                        Confirmación: {{ detalle.cod }}
+                    </div>
                 {% endif %}
             {% endif %}
-        {% else %}
-            <p>No se registraron detalles de pago.</p>
         {% endfor %}
     </div>
 
-    <div class="divider"></div>
-
-    <!-- SELLO OFICIAL ABAJO -->
     <div class="footer">
-        <p>¡GRACIAS POR SU COMPRA!</p>
-        <p class="sello">★ LA COSMETIQUERA DE GABI ★ SELLO OFICIAL</p>
-        <p style="font-size:13px;">Software POS - Lorena Rodriguez<br>Tel 3222823687</p>
+        <div class="divider"><i class="bi bi-heart-fill"></i></div>
+        <div class="sello-digital">Gracias por brillar con nosotros</div>
+        <p style="margin-bottom: 0;"><b>¡Vuelve pronto!</b></p>
+        <p style="font-size: 10px; color: #aaa; margin-top: 15px;">
+            Software POS diseñado por Lorena Rodriguez<br>
+            Soporte: 322 282 3687
+        </p>
     </div>
 
     <div class="no-print">
-        <a href="{{ url_for('nueva_venta') }}" class="action-btn btn-new-sale"><i class="bi bi-bag-plus"></i> Nueva Venta</a>
-        <a onclick="window.print()" class="action-btn btn-print"><i class="bi bi-printer"></i> Imprimir</a>
+        <a href="{{ url_for('nueva_venta') }}" class="btn btn-pink">
+            <i class="bi bi-plus-circle"></i> Nueva Venta
+        </a>
+        <button onclick="window.print()" class="btn btn-dark">
+            <i class="bi bi-printer"></i> Imprimir
+        </button>
     </div>
 </div>
 

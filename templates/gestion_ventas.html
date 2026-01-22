@@ -5,12 +5,9 @@
   /* =========================
      COQUETTE / ROCOCÓ VENTAS
      ========================= */
-
-  /* Iconos y Tipografía */
   .icon-xl { font-size: 1.4rem !important; }
-  .text-coquette { color: #9c0277; } /* Un tono uva/rosado fuerte del primer diseño */
+  .text-coquette { color: #9c0277; }
 
-  /* Card Principal */
   .card-coquette {
     background: #fff;
     border-radius: 18px;
@@ -19,7 +16,6 @@
     overflow: hidden;
   }
 
-  /* Tabla con estilo de tarjetas del primer código */
   .table-responsive-coquette {
     padding: 8px;
     background: #fff7fb;
@@ -41,7 +37,6 @@
     font-weight: 700;
     border-radius: 10px;
     text-align: center;
-    border: none;
   }
 
   .tabla-coquette tbody tr {
@@ -65,26 +60,25 @@
   }
   .tabla-coquette td:last-child { border-right: none; }
 
-  /* Botones de Acción Circulares */
   .btn-action-base {
     width: 38px; height: 38px;
     border-radius: 50%;
     display: inline-flex; align-items: center; justify-content: center;
     border: none; transition: .2s ease; color: #fff !important;
+    cursor: pointer;
   }
   .btn-action-view {
-    background: #76c2ff !important; /* Azul suave */
+    background: #76c2ff !important;
     box-shadow: 0 3px 6px rgba(120, 190, 255, .5);
   }
   .btn-action-view:hover { transform: scale(1.15); background: #42a5f5 !important; }
 
   .btn-action-delete {
-    background: #ff82b2 !important; /* Rosado fresa */
+    background: #ff82b2 !important;
     box-shadow: 0 3px 6px rgba(255, 150, 200, .5);
   }
   .btn-action-delete:hover { transform: scale(1.15); background: #ec407a !important; }
 
-  /* ===== Paginación de Florcitas ===== */
   .pagination-flower {
     display: flex; justify-content: center; align-items: center;
     gap: 10px; margin-top: 20px;
@@ -102,24 +96,12 @@
     background: radial-gradient(circle at 50% 50%, #9c0277 0 48%, #b60086 49% 100%);
   }
 
-  /* Modales Coquette */
-  .modal-content-coquette {
-    border-radius: 20px; border: 3px solid #f8c6dd;
-  }
-  .modal-header-dark {
-    background: #000 !important; color: #fff; border-radius: 16px 16px 0 0;
-  }
-  .nav-tabs .nav-link.active {
-    color: #9c0277 !important; border-bottom: 3px solid #9c0277 !important;
-    background: transparent; font-weight: bold;
-  }
-
-  /* Buscador Flotante */
-  #listaResultados {
-    position: absolute; z-index: 2000; width: 100%;
-    background: #fff; border: 2px solid #f8c6dd; border-radius: 0 0 15px 15px;
-    box-shadow: 0 8px 15px rgba(255, 170, 200, 0.2);
-  }
+  /* Estilos para el Modal */
+  .modal-content-coquette { border-radius: 20px; border: 3px solid #f8c6dd; }
+  .modal-header-dark { background: #000 !important; color: #fff; border-radius: 16px 16px 0 0; }
+  .nav-tabs .nav-link.active { color: #9c0277 !important; border-bottom: 3px solid #9c0277 !important; background: transparent; font-weight: bold; }
+  
+  #listaResultados { position: absolute; z-index: 2000; width: 100%; background: #fff; border: 2px solid #f8c6dd; border-radius: 0 0 15px 15px; box-shadow: 0 8px 15px rgba(255, 170, 200, 0.2); }
   .resultado-item { padding: 10px; cursor: pointer; border-bottom: 1px solid #eee; }
   .resultado-item:hover { background: #fff0f5; }
 </style>
@@ -169,11 +151,13 @@
                   <button class="btn-action-base btn-action-view" title="Ver Detalle" onclick="abrirModalEdicion({{ venta.id }})">
                     <i class="fas fa-eye"></i>
                   </button>
-                  <a href="{{ url_for('eliminar_venta', venta_id=venta.id) }}" 
-                     class="btn-action-base btn-action-delete"
-                     onclick="return confirm('¿Seguro que deseas anular esta venta?');">
+                  
+                  <button type="button" 
+                          class="btn-action-base btn-action-delete" 
+                          title="Anular Venta"
+                          onclick="confirmarAnularVenta('{{ url_for('eliminar_venta', venta_id=venta.id) }}', '{{ venta.id }}')">
                     <i class="fas fa-trash-alt"></i>
-                  </a>
+                  </button>
                 </div>
               </td>
             </tr>
@@ -209,86 +193,44 @@
         <h5 class="modal-title"><i class="fas fa-gift me-2"></i>Editar Venta #<span id="lblVentaID"></span></h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
-      
       <div class="modal-body bg-white">
         <ul class="nav nav-tabs mb-3 border-0" id="tabEdicion" role="tablist">
           <li class="nav-item">
-            <button class="nav-link active" id="items-tab" data-bs-toggle="tab" data-bs-target="#tab-items" type="button">
-              <i class="fas fa-shopping-cart"></i> Artículos
-            </button>
+            <button class="nav-link active" id="items-tab" data-bs-toggle="tab" data-bs-target="#tab-items" type="button">Artículos</button>
           </li>
           <li class="nav-item">
-            <button class="nav-link" id="info-tab" data-bs-toggle="tab" data-bs-target="#tab-info" type="button">
-              <i class="fas fa-money-bill-wave"></i> Info y Pagos
-            </button>
+            <button class="nav-link" id="info-tab" data-bs-toggle="tab" data-bs-target="#tab-info" type="button">Info y Pagos</button>
           </li>
         </ul>
-
-        <div class="tab-content" id="tabContentEdicion">
+        <div class="tab-content">
           <div class="tab-pane fade show active" id="tab-items">
-            <div class="alert alert-warning py-2 small border-0 shadow-sm" style="border-radius: 10px;">
-              <i class="fas fa-magic"></i> Al guardar, se recalculará automáticamente el stock.
-            </div>
-            
-            <div class="position-relative mb-3">
+             <div class="position-relative mb-3">
               <div class="input-group shadow-sm" style="border-radius: 25px; overflow: hidden; border: 2px solid #f8c6dd;">
                 <span class="input-group-text bg-white text-coquette border-0"><i class="fas fa-search"></i></span>
                 <input type="text" id="inputBuscarProducto" class="form-control border-0" placeholder="Buscar producto para agregar..." autocomplete="off">
               </div>
               <div id="listaResultados" style="display: none;"></div>
             </div>
-
             <div class="table-responsive rounded-3">
               <table class="table table-sm align-middle">
                 <thead class="table-dark">
-                  <tr>
-                    <th>Producto</th>
-                    <th width="100">Cant.</th>
-                    <th width="140">Precio</th>
-                    <th width="140">Subtotal</th>
-                    <th width="50"></th>
-                  </tr>
+                  <tr><th>Producto</th><th width="100">Cant.</th><th width="140">Precio</th><th width="140">Subtotal</th><th width="50"></th></tr>
                 </thead>
                 <tbody id="tablaItemsBody"></tbody>
-                <tfoot>
-                  <tr class="bg-light">
-                    <td colspan="3" class="text-end fw-bold">TOTAL:</td>
-                    <td class="fw-bold fs-5 text-coquette text-end">$<span id="lblNuevoTotal">0</span></td>
-                    <td></td>
-                  </tr>
-                </tfoot>
+                <tfoot><tr class="bg-light"><td colspan="3" class="text-end fw-bold">TOTAL:</td><td class="fw-bold fs-5 text-coquette text-end">$<span id="lblNuevoTotal">0</span></td><td></td></tr></tfoot>
               </table>
             </div>
-            <div class="text-end mt-3">
-              <button class="btn btn-dark rounded-pill px-4 shadow" onclick="guardarCambiosItems()">
-                <i class="fas fa-save me-1"></i> GUARDAR ARTÍCULOS
-              </button>
-            </div>
+            <div class="text-end mt-3"><button class="btn btn-dark rounded-pill px-4 shadow" onclick="guardarCambiosItems()">GUARDAR ARTÍCULOS</button></div>
           </div>
-
           <div class="tab-pane fade" id="tab-info">
-            <form id="formInfoVenta">
-              <div class="row g-3 mb-4">
-                <div class="col-md-6">
-                  <label class="form-label fw-bold">Vendedora</label>
-                  <select id="selVendedor" class="form-select border-coquette shadow-sm">
-                    {% for u in vendedores_full %}
-                    <option value="{{ u.id }}">{{ u.username }}</option>
-                    {% endfor %}
-                  </select>
-                </div>
-                <div class="col-md-6">
-                  <label class="form-label fw-bold">Cliente</label>
-                  <select id="selCliente" class="form-select border-coquette shadow-sm">
-                    {% for c in clientes_full %}
-                    <option value="{{ c.id }}">{{ c.nombre }}</option>
-                    {% endfor %}
-                  </select>
-                </div>
-              </div>
-
-              <div class="card p-3 border-0 bg-light shadow-sm" style="border-radius: 15px;">
-                <h6 class="text-coquette fw-bold mb-3 border-bottom pb-2">Desglose de Pago</h6>
+             <div class="row g-3 mb-4">
+              <div class="col-md-6"><label class="form-label fw-bold">Vendedora</label><select id="selVendedor" class="form-select border-coquette shadow-sm">
+                {% for u in vendedores_full %}<option value="{{ u.id }}">{{ u.username }}</option>{% endfor %}</select></div>
+              <div class="col-md-6"><label class="form-label fw-bold">Cliente</label><select id="selCliente" class="form-select border-coquette shadow-sm">
+                {% for c in clientes_full %}<option value="{{ c.id }}">{{ c.nombre }}</option>{% endfor %}</select></div>
+             </div>
+             <div class="card p-3 border-0 bg-light shadow-sm" style="border-radius: 15px;">
+                <h6 class="text-coquette fw-bold mb-3 border-bottom pb-2">Pagos</h6>
                 <div class="row g-2">
                   <div class="col-md-4"><label class="small">Efectivo</label><input type="number" class="form-control border-0 shadow-sm" id="pagoEfectivo"></div>
                   <div class="col-md-4"><label class="small">Nequi</label><input type="number" class="form-control border-0 shadow-sm" id="pagoNequi"></div>
@@ -296,13 +238,8 @@
                   <div class="col-md-4"><label class="small">Transferencia</label><input type="number" class="form-control border-0 shadow-sm" id="pagoTransferencia"></div>
                   <div class="col-md-4"><label class="small">Tarjeta/Bold</label><input type="number" class="form-control border-0 shadow-sm" id="pagoTarjeta"></div>
                 </div>
-              </div>
-            </form>
-            <div class="text-end mt-4">
-              <button class="btn btn-action-delete w-100 fw-bold rounded-pill shadow" onclick="guardarInfo()">
-                <i class="fas fa-check-circle me-1"></i> ACTUALIZAR INFO Y PAGOS
-              </button>
-            </div>
+             </div>
+             <div class="text-end mt-4"><button class="btn btn-action-delete w-100 fw-bold rounded-pill shadow" onclick="guardarInfo()">ACTUALIZAR INFO Y PAGOS</button></div>
           </div>
         </div>
       </div>
@@ -311,7 +248,14 @@
 </div>
 
 <script>
-/* Mantener exactamente el mismo Script que tenías para que la funcionalidad siga intacta */
+// NUEVA FUNCIÓN PARA ANULAR
+function confirmarAnularVenta(url, id) {
+    if (confirm(`¿Estás segura de que deseas anular la venta #${id}? \n\nEl stock de los productos se devolverá automáticamente.`)) {
+        window.location.href = url;
+    }
+}
+
+// SCRIPTS FUNCIONALES ORIGINALES
 let ventaActualID = null;
 let itemsVenta = []; 
 let debounceTimer;
@@ -385,7 +329,6 @@ function eliminarItem(index) {
     renderTablaItems();
 }
 
-// BÚSQUEDA
 const inputBusqueda = document.getElementById('inputBuscarProducto');
 const listaResultados = document.getElementById('listaResultados');
 
