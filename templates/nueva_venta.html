@@ -1,4 +1,10 @@
-<!DOCTYPE html>
+
+{% extends "base.html" %}
+{% block title %}Gestión de Inventario{% endblock %}
+{% block page %}Inventario{% endblock %}
+
+{% block content %}
+
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -17,236 +23,294 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <style>
-        /* ------------------ PALETA COQUETTE MAGENTA Y NEÓN ------------------ */
-        :root {
-            --color-magenta-oscuro-degrade: #880E4F;
-            --color-magenta-principal: #E91E63;
-            --color-magenta-degrade: #FF4081;
-            --color-magenta-suave: #FCE4EC;
-            --color-magenta-texto: #AD1457;
-            --color-neon-line: #FF80AB;
-            --color-navbar: #000000;
-            --color-fondo-pagina: #f9fbfd;
-            --color-card-fondo: #FFFFFF;
-            --color-texto-oscuro: #333333;
-            --color-borde-suave: #e0e0e0;
-            --color-sombra: rgba(0, 0, 0, 0.1);
-            --color-rojo: #dc3545;
-            --color-vuelto-positivo: #FFD1DC;
+        /* =========================================================
+           THEME: Blush / Fucsia Clean (inspirado en tu imagen)
+           SOLO DISEÑO. No cambia lógica.
+           ========================================================= */
+
+        :root{
+          /* Base */
+          --bg: #FBF4F8;              /* fondo rosado muy claro */
+          --surface: #FFFFFF;         /* tarjetas */
+          --surface-2: #FFF7FB;       /* superficies suaves */
+          --text: #1f1f1f;
+          --muted: #6b6b6b;
+          --border: #F0D9E6;          /* borde rosado suave */
+          --shadow: 0 10px 30px rgba(0,0,0,.08);
+
+          /* Brand */
+          --primary: #E52768;         /* fucsia principal */
+          --primary-2: #D66AA0;       /* rosa medio */
+          --primary-3: #E698B4;       /* rosa claro */
+          --deep: #A01273;            /* morado/fucsia profundo */
+
+          /* Dark header / table */
+          --dark: #080909;
+
+          /* Accents */
+          --success: #278B5D;         /* verde exportar */
+          --info: #97CCF4;            /* azul claro */
+          --danger: #FF5A7A;          /* rojo/rosa eliminar */
+          --focus: rgba(229,39,104,.15);
         }
 
         html { height: 100%; }
         body {
             font-family: 'Poppins', sans-serif;
-            background-color: var(--color-fondo-pagina) !important;
-            color: var(--color-texto-oscuro);
+            background: var(--bg) !important;
+            color: var(--text);
             display: flex;
             flex-direction: column;
-            min-height: 100%; 
+            min-height: 100%;
         }
 
+        /* Layout */
         .container-venta {
             display: flex;
             flex-wrap: wrap;
-            gap: 20px;
+            gap: 22px;
             max-width: 1400px;
-            margin: 20px auto; 
-            padding: 0 20px; 
+            margin: 20px auto;
             flex: 1;
         }
         .columna-izquierda {
-            flex: 1.5; min-width: 300px; display: flex; flex-direction: column; gap: 20px;
+            flex: 1.5;
+            min-width: 300px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
         }
         .columna-derecha {
-            flex: 1; 
-            min-width: 300px; 
-            display: flex; 
-            flex-direction: column; 
+            flex: 1;
+            min-width: 300px;
+            display: flex;
+            flex-direction: column;
             gap: 20px;
         }
 
+        /* Navbar oscuro con acento fucsia */
         .navbar-custom {
-            background-color: var(--color-navbar); 
+            background-color: var(--dark) !important;
+            box-shadow: 0 4px 16px rgba(0,0,0,.25);
         }
-        
+        .navbar-custom .nav-link{
+            color: rgba(255,255,255,.85) !important;
+        }
+        .navbar-custom .nav-link.active{
+            color: #fff !important;
+            font-weight: 700;
+            position: relative;
+        }
+        .navbar-custom .nav-link.active::after{
+            content:"";
+            position:absolute;
+            left: .4rem;
+            right: .4rem;
+            bottom: .25rem;
+            height: 2px;
+            background: var(--primary);
+            border-radius: 20px;
+        }
+
+        /* Cards */
         .card {
-            background-color: var(--color-card-fondo);
-            border-radius: 15px; 
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+            background-color: var(--surface);
+            border-radius: 18px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
             overflow: hidden;
-            border: 1px solid var(--color-borde-suave);
         }
-        
+
+        /* Encabezado suave */
         .card-header {
-            background: linear-gradient(90deg, var(--color-magenta-oscuro-degrade) 0%, var(--color-magenta-principal) 100%);
-            color: white;
-            padding: 15px 20px;
-            font-size: 1.15rem;
-            font-weight: 600;
-            border-bottom: none;
+            background: linear-gradient(90deg, #FFE3EF 0%, #FFD2E5 100%);
+            color: var(--deep);
+            font-size: 1.05rem;
+            font-weight: 700;
+            border-bottom: 1px solid var(--border);
             display: flex;
             align-items: center;
         }
 
+        /* Inputs */
         .form-control, .form-select, .select2-container--bootstrap-5 .select2-selection {
-            padding: 12px;
-            border: 1px solid var(--color-borde-suave);
-            border-radius: 8px !important;
+            border: 1px solid var(--border);
+            border-radius: 12px !important;
             transition: all 0.2s;
+            background: #fff;
         }
 
-        .form-control:focus, .form-select:focus, .select2-container--bootstrap-5.select2-container--focus .select2-selection {
+        .form-control:focus, .form-select:focus,
+        .select2-container--bootstrap-5.select2-container--focus .select2-selection {
             outline: none;
-            border-color: var(--color-neon-line) !important;
-            box-shadow: 0 0 8px 1px rgba(255, 128, 171, 0.7) !important; 
-        }
-        
-        .form-grupo label {
-            color: var(--color-magenta-texto); 
-            font-weight: 600;
-            margin-bottom: 5px;
+            border-color: rgba(229,39,104,.55) !important;
+            box-shadow: 0 0 0 .25rem var(--focus) !important;
         }
 
+        .form-grupo label {
+            color: var(--deep);
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        /* Botón principal */
         .btn-primario {
-            background-color: var(--color-magenta-principal);
+            background-color: var(--primary);
             color: white;
             width: 100%;
-            padding: 12px 20px;
-            font-size: 1.05rem;
-            font-weight: 600;
+            font-size: 1.02rem;
+            font-weight: 700;
             border: none;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(233, 30, 99, 0.6); 
+            border-radius: 14px;
+            box-shadow: 0 10px 22px rgba(229,39,104,.25);
             transition: all 0.2s ease;
             text-transform: uppercase;
+            letter-spacing: .3px;
         }
 
         .btn-primario:hover {
-            background-color: var(--color-magenta-oscuro-degrade);
-            box-shadow: 0 6px 20px rgba(233, 30, 99, 0.8);
+            background-color: #D81B60;
+            box-shadow: 0 14px 28px rgba(229,39,104,.30);
             transform: translateY(-1px);
         }
-        
+
+        /* Total */
         .resumen-total {
             text-align: right;
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--color-magenta-principal);
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--primary);
             margin-top: 5px;
-            padding-top: 15px;
-            border-top: 3px solid var(--color-magenta-suave);
-            letter-spacing: 1px;
-            background-color: var(--color-magenta-suave);
-            border-radius: 10px;
+            background: #FFE3EF;
+            border: 1px solid var(--border);
+            border-radius: 16px;
             padding: 15px;
+            letter-spacing: .6px;
         }
-        
+
+        /* Vuelto */
         #contenedor-vuelto {
-            margin-top: 25px;
+            margin-top: 22px;
             padding: 15px;
-            background-color: #37474F;
+            background-color: var(--dark);
             color: white;
-            border-radius: 10px;
+            border-radius: 16px;
             text-align: center;
-            font-size: 1.5rem;
-            font-weight: 700;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            font-size: 1.3rem;
+            font-weight: 800;
+            box-shadow: 0 10px 24px rgba(0,0,0,.20);
         }
         #vuelto-monto {
-            font-size: 2rem;
+            font-size: 1.9rem;
             display: block;
-            margin-top: 5px;
+            margin-top: 6px;
         }
-        
+
+        /* Carrito scrol */
         #carrito-card-body {
-            min-height: 250px; 
+            min-height: 250px;
             max-height: 40vh;
-            overflow-y: auto; 
+            overflow-y: auto;
             padding-bottom: 0;
             padding-top: 0;
             padding-left: 20px;
             padding-right: 20px;
         }
-        
+
         #form_venta > .card:first-child {
-            flex-grow: 1; 
+            flex-grow: 1;
         }
 
-        .tabla thead th {
+        /* Tabla estilo “dashboard” */
+        .tabla{
+            border-collapse: separate;
+            border-spacing: 0 10px; /* filas separadas */
+        }
+        .tabla thead th{
             position: sticky;
             top: 0;
             z-index: 10;
+            background: var(--dark);
+            color: #fff;
+            border: none;
         }
+        .tabla thead th:first-child{ border-top-left-radius: 12px; border-bottom-left-radius: 12px; }
+        .tabla thead th:last-child{ border-top-right-radius: 12px; border-bottom-right-radius: 12px; }
 
-        .tabla tbody td {
-            white-space: normal; 
+        .tabla tbody tr{
+            background: #fff;
+            box-shadow: 0 8px 18px rgba(0,0,0,.05);
+            border-radius: 14px;
+        }
+        .tabla tbody td{
+            border: none !important;
+            
+            vertical-align: middle;
+            white-space: normal;
             word-wrap: break-word;
         }
+        .tabla tbody tr td:first-child{ border-top-left-radius: 14px; border-bottom-left-radius: 14px; }
+        .tabla tbody tr td:last-child{ border-top-right-radius: 14px; border-bottom-right-radius: 14px; }
 
-        .tabla th:nth-child(1), .tabla td:nth-child(1) {
-            width: 55%; 
+        .tabla th:nth-child(1), .tabla td:nth-child(1) { width: 55%; }
+
+        /* Botón eliminar (solo estilo) */
+        .btn-rojo{
+            background: var(--danger);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            padding: 8px 10px;
+            box-shadow: 0 8px 16px rgba(255,90,122,.20);
+            cursor: pointer;
+        }
+        .btn-rojo:hover{
+            filter: brightness(.95);
+            transform: translateY(-1px);
         }
 
-        /* 🔥 NUEVO: bloque de códigos electrónicos */
+        /* Bloque pagos electrónicos */
         #detalles_pago_electronico {
             margin-top: 18px;
             padding: 14px;
-            border-radius: 10px;
-            background: #fff7fb;
-            border: 1px dashed var(--color-neon-line);
+            border-radius: 16px;
+            background: var(--surface-2);
+            border: 1px dashed rgba(229,39,104,.45);
         }
         #detalles_pago_electronico strong {
-            color: var(--color-magenta-oscuro-degrade);
+            color: var(--deep);
         }
         .codigo-metodo {
             display: none;
             margin-top: 10px;
         }
 
+        /* Select2 look */
+        .select2-container--bootstrap-5 .select2-dropdown{
+            border-radius: 14px !important;
+            border: 1px solid var(--border) !important;
+            box-shadow: 0 16px 30px rgba(0,0,0,.12);
+        }
+        .select2-container--bootstrap-5 .select2-results__option--highlighted{
+            background: rgba(229,39,104,.12) !important;
+            color: var(--deep) !important;
+        }
+
+        /* Footer */
         footer {
-            background-color: var(--color-navbar); 
-            color: white; 
-            padding: 10px 0; 
+            background-color: var(--dark);
+            color: rgba(255,255,255,.9);
+            padding: 10px 0;
             text-align: center;
-            margin-top: auto; 
+            margin-top: auto;
             font-size: 0.9rem;
-            width: 100%; 
+            width: 100%;
         }
     </style>
 </head>
+
 <body>
 
-{% if current_user.is_authenticated %}
-<nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
-    <div class="container-fluid">
-        <a class="navbar-brand d-flex align-items-center" href="{{ url_for('dashboard') or url_for('clientes') }}">
-            <i class="fas fa-gem me-2"></i> 
-            LA COSMETIQUERA DE GABI
-        </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
-                <li class="nav-item"><a class="nav-link" href="{{ url_for('inventario') }}">Inventario</a></li>
-                <li class="nav-item"><a class="nav-link" href="{{ url_for('clientes') }}">Clientes</a></li>
-                <li class="nav-item"><a class="nav-link active" aria-current="page" href="{{ url_for('nueva_venta') }}">Ventas Diarias</a></li> 
-                {% if current_user.rol.lower() == 'administrador' %}
-                <li class="nav-item"><a class="nav-link" href="{{ url_for('reportes') }}">Cierre / Informes</a></li>
-                <li class="nav-item"><a class="nav-link" href="{{ url_for('usuarios') }}">Gestión de Usuarios</a></li>
-                {% endif %}
-            </ul>
-            <span class="navbar-text me-3 text-white">
-                Hola, {{ current_user.username }}
-                <span class="badge text-bg-light">{{ current_user.rol }}</span>
-            </span>
-            <a class="btn btn-sm btn-light text-dark" href="{{ url_for('logout') }}">Cerrar Sesión</a>
-        </div>
-    </div>
-</nav>
-{% endif %}
 
 <script id="product-data" type="application/json">
 [
@@ -304,7 +368,7 @@
             <div class="card-body">
                 <div class="form-grupo">
                     <label for="cliente_id">Cliente para la Venta</label>
-                    <select name="cliente_id" id="cliente_id" class="form-select" form="form_venta" data-bs-theme="bootstrap-5"> 
+                    <select name="cliente_id" id="cliente_id" class="form-select" form="form_venta" data-bs-theme="bootstrap-5">
                         {% for cliente in clientes %}
                             <option value="{{ cliente.id }}" {% if cliente.id == 1 %}selected{% endif %}>{{ cliente.nombre }}</option>
                         {% endfor %}
@@ -425,9 +489,7 @@
     </div>
 </div>
 
-<footer>
-    <p class="mb-0">POS Cosmetiquería | Todos los derechos reservados &copy; {{ now.year }}</p> 
-</footer>
+
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
@@ -494,11 +556,11 @@
         $vueltoMonto.text(`$ ${formatCurrency(vuelto)}`);
 
         if (vuelto > 0) {
-            $vueltoMonto.css('color', 'var(--color-vuelto-positivo)');
+            $vueltoMonto.css('color', '#FFD1DC');
             $vueltoMonto.css('text-shadow', '0 0 5px rgba(255, 209, 220, 0.8)');
         } else if (totalPagado < totalCarrito) {
             $vueltoMonto.text(`$ 0 (Faltan $${formatCurrency(totalCarrito - totalPagado)})`);
-            $vueltoMonto.css('color', 'var(--color-magenta-principal)');
+            $vueltoMonto.css('color', '#E52768');
             $vueltoMonto.css('text-shadow', 'none');
         } else {
             $vueltoMonto.css('color', 'white');
@@ -577,7 +639,7 @@
                 <td>
                     <input type="number" value="${item.cantidad}" min="1" max="${producto.stock}"
                            class="form-control form-control-sm cantidad-input"
-                           style="width: 70px; display: inline-block; text-align: center;">
+                           style="width: 100px; display: inline-block; text-align: center;">
                 </td>
                 <td style="text-align: right;" class="fw-bold text-success">$${formatCurrency(item.subtotal)}</td>
                 <td>
@@ -753,3 +815,5 @@
 
 </body>
 </html>
+``
+{% endblock %}

@@ -1,271 +1,231 @@
-/* static/css/styles.css */
-
 /* --------------------------------------------------------- */
-/* COLORES DE MARCA (Actualizados) */
+/* 1. VARIABLES Y CONFIGURACIÓN */
 /* --------------------------------------------------------- */
 :root {
-    --color-principal: #9c0277; /* Magenta oscuro principal */
-    --color-principal-light: #aa0066; /* Magenta más claro para degradados */
-    --color-principal-dark: #800050;  /* Magenta más oscuro */
-    --color-secundario: #000000; /* Negro */
-    --color-texto-claro: #FFFFFF; /* Blanco */
-    --color-fondo-suave: #F8F8F8;
-
-    /* Coquette */
+    /* Marca Principal */
+    --color-principal: #9c0277;
+    --color-principal-light: #c2188d;
+    --color-principal-dark: #7a015d;
+    --color-secundario: #1a1a1a;
+    
+    /* Estilo Coquette */
     --coquette-pink: #ffb6dc;
+    --coquette-soft: #fce4ef;
     --coquette-strong: #ff69b4;
-    --coquette-glow: rgba(255, 182, 225, 0.7);
+    --coquette-glow: rgba(255, 182, 225, 0.5);
+    
+    /* UI Helpers */
+    --bg-light: #ffffff;
+    --bg-soft: #f8f9fa;
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.1);
+    --shadow-md: 0 8px 20px rgba(0,0,0,0.15);
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* --------------------------------------------------------- */
-/* A. BODY Y ESTRUCTURA GENERAL */
-/* --------------------------------------------------------- */
+/* Reset suave */
+* {
+    box-sizing: border-box;
+}
+
 body {
-    background-color: #ffffff;
+    background-color: var(--bg-light);
     color: var(--color-secundario);
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    position: relative;
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    overflow-x: hidden;
 }
 
 /* --------------------------------------------------------- */
-/* B. NAVBAR COQUETTE PREMIUM */
+/* 2. NAVBAR MODERNA (GLASSMORPHISM) */
 /* --------------------------------------------------------- */
 .nav-coquette {
-    background: #000;
-    padding: 0.7rem 1.4rem;
-    border-bottom: 2px solid #ffb6dc4a;
-    backdrop-filter: blur(6px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.45);
+    background: rgba(0, 0, 0, 0.85);
+    padding: 0.6rem 1.5rem;
+    border-bottom: 2px solid var(--coquette-pink);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
 
-/* Logo contenedor */
 .logo-wrapper {
-    width: 60px;
-    height: 60px;
+    width: 55px;
+    height: 55px;
     border-radius: 50%;
-    padding: 6px;
-    background: linear-gradient(135deg, #ff8fb7, #ffcee6);
-    box-shadow: 0 0 12px rgba(255, 167, 210, .6);
+    padding: 3px;
+    background: linear-gradient(135deg, var(--coquette-pink), var(--coquette-strong));
     display: flex;
     justify-content: center;
     align-items: center;
+    transition: var(--transition);
+}
+
+.logo-wrapper:hover {
+    transform: rotate(5deg) scale(1.05);
+    box-shadow: 0 0 15px var(--coquette-pink);
 }
 
 .logo-coquette {
-    width: 95%;
-    height: auto;
+    width: 90%;
+    height: 90%;
+    object-fit: cover;
     border-radius: 50%;
-    transition: 0.3s ease;
 }
 
-.logo-wrapper:hover .logo-coquette {
-    transform: scale(1.07);
-}
-
-/* Nombre marca */
 .titulo-coquette {
     font-family: 'Playfair Display', serif;
-    font-size: 1.3rem;
-    font-weight: 900;
-    color: #fce4ef;
-    letter-spacing: 1px;
-    text-shadow: 0 0 8px var(--coquette-glow);
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--coquette-soft);
+    letter-spacing: 0.5px;
+    margin-left: 12px;
 }
 
-/* Links de navegación */
 .nav-link-coquette {
-    color: #fff !important;
+    color: #ffffff !important;
+    text-decoration: none;
+    font-size: 0.95rem;
     font-weight: 500;
-    margin: 0 8px;
-    transition: all .25s ease-out;
+    padding: 8px 12px;
+    transition: var(--transition);
 }
 
 .nav-link-coquette:hover {
     color: var(--coquette-pink) !important;
-    text-shadow: 0 0 10px var(--coquette-glow);
-    transform: translateY(-1px);
-}
-
-/* Usuario */
-.user-badge-coquette {
-    font-weight: 600;
-    color: white;
-}
-
-.role-badge {
-    background: var(--coquette-pink);
-    color: #000;
-    font-weight: 700;
-}
-
-/* Botón logout */
-.btn-logout-coquette {
-    background: linear-gradient(45deg, #ff6ea8, #ff8fba);
-    border: none;
-    padding: 6px 14px;
-    color: white !important;
-    border-radius: 10px;
-    font-weight: 600;
-    transition: 0.3s ease;
-}
-
-.btn-logout-coquette:hover {
-    background: linear-gradient(45deg, #ff5c95, #ff79ad);
-    transform: translateY(-2px);
-}
-
-/* Responsive navbar */
-@media (max-width: 576px) {
-    .titulo-coquette { display: none; }
-    .logo-wrapper { width: 50px; height: 50px; }
+    text-shadow: 0 0 8px var(--coquette-glow);
 }
 
 /* --------------------------------------------------------- */
-/* C. BOTONES GLOSSI NEOMORFISMO */
+/* 3. BOTONES Y ACCIONES */
 /* --------------------------------------------------------- */
 .btn {
     border: none;
-    border-radius: 25px;
-    padding: 10px 25px;
-    font-weight: bold;
-    transition: all 0.3s ease-in-out;
-    cursor: pointer;
+    border-radius: 50px; /* Más redondeados para el estilo coquette */
+    padding: 12px 28px;
+    font-weight: 700;
+    transition: var(--transition);
     text-transform: uppercase;
-    letter-spacing: 0.5px;
-    box-shadow: 5px 5px 10px rgba(0,0,0,0.1),
-                -5px -5px 10px rgba(255,255,255,0.7);
-}
-
-.btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 7px 7px 15px rgba(0,0,0,0.2),
-                -7px -7px 15px rgba(255,255,255,0.8);
-}
-
-.btn:active {
-    transform: translateY(1px);
-    box-shadow: inset 2px 2px 5px rgba(0,0,0,0.2),
-                inset -2px -2px 5px rgba(255,255,255,0.5);
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, var(--color-principal-light) 0%, var(--color-principal) 100%);
-    color: white !important;
+    background: linear-gradient(135deg, var(--color-principal) 0%, var(--color-principal-dark) 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(156, 2, 119, 0.3);
 }
 
 .btn-primary:hover {
-    background: linear-gradient(135deg, var(--color-principal) 0%, var(--color-principal-dark) 100%);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(156, 2, 119, 0.4);
+    filter: brightness(1.1);
+}
+
+/* Botón Logout específico */
+.btn-logout-coquette {
+    background: linear-gradient(45deg, var(--coquette-strong), #ff8fba);
+    color: white;
+    padding: 8px 18px;
+    border-radius: 12px;
+    font-size: 0.9rem;
 }
 
 /* --------------------------------------------------------- */
-/* D. TABLAS */
-/* --------------------------------------------------------- */
-.table th {
-    background-color: var(--color-secundario);
-    color: var(--color-texto-claro);
-}
-
-/* --------------------------------------------------------- */
-/* E. ALERTAS */
-/* --------------------------------------------------------- */
-.alert-success {
-    background-color: #f8e6f2;
-    border-color: var(--color-principal);
-    color: var(--color-secundario);
-}
-
-/* --------------------------------------------------------- */
-/* F. FONDO DE ICONOS ANIMADO */
-/* --------------------------------------------------------- */
-.fondo-iconos {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100vh;
-    background-image: url('../img/fondo.png');
-    background-repeat: repeat;
-    background-size: 120px 120px;
-    opacity: 0.15;
-    z-index: 0;
-    pointer-events: none;
-    animation: moverFondo 60s linear infinite;
-}
-
-@keyframes moverFondo {
-    0% { background-position: 0 0; }
-    100% { background-position: 1000px 1000px; }
-}
-
-/* --------------------------------------------------------- */
-/* G. TARJETA DE BIENVENIDA */
+/* 4. DASHBOARD Y TARJETAS */
 /* --------------------------------------------------------- */
 .welcome-card {
-    background: linear-gradient(135deg, #ffb6e1, #ff69b4, #ff1493);
-    color: #fff;
-    border-radius: 25px;
-    padding: 50px 35px;
-    box-shadow: 0 15px 35px rgba(0,0,0,0.2);
-    text-align: center;
-    max-width: 600px;
-    width: 100%;
-    font-family: 'Playfair Display', serif;
+    background: linear-gradient(-45deg, #ffb6e1, #ff69b4, #9c0277, #ff1493);
     background-size: 400% 400%;
-    animation: gradientMove 10s ease infinite;
-}
-
-.welcome-card h2 {
-    font-size: 2.2rem;
-    font-weight: 900;
-    margin-bottom: 12px;
+    animation: gradientMove 15s ease infinite;
+    color: #fff;
+    border-radius: 30px;
+    padding: 60px 40px;
+    box-shadow: var(--shadow-md);
+    text-align: center;
+    margin: 2rem auto;
 }
 
 @keyframes gradientMove {
-    0%{background-position:0% 50%;}
-    50%{background-position:100% 50%;}
-    100%{background-position:0% 50%;}
-}
-
-/* --------------------------------------------------------- */
-/* H. BOTONES DASHBOARD COQUETTE */
-/* --------------------------------------------------------- */
-.dashboard-buttons {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 25px;
-    max-width: 700px;
-    width: 100%;
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
 }
 
 .btn-dashboard {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    padding: 20px 35px;
-    font-size: 1.25rem;
-    font-weight: 700;
-    border-radius: 25px;
-    color: #fff;
-    transition: all 0.3s ease;
-    background: linear-gradient(135deg, #ff9ce1, #c71585);
+    background: white;
+    color: var(--color-principal);
+    padding: 20px 30px;
+    border-radius: 20px;
+    font-weight: 800;
     text-decoration: none;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    transition: var(--transition);
+    border: 1px solid var(--coquette-soft);
 }
 
 .btn-dashboard:hover {
-    transform: translateY(-5px) scale(1.08);
-    box-shadow: 12px 12px 25px rgba(0,0,0,0.25),
-                -12px -12px 25px rgba(255,255,255,0.6);
+    transform: translateY(-8px);
+    background: var(--coquette-soft);
+    box-shadow: var(--shadow-md);
 }
 
-/* Responsive */
-@media (max-width: 576px) {
-    .dashboard-buttons {
-        flex-direction: column;
-        gap: 15px;
+/* --------------------------------------------------------- */
+/* 5. TABLAS Y DATOS */
+/* --------------------------------------------------------- */
+.table-container {
+    overflow-x: auto;
+    border-radius: 15px;
+    box-shadow: var(--shadow-sm);
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+}
+
+.table th {
+    background-color: var(--color-secundario);
+    color: white;
+    padding: 15px;
+    text-align: left;
+    font-size: 0.9rem;
+}
+
+.table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #eee;
+}
+
+/* --------------------------------------------------------- */
+/* 6. RESPONSIVE DESIGN */
+/* --------------------------------------------------------- */
+@media (max-width: 768px) {
+    .titulo-coquette {
+        font-size: 1.1rem;
     }
-    .btn-dashboard {
-        width: 100%;
+    
+    .dashboard-buttons {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 15px;
+        padding: 0 20px;
+    }
+    
+    .welcome-card {
+        padding: 40px 20px;
+        margin: 1rem;
     }
 }
