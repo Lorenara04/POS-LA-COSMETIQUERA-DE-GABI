@@ -6,83 +6,120 @@
 {% if current_user.rol.lower() == 'administrador' %}
 
 <style>
-/* 🎀 Tarjetas y botones coquette */
-.btn-coquette {
-    background: linear-gradient(45deg, #ff8fab, #ffb3c6);
+/* 🎀 Paleta de colores unificada */
+:root {
+    --magenta-principal: #D81B60; 
+    --magenta-suave: #FDEEF4;    
+    --negro-header: #111111;     
+    --rosa-borrar: #F48FB1;      
+}
+
+/* Título estilo coquette */
+.titulo-coquette {
+    font-weight: 800;
+    color: #444;
+    text-align: center;
+    margin: 25px 0;
+}
+
+/* Contenedor de tabla redondeado */
+.tabla-coquette-container {
+    border-radius: 15px;
+    background: #fff;
+    border: 1px solid #f0f0f0;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    overflow: hidden;
+}
+
+/* Encabezados Negros (como en Gestión de Ventas e Inventario) */
+.table-coquette thead th {
+    background: var(--negro-header);
+    color: white !important;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border: none;
+    padding: 15px;
+    text-transform: uppercase;
+}
+
+/* Filas Rosadas (como en Gestión de Ventas) */
+.table-coquette tbody tr {
+    background-color: var(--magenta-suave);
+    border-bottom: 2px solid white; 
+}
+
+/* Botón Crear Usuario (Fucsia/Rosa) */
+.btn-crear {
+    background-color: #ff8fab;
     border: none;
     color: white;
-    font-weight: 600;
-    border-radius: 10px;
+    font-weight: 700;
+    border-radius: 12px;
+    padding: 10px 25px;
     transition: 0.3s;
 }
-.btn-coquette:hover {
-    background: linear-gradient(45deg, #ff7aa2, #ff99bb);
+.btn-crear:hover {
+    background-color: #ff7aa2;
+    color: white;
     transform: translateY(-2px);
 }
 
-/* Botón outline */
-.btn-coquette-outline {
+/* Botones de acción estilizados */
+.btn-accion-outline {
     border: 2px solid #ff8fab;
     color: #ff5c8d;
-    font-weight: 600;
+    font-weight: 700;
     border-radius: 10px;
+    padding: 5px 15px;
+    background: white;
+    text-decoration: none;
+    display: inline-block;
 }
-.btn-coquette-outline:hover {
+.btn-accion-outline:hover {
     background: #ff8fab;
     color: white;
 }
 
-/* Tabla estilo coquette */
-.table-coquette thead {
-    background: #ffe0ea;
-    color: #d63384;
-}
-.table-coquette tbody tr:hover {
-    background: #fff2f7;
-}
-
-/* Badge de roles */
-.badge-admin {
-    background: #c77dff;
-}
-.badge-vendedora {
-    background: #ffb3c6;
-    color: #6a004f;
+.btn-eliminar-coquette {
+    background-color: #cc3366; /* Rojo/Rosa oscuro de tus botones de borrar */
+    color: white;
+    font-weight: 700;
+    border-radius: 10px;
+    padding: 7px 15px;
+    border: none;
+    text-decoration: none;
 }
 
-/* Modal coquette */
-.modal-content {
-    border-radius: 20px !important;
-    border: 3px solid #ffc8dd;
-}
-.modal-header {
-    background: #ffe0ea;
-    border-radius: 20px 20px 0 0 !important;
-}
+/* Badges de Roles */
+.badge-admin { background: #c77dff; color: white; border-radius: 10px; }
+.badge-vendedora { background: #ffb3c6; color: #6a004f; border-radius: 10px; }
+
+/* Modales */
+.modal-content { border-radius: 25px; border: none; overflow: hidden; }
+.modal-header { background: var(--negro-header); color: white; }
 </style>
 
-<h2 class="mb-4 fw-bold text-center" style="color:#ff5c8d;">🎀 Gestión de Personal 🎀</h2>
+<h2 class="titulo-coquette">🎀 Gestión de Personal 🎀</h2>
 
-<!-- Botón abrir modal -->
-<div class="text-end mb-3">
-    <button type="button" class="btn btn-coquette btn-lg" data-bs-toggle="modal" data-bs-target="#agregarUsuarioModal">
-        + Crear Nuevo Usuario
+<div class="text-end mb-4 px-3">
+    <button type="button" class="btn btn-crear shadow-sm" data-bs-toggle="modal" data-bs-target="#agregarUsuarioModal">
+        + CREAR NUEVO USUARIO
     </button>
 </div>
 
-<div class="table-responsive shadow-sm">
-    <table class="table table-hover table-coquette align-middle">
+<div class="mx-3 mb-5 tabla-coquette-container">
+    <table class="table table-hover table-coquette align-middle text-center mb-0">
         <thead>
             <tr>
                 <th>Usuario</th>
                 <th>Rol</th>
-                <th class="text-center">Acciones</th>
+                <th>Acciones</th>
             </tr>
         </thead>
         <tbody>
             {% for usuario in usuarios %}
             <tr>
-                <td class="fw-semibold">{{ usuario.username }}</td>
+                <td class="fw-bold" style="color: #333;">{{ usuario.username | upper }}</td>
                 <td>
                     {% if usuario.rol.lower() == 'administrador' %}
                         <span class="badge badge-admin px-3 py-2">Administrador</span>
@@ -90,20 +127,20 @@
                         <span class="badge badge-vendedora px-3 py-2">Vendedora</span>
                     {% endif %}
                 </td>
-                <td class="text-center">
+                <td>
                     {% if usuario.id != current_user.id %}
                     <a href="{{ url_for('editar_usuario', usuario_id=usuario.id) }}" 
-                       class="btn btn-coquette-outline btn-sm me-2">
-                        ✏ Editar
+                       class="btn-accion-outline me-2">
+                       ✏ EDITAR
                     </a>
 
                     <a href="{{ url_for('eliminar_usuario', usuario_id=usuario.id) }}" 
-                       class="btn btn-danger btn-sm"
-                       data-confirm="¿Seguro que deseas eliminar a {{ usuario.username }}?">
-                        🗑 Eliminar
+                       class="btn-eliminar-coquette"
+                       onclick="return confirm('¿Seguro que deseas eliminar a {{ usuario.username }}?')">
+                       🗑 ELIMINAR
                     </a>
                     {% else %}
-                    <span class="text-muted small">Tu cuenta</span>
+                    <span class="text-muted small fw-bold">Tu cuenta</span>
                     {% endif %}
                 </td>
             </tr>
@@ -112,67 +149,59 @@
     </table>
 </div>
 
-<!-- Modal Agregar Usuario -->
-<div class="modal fade" id="agregarUsuarioModal" tabindex="-1" aria-labelledby="agregarUsuarioModalLabel" aria-hidden="true">
+<div class="modal fade" id="agregarUsuarioModal" tabindex="-1">
   <div class="modal-dialog">
-    <div class="modal-content">
-
+    <div class="modal-content shadow-lg">
       <form action="{{ url_for('agregar_usuario') }}" method="POST">
-
         <div class="modal-header">
-          <h5 class="modal-title fw-bold" id="agregarUsuarioModalLabel" style="color:#d63384;">
-            ✨ Crear Nuevo Usuario ✨
-          </h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          <h5 class="modal-title fw-bold">✨ Crear Nuevo Usuario ✨</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
 
-        <div class="modal-body">
+        <div class="modal-body p-4">
           <div class="mb-3">
-            <label class="form-label fw-bold">Usuario</label>
-            <input type="text" class="form-control" name="username" required>
+            <label class="form-label fw-bold">Nombre de Usuario</label>
+            <input type="text" class="form-control rounded-3" name="username" required>
           </div>
-
-          <div class="mb-3">
-            <label class="form-label fw-bold">Nombre</label>
-            <input type="text" class="form-control" name="nombre" required>
+          <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label fw-bold">Nombre</label>
+                <input type="text" class="form-control rounded-3" name="nombre" required>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label fw-bold">Apellido</label>
+                <input type="text" class="form-control rounded-3" name="apellido" required>
+              </div>
           </div>
-
-          <div class="mb-3">
-            <label class="form-label fw-bold">Apellido</label>
-            <input type="text" class="form-control" name="apellido" required>
-          </div>
-
           <div class="mb-3">
             <label class="form-label fw-bold">Cédula</label>
-            <input type="text" class="form-control" name="cedula" required>
+            <input type="text" class="form-control rounded-3" name="cedula" required>
           </div>
-
           <div class="mb-3">
-            <label class="form-label fw-bold">Rol</label>
-            <select class="form-select" name="rol" required>
+            <label class="form-label fw-bold">Rol en el Sistema</label>
+            <select class="form-select rounded-3" name="rol" required>
               <option value="Administrador">Administrador</option>
               <option value="Vendedora">Vendedora</option>
             </select>
           </div>
-
           <div class="mb-3">
             <label class="form-label fw-bold">Contraseña</label>
-            <input type="password" class="form-control" name="password" required>
+            <input type="password" class="form-control rounded-3" name="password" required>
           </div>
         </div>
 
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-          <button type="submit" class="btn btn-coquette">Crear Usuario</button>
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-crear rounded-pill px-4">Guardar Usuario</button>
         </div>
-
       </form>
-
     </div>
   </div>
 </div>
 
 {% else %}
-<p class="text-muted text-center">No tienes permisos para ver esta sección.</p>
+<div class="container text-center mt-5">
+    <p class="text-muted fs-5">No tienes permisos para ver esta sección. ✨</p>
+</div>
 {% endif %}
 {% endblock %}

@@ -164,4 +164,41 @@
         </div>
     </main>
 </body>
+<!-- AGREGADO EN reportes.html -->
+ <title>IMPORTACION Y EXPORTACION DE REPORTES</title>
+<!-- Agregado de nuevo botón de exportar cierres -->
+ <a class="btn btn-outline-dark rounded-pill px-3" href="{{ url_for('exportar_cierres_excel') }}">
+            <i class="fas fa-file-excel me-1"></i> Exportar cierres
+        </a>
+  <!-- EXPORTAR ACUMULADO HOY   -->
+    <a class="btn btn-outline-dark rounded-pill px-3"
+           href="{{ url_for('exportar_acumulados_excel', fecha_inicio=hoy, fecha_fin=hoy) }}">
+            <i class="fas fa-file-invoice-dollar me-1"></i> Acumulado hoy
+        </a>    
+
+<!-- AGREGADO EN importar_datos.html -->
+         <div class="col-md-6">
+                <form action="{{ url_for('importar_cierres_excel') }}" method="POST" enctype="multipart/form-data" class="mb-2">
+                    <label class="small fw-bold">Importar Cierres de Caja</label>
+                    <div class="input-group input-group-sm">
+                        <input type="file" name="excel_file" class="form-control" accept=".xlsx" required>
+                        <button type="submit" class="btn btn-dark">Subir</button>
+                    </div>
+                </form>
+            </div>
+            <div class="col-md-6">
+                <form action="{{ url_for('importar_acumulado_mes_excel') }}" method="POST" enctype="multipart/form-data">
+                    <label class="small fw-bold">Importar Acumulado Mensual</label>
+                    <div class="input-group input-group-sm">
+                        <input type="file" name="excel_file" class="form-control" accept=".xlsx" required>
+                        <button type="submit" class="btn btn-dark">Subir</button>
+                    </div>
+                </form>
+                  <div class="card-informe mb-4 bg-light border-0">
+        <h6 class="fw-bold text-coquette mb-3"><i class="fas fa-upload me-2"></i>Mantenimiento de Datos</h6>
+        <div class="row">
+           
+            </div>
+        </div>
+    </div>
 </html>

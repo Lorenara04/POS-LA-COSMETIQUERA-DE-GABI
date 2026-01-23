@@ -868,10 +868,21 @@ def ejecutar_cierre_caja():
 
     # 2. PROCESAR EGRESOS (GASTOS) - Para que dejen de salir en $0
     # Asegúrate que el modelo se llame Gasto en tu proyecto
-    egresos_hoy = Gasto.query.filter(and_(Gasto.fecha >= inicio_utc, Gasto.fecha <= fin_utc)).all()
+    # 2. PROCESAR EGRESOS (GASTOS) - CORREGIDO
+    # Filtramos directamente por la fecha_comercial (tipo Date)
+    egresos_hoy = Gasto.query.filter_by(fecha=fecha_comercial).all()
+    
     tot_egresos = sum(float(e.total) for e in egresos_hoy)
-    lista_egresos = [{'concepto':e.concepto, 'medio':e.medio_pago, 'monto':float(e.total)} for e in egresos_hoy]
-
+    
+    # IMPORTANTE: Tu modelo Gasto no tiene campo 'medio_pago', tiene abonos asociados.
+    # Si quieres el detalle simple, usamos el concepto y el total del gasto.
+    lista_egresos = []
+    for e in egresos_hoy:
+        lista_egresos.append({
+            'concepto': e.concepto,
+            'medio': e.categoria, # Usamos categoria como medio informativo
+            'monto': float(e.total)
+        })
     # 3. CONSOLIDAR SNAPSHOT (La clave para la imagen b6e2a0.png)
     snapshot = {
         'GENERAL': gen,
