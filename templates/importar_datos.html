@@ -3,202 +3,94 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Importar Inventario - La Cosmetiquera de Gabi</title>
+    <title>Importar Inventario</title>
+
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f4f7f9; }
-        .card-import { border-left: 5px solid #E91E63; }
-        .btn-primary { background-color: #E91E63; border-color: #E91E63; }
-        .btn-primary:hover { background-color: #C2185B; border-color: #C2185B; }
-        .alert-info { background-color: #e0f2fe; border-color: #3b82f6; color: #1e3a8a; }
+        body {
+            font-family: Inter, system-ui, sans-serif;
+            background-color: #f4f7f9;
+        }
+
+        .btn-primary {
+            background: #ec4899;
+        }
+
+        .btn-primary:hover {
+            background: #db2777;
+        }
     </style>
 </head>
-<body class="min-h-screen flex flex-col">
 
-    {% include 'navbar.html' %} 
+<body class="min-h-screen bg-gray-100">
 
-    <main class="flex-grow container mx-auto p-4 md:p-8">
-        <h1 class="text-3xl font-bold text-gray-800 mb-6 border-b pb-2">
-            <i class="fas fa-file-upload text-pink-600"></i> Importar Productos por Excel
-        </h1>
+{% include 'navbar.html' %}
 
-        <!-- Mensajes Flash de Flask -->
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                <div class="space-y-3 mb-6">
-                    {% for category, message in messages %}
-                        <div class="p-4 rounded-lg shadow-md {% if category == 'success' %}bg-green-100 border-l-4 border-green-500 text-green-700{% elif category == 'danger' %}bg-red-100 border-l-4 border-red-500 text-red-700{% else %}bg-blue-100 border-l-4 border-blue-500 text-blue-700{% endif %}" role="alert">
-                            {{ message }}
-                        </div>
-                    {% endfor %}
-                </div>
-            {% endif %}
-        {% endwith %}
+<div class="max-w-5xl mx-auto mt-10 p-6 bg-white rounded-lg shadow">
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            
-            <!-- Columna de Instrucciones -->
-            <div class="lg:col-span-2 space-y-6">
-                <div class="bg-white p-6 rounded-xl shadow-lg card-import">
-                    <h2 class="text-2xl font-semibold text-gray-700 mb-4"><i class="fas fa-list-check mr-2 text-pink-600"></i> Instrucciones de Importación</h2>
-                    
-                    <p class="text-gray-600 mb-4">Para importar correctamente su inventario, debe seguir estas reglas:</p>
+    <h1 class="text-3xl font-bold mb-6 text-gray-800">
+        <i class="fas fa-file-upload text-pink-600"></i>
+        Importar Inventario por Excel
+    </h1>
 
-                    <ol class="list-decimal list-inside text-gray-600 space-y-2 pl-4">
-                        <li class="font-semibold">El archivo debe ser formato **.xlsx** (Excel).</li>
-                        <li class="font-semibold">El archivo debe tener una hoja llamada exactamente: <span class="text-pink-600 font-extrabold">"Producto"</span>.</li>
-                        <li class="font-semibold">La importación **borrará todo el inventario existente** y lo reemplazará con los datos del Excel. ¡Úselo con cuidado!</li>
-                        <li>Las columnas son sensibles a mayúsculas y minúsculas y deben ser las siguientes (el orden no importa):</li>
-                    </ol>
-                    
-                    <div class="mt-4 p-4 border rounded-lg bg-gray-50 overflow-x-auto">
-                        <h3 class="font-bold text-gray-700 mb-2">Columnas Requeridas/Opcionales:</h3>
-                        <table class="w-full text-sm text-left text-gray-500">
-                            <thead class="text-xs text-gray-700 uppercase bg-gray-100">
-                                <tr>
-                                    <th scope="col" class="px-6 py-3">Nombre Columna</th>
-                                    <th scope="col" class="px-6 py-3">Obligatorio</th>
-                                    <th scope="col" class="px-6 py-3">Tipo de Dato</th>
-                                    <th scope="col" class="px-6 py-3">Descripción</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr class="bg-white border-b">
-                                    <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">nombre</td>
-                                    <td class="px-6 py-4 text-green-600 font-bold">SÍ</td>
-                                    <td class="px-6 py-4">Texto</td>
-                                    <td class="px-6 py-4">Nombre del producto (e.g., Mascara Pestañas X).</td>
-                                </tr>
-                                <tr class="bg-white border-b">
-                                    <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">valor_venta</td>
-                                    <td class="px-6 py-4 text-green-600 font-bold">SÍ</td>
-                                    <td class="px-6 py-4">Número (Decimal)</td>
-                                    <td class="px-6 py-4">Precio final al público.</td>
-                                </tr>
-                                <tr class="bg-white border-b">
-                                    <td class="px-6 py-4">cantidad</td>
-                                    <td class="px-6 py-4 text-red-600">NO</td>
-                                    <td class="px-6 py-4">Número (Entero)</td>
-                                    <td class="px-6 py-4">Stock actual. Si falta, se asume 0.</td>
-                                </tr>
-                                <tr class="bg-white border-b">
-                                    <td class="px-6 py-4">codigo</td>
-                                    <td class="px-6 py-4 text-red-600">NO</td>
-                                    <td class="px-6 py-4">Texto/Número</td>
-                                    <td class="px-6 py-4">Código de barras o SKU único. Si falta, se genera automáticamente.</td>
-                                </tr>
-                                <tr class="bg-white border-b">
-                                    <td class="px-6 py-4">marca</td>
-                                    <td class="px-6 py-4 text-red-600">NO</td>
-                                    <td class="px-6 py-4">Texto</td>
-                                    <td class="px-6 py-4">Marca o fabricante.</td>
-                                </tr>
-                                <tr class="bg-white border-b">
-                                    <td class="px-6 py-4">descripcion</td>
-                                    <td class="px-6 py-4 text-red-600">NO</td>
-                                    <td class="px-6 py-4">Texto</td>
-                                    <td class="px-6 py-4">Descripción corta.</td>
-                                </tr>
-                                <tr class="bg-white">
-                                    <td class="px-6 py-4">valor_interno</td>
-                                    <td class="px-6 py-4 text-red-600">NO</td>
-                                    <td class="px-6 py-4">Número (Decimal)</td>
-                                    <td class="px-6 py-4">Costo interno del producto.</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+    <!-- FLASH MESSAGES -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="mb-4 p-3 rounded
+            {% if category == 'success' %}bg-green-200 text-green-800
+            {% elif category == 'danger' %}bg-red-200 text-red-800
+            {% else %}bg-blue-200 text-blue-800{% endif %}">
+                {{ message }}
             </div>
+        {% endfor %}
+    {% endif %}
+    {% endwith %}
 
-            <!-- Columna de Carga de Archivo -->
-            <div class="lg:col-span-1">
-                <div class="bg-white p-6 rounded-xl shadow-lg">
-                    <h2 class="text-2xl font-semibold text-gray-700 mb-4"><i class="fas fa-cloud-upload-alt mr-2"></i> Cargar Archivo</h2>
-                    
-                    <form action="{{ url_for('importar_productos_excel') }}" method="post" enctype="multipart/form-data">
-                        <div class="mb-4">
-                            <label class="block text-gray-700 text-sm font-bold mb-2" for="excel_file">
-                                Seleccionar archivo .xlsx
-                            </label>
-                            <input 
-                                class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500" 
-                                id="excel_file" 
-                                type="file" 
-                                name="excel_file" 
-                                accept=".xlsx"
-                                required
-                            >
-                        </div>
-                        
-                        <div class="mb-6 alert-info p-3 rounded-lg text-xs">
-                             <i class="fas fa-exclamation-triangle mr-1"></i> ADVERTENCIA: Esta acción es irreversible y borra los datos actuales.
-                        </div>
+    <!-- INSTRUCCIONES -->
+    <div class="mb-8">
 
-                        <div class="flex items-center justify-end">
-                            <button 
-                                class="btn-primary text-white font-bold py-2 px-4 rounded-xl focus:outline-none focus:shadow-outline transition duration-150 ease-in-out hover:scale-[1.01]" 
-                                type="submit"
-                            >
-                                <i class="fas fa-upload mr-2"></i> Iniciar Importación
-                            </button>
-                        </div>
-                    </form>
-                </div>
+        <h2 class="text-xl font-semibold mb-2">Formato del Excel</h2>
 
-                <!-- Enlace de descarga de plantilla -->
-                <div class="mt-8 p-4 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded-xl shadow-md">
-                    <p class="font-bold mb-2"><i class="fas fa-download mr-2"></i> Descargar Plantilla de Ejemplo</p>
-                    <p class="text-sm">Si necesita un ejemplo de cómo debe lucir el archivo, puede descargar una plantilla modelo con las cabeceras exactas.</p>
-                    <!-- Enlace de descarga simulado que funciona como ejemplo -->
-                    <a href="data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,REPLACE_WITH_REAL_TEMPLATE_BASE64" 
-                       download="plantilla_inventario.xlsx"
-                       class="mt-3 inline-block text-yellow-800 underline hover:text-yellow-900 font-semibold" target="_blank">
-                         Descargar Plantilla.xlsx
-                    </a>
-                </div>
-            </div>
+        <p class="mb-2">Tu Excel debe tener estas columnas:</p>
 
+        <div class="bg-gray-100 p-4 rounded text-sm font-mono">
+            Código | Nombre | Descripción | Marca | stock | precio_venta | precio_interno | stock_minimo
         </div>
-    </main>
-</body>
-<!-- AGREGADO EN reportes.html -->
- <title>IMPORTACION Y EXPORTACION DE REPORTES</title>
-<!-- Agregado de nuevo botón de exportar cierres -->
- <a class="btn btn-outline-dark rounded-pill px-3" href="{{ url_for('exportar_cierres_excel') }}">
-            <i class="fas fa-file-excel me-1"></i> Exportar cierres
-        </a>
-  <!-- EXPORTAR ACUMULADO HOY   -->
-    <a class="btn btn-outline-dark rounded-pill px-3"
-           href="{{ url_for('exportar_acumulados_excel', fecha_inicio=hoy, fecha_fin=hoy) }}">
-            <i class="fas fa-file-invoice-dollar me-1"></i> Acumulado hoy
-        </a>    
 
-<!-- AGREGADO EN importar_datos.html -->
-         <div class="col-md-6">
-                <form action="{{ url_for('importar_cierres_excel') }}" method="POST" enctype="multipart/form-data" class="mb-2">
-                    <label class="small fw-bold">Importar Cierres de Caja</label>
-                    <div class="input-group input-group-sm">
-                        <input type="file" name="excel_file" class="form-control" accept=".xlsx" required>
-                        <button type="submit" class="btn btn-dark">Subir</button>
-                    </div>
-                </form>
-            </div>
-            <div class="col-md-6">
-                <form action="{{ url_for('importar_acumulado_mes_excel') }}" method="POST" enctype="multipart/form-data">
-                    <label class="small fw-bold">Importar Acumulado Mensual</label>
-                    <div class="input-group input-group-sm">
-                        <input type="file" name="excel_file" class="form-control" accept=".xlsx" required>
-                        <button type="submit" class="btn btn-dark">Subir</button>
-                    </div>
-                </form>
-                  <div class="card-informe mb-4 bg-light border-0">
-        <h6 class="fw-bold text-coquette mb-3"><i class="fas fa-upload me-2"></i>Mantenimiento de Datos</h6>
-        <div class="row">
-           
-            </div>
-        </div>
+        <p class="mt-2 text-red-600 font-semibold">
+            ⚠️ La importación BORRA todo el inventario actual.
+        </p>
+
     </div>
+
+    <!-- FORMULARIO -->
+    <form action="/admin/importar_productos"
+          method="POST"
+          enctype="multipart/form-data">
+
+        <label class="block mb-2 font-semibold">
+            Seleccione archivo Excel (.xlsx)
+        </label>
+
+        <input type="file"
+               name="excel_file"
+               accept=".xlsx"
+               required
+               class="border w-full p-2 rounded mb-4">
+
+        <button type="submit"
+                class="btn-primary text-white px-6 py-2 rounded font-bold">
+            <i class="fas fa-upload"></i> Importar
+        </button>
+
+    </form>
+
+</div>
+
+</body>
 </html>

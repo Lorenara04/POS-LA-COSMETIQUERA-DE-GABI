@@ -1591,6 +1591,7 @@ def eliminar_venta(venta_id):
         
     return redirect(url_for('gestion_ventas'))
 # -------------------- IMPORTAR EXCEL (ADMIN) --------------------
+
 @app.route('/importar')
 @login_required
 def vista_importar():
@@ -1599,126 +1600,82 @@ def vista_importar():
         return redirect(url_for('dashboard'))
     return render_template('importar_datos.html')
 
+
 @app.route('/admin/importar_productos', methods=['POST'])
 @login_required
 def importar_productos_excel():
+
     if current_user.rol.lower() != 'administrador':
-        flash('Permiso denegado. Solo administradores pueden importar datos.', 'danger')
+        flash('Permiso denegado.', 'danger')
         return redirect(url_for('inventario'))
 
     if 'excel_file' not in request.files:
-        flash('Error: No se encontró el archivo en la solicitud.', 'danger')
+        flash('No se envió archivo.', 'danger')
         return redirect(url_for('vista_importar'))
 
     file = request.files['excel_file']
-    if not file or file.filename == '':
-        flash('Error: Archivo no seleccionado.', 'danger')
+
+    if file.filename == '':
+        flash('No seleccionó archivo.', 'danger')
         return redirect(url_for('vista_importar'))
 
-    if not file.filename.endswith('.xlsx'):
-        flash('Error: El archivo debe ser un Excel (.xlsx).', 'danger')
+    if not file.filename.lower().endswith('.xlsx'):
+        flash('Debe ser archivo .xlsx', 'danger')
         return redirect(url_for('vista_importar'))
 
     try:
         excel_data = BytesIO(file.read())
-        df_productos = pd.read_excel(excel_data, sheet_name='Producto')
 
-        db.session.begin_nested()
+        # 👉 LEE PRIMERA HOJA SIN NOMBRE
+        df = pd.read_excel(excel_data)
+
+        # Normalizar encabezados
+        df.columns = [str(c).strip().lower() for c in df.columns]
+
+        columnas_requeridas = ['nombre', 'precio_venta']
+
+        for col in columnas_requeridas:
+            if col not in df.columns:
+                flash(f'Falta columna obligatoria: {col}', 'danger')
+                return redirect(url_for('vista_importar'))
+
+        # LIMPIAR TABLAS
         db.session.query(VentaDetalle).delete()
         db.session.query(Venta).delete()
         db.session.query(CierreCaja).delete()
         db.session.query(Producto).delete()
         db.session.commit()
 
-        filas_importadas = 0
-        for _, row in df_productos.iterrows():
-            row_lower = {str(k).lower(): v for k, v in row.items()}
-            if pd.isna(row_lower.get('nombre')) or pd.isna(row_lower.get('valor_venta')):
+        filas = 0
+
+        for _, row in df.iterrows():
+
+            if pd.isna(row.get('nombre')):
                 continue
 
-            def to_float(x, default=0.0):
-                try:
-                    return float(x)
-                except Exception:
-                    return default
-
-            def to_int(x, default=0):
-                try:
-                    return int(x)
-                except Exception:
-                    return default
-
-            nuevo_producto = Producto(
-                codigo=str(row_lower.get('codigo')) if pd.notna(row_lower.get('codigo')) else None,
-                nombre=str(row_lower.get('nombre')),
-                descripcion=str(row_lower.get('descripcion')) if pd.notna(row_lower.get('descripcion')) else None,
-                marca=str(row_lower.get('marca')) if pd.notna(row_lower.get('marca')) else None,
-                cantidad=to_int(row_lower.get('cantidad'), 0),
-                valor_venta=to_float(row_lower.get('valor_venta'), 0.0),
-                valor_interno=to_float(row_lower.get('valor_interno'), 0.0),
-                stock_minimo=to_int(row_lower.get('stock_minimo'), 5)
+            producto = Producto(
+                codigo = str(row.get('código')) if not pd.isna(row.get('código')) else None,
+                nombre = str(row.get('nombre')),
+                descripcion = str(row.get('descripción')) if not pd.isna(row.get('descripción')) else None,
+                marca = str(row.get('marca')) if not pd.isna(row.get('marca')) else None,
+                cantidad = int(row.get('stock')) if not pd.isna(row.get('stock')) else 0,
+                valor_venta = float(row.get('precio_venta')),
+                valor_interno = float(row.get('precio_interno')) if not pd.isna(row.get('precio_interno')) else 0,
+                stock_minimo = int(row.get('stock_minimo')) if not pd.isna(row.get('stock_minimo')) else 5
             )
-            db.session.add(nuevo_producto)
-            filas_importadas += 1
+
+            db.session.add(producto)
+            filas += 1
 
         db.session.commit()
-        flash(f'✅ ¡Éxito! {filas_importadas} productos importados desde Excel (Hoja Producto).', 'success')
-    except KeyError as e:
-        db.session.rollback()
-        flash(f'Error en el Excel: Columna/hoja no encontrada: {e}', 'danger')
+
+        flash(f'✅ {filas} productos importados correctamente.', 'success')
+
     except Exception as e:
         db.session.rollback()
-        flash(f'Error grave al procesar el Excel: {e}', 'danger')
+        flash(f'Error al importar: {e}', 'danger')
 
     return redirect(url_for('inventario'))
-
-
-with app.app_context():
-    try:
-        locale.setlocale(locale.LC_ALL, 'es_CO.UTF-8')
-    except locale.Error as le:
-        try:
-            locale.setlocale(locale.LC_ALL, 'C.UTF-8')
-        except locale.Error:
-            print(f"❌ Advertencia: Fallo al establecer el locale, usando el predeterminado. Error: {le}")
-
-    try:
-        db.create_all()
-        print("✅ Tablas creadas (o verificadas) correctamente en PostgreSQL de Render.")
-
-        admin = Usuario.query.filter_by(username='admin').first()
-        if not admin:
-            admin = Usuario(
-                username='admin',
-                nombre='Admin',
-                apellido='G',
-                cedula='123',
-                rol='Administrador'
-            )
-            admin.set_password('admin123')
-            db.session.add(admin)
-            db.session.flush()
-            print("✅ Usuario admin creado: admin / admin123")
-
-        generico = Cliente.query.get(1)
-        if not generico:
-            generico = Cliente(
-                id=1,
-                nombre='Contado / Genérico',
-                telefono='N/A',
-                direccion='N/A',
-                email='N/A'
-            )
-            db.session.add(generico)
-            db.session.flush()
-            print("✅ Cliente genérico creado.")
-
-        db.session.commit()
-
-    except Exception as e:
-        print(f"❌ ¡ERROR CRÍTICO DURANTE LA INICIALIZACIÓN DE DB!: {e}")
-        print("Asegúrese de que la URL de la base de datos sea accesible.")
-        db.session.rollback()
 # ======================IMPORTAR CIERRE DE CAJA ===========================================
 @app.route("/admin/importar_cierres_excel", methods=["POST"])
 @login_required
