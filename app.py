@@ -46,7 +46,7 @@ app.config["MAIL_USE_TLS"] = os.getenv("MAIL_USE_TLS", "true").lower() == "true"
 
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
     'DATABASE_URL',
-    'postgresql://la_cosmetiquera_de_gabi_user:z8vuwVK8rfm5S8CpZHZ3RITphvEolaqK@dpg-d48vb0i4d50c7391iap0-a.oregon-postgres.render.com/la_cosmetiquera_de_gabi'
+    'postgresql://pos_gabi_db_user:NY7byKI1ixOvMV86nr05Hgipr7nuqnR7@dpg-d5tmsn63jp1c73ec3ls0-a.oregon-postgres.render.com/pos_gabi_db'
 )
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 

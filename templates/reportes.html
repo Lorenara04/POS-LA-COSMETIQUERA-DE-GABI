@@ -5,76 +5,78 @@
 {% block content %}
 
 <style>
-    /* =========================
-       COQUETTE / ROCOCÓ REPORTES
-       ========================= */
-    .text-coquette { color: #9c0277; }
+/* =========================
+   AZUL ELEGANTE REPORTES
+   ========================= */
+
+.text-coquette { color: #1e88e5; }
     
-    .card-metric {
-        border: none;
-        border-radius: 18px;
-        transition: transform 0.2s;
-        color: white;
-        border: 2px solid rgba(248, 198, 221, 0.5);
-    }
-    .card-metric:hover {
-        transform: translateY(-5px);
-    }
+.card-metric {
+    border: none;
+    border-radius: 18px;
+    transition: transform 0.2s;
+    color: white;
+    border: 2px solid rgba(144, 202, 249, 0.6);
+}
+.card-metric:hover {
+    transform: translateY(-5px);
+}
 
-    /* Degradados actualizados a la paleta intensa */
-    .bg-gradient-pink { background: linear-gradient(145deg, #ff82b2, #ec407a); }
-    .bg-gradient-purple { background: linear-gradient(145deg, #9c0277, #7b015d); }
-    .bg-gradient-blue { background: linear-gradient(145deg, #000000, #333333); } /* Negro elegante para contraste */
+/* Degradados AZULES */
+.bg-gradient-pink { background: linear-gradient(145deg, #64b5f6, #1e88e5); }
+.bg-gradient-purple { background: linear-gradient(145deg, #42a5f5, #1565c0); }
+.bg-gradient-blue { background: linear-gradient(145deg, #0d47a1, #1976d2); }
 
-    .chart-container {
-        background: white;
-        border-radius: 20px;
-        padding: 20px;
-        box-shadow: 0 6px 16px rgba(255, 170, 200, 0.2);
-        height: 350px;
-        position: relative;
-        border: 2px solid #f8c6dd;
-    }
+.chart-container {
+    background: white;
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 0 6px 16px rgba(30, 136, 229, 0.25);
+    height: 350px;
+    position: relative;
+    border: 2px solid #bbdefb;
+}
 
-    .card-informe {
-        background: #fff;
-        border-radius: 18px;
-        padding: 18px;
-        box-shadow: 0 6px 16px rgba(255, 170, 200, 0.2);
-        border: 2px solid #f8c6dd;
-    }
+.card-informe {
+    background: #fff;
+    border-radius: 18px;
+    padding: 18px;
+    box-shadow: 0 6px 16px rgba(30, 136, 229, 0.25);
+    border: 2px solid #bbdefb;
+}
 
-    .btn-pink {
-        background-color: #9c0277;
-        border-color: #9c0277;
-        color: white;
-        font-weight: 600;
-        border-radius: 25px; /* Más redondeado */
-        transition: .3s;
-    }
-    .btn-pink:hover {
-        background-color: #ec407a;
-        border-color: #ec407a;
-        color: white;
-        transform: scale(1.02);
-    }
+.btn-pink {
+    background-color: #1e88e5;
+    border-color: #1e88e5;
+    color: white;
+    font-weight: 600;
+    border-radius: 25px;
+    transition: .3s;
+}
+.btn-pink:hover {
+    background-color: #1565c0;
+    border-color: #1565c0;
+    color: white;
+    transform: scale(1.02);
+}
 
-    .form-label {
-        font-weight: 700;
-        color: #9c0277;
-    }
+.form-label {
+    font-weight: 700;
+    color: #1e88e5;
+}
 
-    /* Estilo de tabla unificado */
-    .table-coquette-header {
-        background: linear-gradient(145deg, #000000, #111111) !important;
-        color: #fff !important;
-    }
+/* Encabezado tabla */
+.table-coquette-header {
+    background: linear-gradient(145deg, #0d47a1, #1976d2) !important;
+    color: #fff !important;
+}
     
-    .border-coquette {
-        border: 2px solid #f8c6dd !important;
-        border-radius: 15px;
-    }
+.border-coquette {
+    border: 2px solid #bbdefb !important;
+    border-radius: 15px;
+}
 </style>
+
 
 <div class="container mt-4">
     <div class="d-flex gap-2 mb-3 flex-wrap">
