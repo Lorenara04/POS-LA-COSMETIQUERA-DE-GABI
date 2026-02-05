@@ -29,90 +29,102 @@
         </div>
     </div>
 
-    <div class="row" style="position: relative; z-index: 1;">
-        <div class="col-lg-4 mb-4">
+    <div class="row mb-4" style="position: relative; z-index: 1;">
+        <div class="col-12">
             <div class="card shadow-sm border-0 p-4" style="border-radius: 25px;">
-                <h4 class="mb-4" style="color: #c71585; font-weight: 700; border-bottom: 2px solid #f8bbd0; padding-bottom: 10px;">
-                    💌 Registrar Factura
-                </h4>
-                <form method="POST">
-                    <div class="mb-3">
+                <h5 class="mb-3" style="color: #c71585; font-weight: 700;">💌 Registrar Nueva Factura</h5>
+                <form method="POST" class="row g-3 align-items-end">
+                    <div class="col-md-2">
                         <label class="form-label fw-bold small text-uppercase text-muted">N° Factura</label>
-                        <input type="text" name="numero" class="form-control border-0 bg-light" required>
+                        <input type="text" name="numero" class="form-control border-0 bg-light" placeholder="Ej: 1020" required style="border-radius: 12px;">
                     </div>
-                    <div class="mb-3">
+                    <div class="col-md-3">
                         <label class="form-label fw-bold small text-uppercase text-muted">Proveedor</label>
-                        <input type="text" name="proveedor" class="form-control border-0 bg-light" required>
+                        <input type="text" name="proveedor" class="form-control border-0 bg-light" placeholder="Nombre del proveedor" required style="border-radius: 12px;">
                     </div>
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold small text-uppercase text-muted">Total ($)</label>
-                            <input type="number" step="0.01" name="total" class="form-control border-0 bg-light" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold small text-uppercase text-muted">Fecha</label>
-                            <input type="date" name="fecha" class="form-control border-0 bg-light">
-                        </div>
+                    <div class="col-md-2">
+                        <label class="form-label fw-bold small text-uppercase text-muted">Total ($)</label>
+                        <input type="number" step="0.01" name="total" class="form-control border-0 bg-light" placeholder="0.00" required style="border-radius: 12px;">
                     </div>
-                    <button type="submit" class="btn w-100 text-white fw-bold py-3 mt-2 shadow"
-                            style="background: linear-gradient(45deg, #ff69b4, #c71585); border-radius: 50px;">
-                        💾 GUARDAR FACTURA
-                    </button>
+                    <div class="col-md-2">
+                        <label class="form-label fw-bold small text-uppercase text-muted">Fecha</label>
+                        <input type="date" name="fecha" class="form-control border-0 bg-light" style="border-radius: 12px;">
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn w-100 text-white fw-bold shadow"
+                                style="background: linear-gradient(45deg, #ff69b4, #c71585); border-radius: 50px; height: 45px;">
+                            <i class="fas fa-save me-2"></i> GUARDAR FACTURA
+                        </button>
+                    </div>
                 </form>
             </div>
         </div>
+    </div>
 
-        <div class="col-lg-8">
+    <div class="row" style="position: relative; z-index: 1;">
+        <div class="col-12">
             <div class="card shadow-sm border-0 p-0" style="border-radius: 25px; overflow: hidden;">
-                <div class="p-4 bg-white">
+                
+                <div class="p-4 bg-white d-flex justify-content-between align-items-center flex-wrap gap-3">
                     <h4 style="color: #9c0277; font-weight: 700; margin: 0;">🧾 Listado General de Facturas</h4>
+                    
+                    <div class="search-box" style="position: relative; width: 350px;">
+                        <i class="fas fa-search" style="position: absolute; left: 15px; top: 12px; color: #ff69b4;"></i>
+                        <input type="text" id="busquedaFactura" class="form-control ps-5 border-0 bg-light" 
+                               placeholder="Buscar por proveedor o N° factura..." 
+                               style="border-radius: 50px; height: 40px; border: 1px solid #ffd1dc !important;">
+                    </div>
                 </div>
 
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
+                    <table class="table table-hover align-middle mb-0" id="tablaFacturas">
                         <thead style="background-color: #2a1f2d; color: white;">
                             <tr>
                                 <th class="ps-4">Fecha</th>
                                 <th>N° Factura</th>
                                 <th>Proveedor</th>
                                 <th class="text-center">Total</th>
-                                <th class="text-center">Saldo</th>
+                                <th class="text-center">Saldo Actual</th>
                                 <th class="text-center pe-4">Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
                         {% for f in facturas %}
                             {% set saldo = f.total - f.abonado %}
-                            <tr>
+                            <tr class="factura-row">
                                 <td class="ps-4 small text-muted">
-                                    {{ f.fecha_factura }}<br>
-                                    <span style="font-size: 10px;">Ult: {{ f.fecha_ultimo_abono or '—' }}</span>
+                                    <span class="fw-bold text-dark">{{ f.fecha_factura }}</span><br>
+                                    <span style="font-size: 10px;">Ult. Abono: {{ f.fecha_ultimo_abono or '—' }}</span>
                                 </td>
-                                <td><b>{{ f.numero }}</b></td>
-                                <td><span class="badge rounded-pill" style="background-color:#f3e5f5;color:#7b1fa2;">{{ f.proveedor }}</span></td>
-                                <td class="text-center fw-bold">${{ f.total | format_number }}</td>
+                                <td class="numero-factura text-uppercase"><b>{{ f.numero }}</b></td>
+                                <td class="nombre-proveedor">
+                                    <span class="badge rounded-pill" style="background-color:#f3e5f5; color:#7b1fa2; font-size: 0.9rem; padding: 8px 15px;">
+                                        {{ f.proveedor }}
+                                    </span>
+                                </td>
+                                <td class="text-center fw-bold" style="color: #2a1f2d;">${{ f.total | format_number }}</td>
                                 <td class="text-center">
                                     {% if saldo <= 0 %}
-                                        <span class="badge bg-success rounded-pill px-3">PAGADA ✅</span>
+                                        <span class="badge bg-success rounded-pill px-3" style="font-size: 0.8rem;">PAGADA ✅</span>
                                     {% else %}
-                                        <span class="badge rounded-pill px-3" style="background:#fff0f5;color:#dc3545;border:1px solid #ffb6c1;">
-                                            Pend: ${{ saldo | format_number }}
+                                        <span class="badge rounded-pill px-3" style="background:#fff0f5; color:#dc3545; border:1px solid #ffb6c1; font-size: 0.8rem;">
+                                            Pendiente: ${{ saldo | format_number }}
                                         </span>
                                     {% endif %}
                                 </td>
                                 <td class="text-center pe-4">
                                     <div class="d-flex justify-content-center gap-2">
-                                        <button class="btn btn-sm shadow-sm" style="background:#f3f4f6;border-radius:10px;"
-                                                type="button" data-bs-toggle="collapse" data-bs-target="#abonoF{{ f.id }}">
+                                        <button class="btn btn-sm shadow-sm btn-action" style="background:#fff; border: 1px solid #eee; border-radius:10px;"
+                                                type="button" data-bs-toggle="collapse" data-bs-target="#abonoF{{ f.id }}" title="Abonar">
                                             <i class="fas fa-dollar-sign text-success"></i>
                                         </button>
                                         <a href="{{ url_for('editar_factura', factura_id=f.id) }}"
-                                           class="btn btn-sm shadow-sm" style="background:#f3f4f6;border-radius:10px;">
+                                           class="btn btn-sm shadow-sm btn-action" style="background:#fff; border: 1px solid #eee; border-radius:10px;" title="Editar">
                                             <i class="fas fa-edit text-info"></i>
                                         </a>
-                                        <form method="POST" action="{{ url_for('eliminar_factura', factura_id=f.id) }}">
-                                            <button type="submit" class="btn btn-sm shadow-sm"
-                                                    style="background:#f3f4f6;border-radius:10px;"
+                                        <form method="POST" action="{{ url_for('eliminar_factura', factura_id=f.id) }}" style="display:inline;">
+                                            <button type="submit" class="btn btn-sm shadow-sm btn-action"
+                                                    style="background:#fff; border: 1px solid #eee; border-radius:10px;"
                                                     onclick="return confirm('¿Eliminar factura?')">
                                                 <i class="fas fa-trash text-danger"></i>
                                             </button>
@@ -121,65 +133,55 @@
                                 </td>
                             </tr>
 
-                            <!-- ABONOS -->
                             <tr class="collapse" id="abonoF{{ f.id }}">
-                                <td colspan="6" class="bg-light p-3" style="border-radius:15px;">
-                                    <div class="row">
-                                        <div class="col-md-7 border-end">
-                                            <h6 class="fw-bold small mb-3 text-primary">📋 HISTORIAL / EDITAR ABONOS</h6>
-
-                                            {% for a in abonos if a.factura_id == f.id %}
-                                            <div class="d-flex align-items-center mb-2">
-                                                <form method="POST"
-                                                      action="{{ url_for('editar_abono_proveedor', abono_id=a.id) }}"
-                                                      class="flex-grow-1 me-2">
-                                                    <div class="input-group input-group-sm">
-                                                        <span class="input-group-text bg-white border-0">
-                                                            <i class="fas fa-calendar-alt text-muted"></i>
-                                                        </span>
-                                                        <input type="date" name="fecha" value="{{ a.fecha }}"
-                                                               class="form-control border-0" style="max-width:130px;">
-                                                        <span class="input-group-text bg-white border-0"><b>$</b></span>
-                                                        <input type="number" step="0.01" name="monto"
-                                                               value="{{ a.monto }}" class="form-control border-0">
-                                                        <button class="btn btn-outline-success border-0" type="submit">
-                                                            <i class="fas fa-save"></i>
-                                                        </button>
+                                <td colspan="6" class="p-3" style="background-color: #fafafa;">
+                                    <div class="card border-0 shadow-sm mx-3" style="border-radius: 15px;">
+                                        <div class="card-body row">
+                                            <div class="col-md-7 border-end">
+                                                <h6 class="fw-bold small mb-3 text-primary"><i class="fas fa-history me-1"></i> HISTORIAL DE ABONOS</h6>
+                                                {% for a in abonos if a.factura_id == f.id %}
+                                                <div class="d-flex align-items-center mb-2 p-2 bg-light" style="border-radius: 10px;">
+                                                    <form method="POST" action="{{ url_for('editar_abono_proveedor', abono_id=a.id) }}" class="d-flex gap-2 flex-grow-1">
+                                                        <input type="date" name="fecha" value="{{ a.fecha }}" class="form-control form-control-sm border-0" style="width: 135px;">
+                                                        <div class="input-group input-group-sm">
+                                                            <span class="input-group-text bg-transparent border-0">$</span>
+                                                            <input type="number" step="0.01" name="monto" value="{{ a.monto }}" class="form-control border-0">
+                                                        </div>
+                                                        <button class="btn btn-sm btn-outline-success border-0" type="submit"><i class="fas fa-save"></i></button>
+                                                    </form>
+                                                    <form method="POST" action="{{ url_for('eliminar_abono_proveedor', abono_id=a.id) }}" onsubmit="return confirm('¿Eliminar abono?');">
+                                                        <button type="submit" class="btn btn-sm text-danger border-0"><i class="fas fa-times-circle"></i></button>
+                                                    </form>
+                                                </div>
+                                                {% else %}
+                                                    <p class="text-muted small fst-italic">No se han registrado abonos para esta factura.</p>
+                                                {% endfor %}
+                                            </div>
+                                            <div class="col-md-5">
+                                                <h6 class="fw-bold small mb-3 text-success"><i class="fas fa-plus-circle me-1"></i> NUEVO ABONO</h6>
+                                                {% if saldo > 0 %}
+                                                <form method="POST" action="{{ url_for('abonar', factura_id=f.id) }}">
+                                                    <div class="row g-2">
+                                                        <div class="col-6">
+                                                            <input type="number" step="0.01" name="monto" max="{{ saldo }}" class="form-control form-control-sm" placeholder="Monto $" required>
+                                                        </div>
+                                                        <div class="col-6">
+                                                            <select name="medio" class="form-select form-select-sm">
+                                                                <option>Efectivo</option>
+                                                                <option>Transferencia</option>
+                                                                <option>Nequi</option>
+                                                                <option>Daviplata</option>
+                                                            </select>
+                                                        </div>
+                                                        <div class="col-12">
+                                                            <button class="btn btn-dark btn-sm w-100 shadow-sm" style="border-radius: 8px;">Registrar Abono</button>
+                                                        </div>
                                                     </div>
                                                 </form>
-
-                                                <!-- BOTÓN ELIMINAR ABONO -->
-                                                <form method="POST"
-                                                      action="{{ url_for('eliminar_abono_proveedor', abono_id=a.id) }}"
-                                                      onsubmit="return confirm('¿Eliminar este abono?');">
-                                                    <button type="submit" class="btn btn-sm shadow-sm"
-                                                            style="background:#f3f4f6;border-radius:10px;">
-                                                        <i class="fas fa-trash text-danger"></i>
-                                                    </button>
-                                                </form>
+                                                {% else %}
+                                                    <div class="alert alert-success py-2 mb-0 small text-center">✅ Esta factura se encuentra cancelada.</div>
+                                                {% endif %}
                                             </div>
-                                            {% else %}
-                                                <div class="small text-muted fst-italic">No hay abonos aún</div>
-                                            {% endfor %}
-                                        </div>
-
-                                        <div class="col-md-5 ps-3">
-                                            <h6 class="fw-bold small mb-3 text-success">➕ NUEVO ABONO</h6>
-                                            {% if saldo > 0 %}
-                                            <form method="POST" action="{{ url_for('abonar', factura_id=f.id) }}">
-                                                <input type="number" step="0.01" name="monto" max="{{ saldo }}"
-                                                       class="form-control form-control-sm mb-2" placeholder="Monto" required>
-                                                <select name="medio" class="form-select form-select-sm mb-2">
-                                                    <option>Efectivo</option>
-                                                    <option>Transferencia</option>
-                                                    <option>Nequi</option>
-                                                    <option>Daviplata</option>
-                                                </select>
-                                                <button class="btn btn-dark btn-sm w-100">Abonar</button>
-                                            </form>
-                                            {% else %}
-                                                <div class="text-center text-success fw-bold py-2">FACTURA PAGADA ✅</div>
-                                            {% endif %}
                                         </div>
                                     </div>
                                 </td>
@@ -189,8 +191,56 @@
                     </table>
                 </div>
 
+                <div class="p-4 bg-white d-flex justify-content-between align-items-center border-top">
+                    <span class="text-muted small">Mostrando {{ facturas|length }} facturas</span>
+                    <nav>
+                      <ul class="pagination pagination-sm mb-0">
+                        <li class="page-item disabled"><a class="page-link border-0 rounded-circle mx-1" href="#"><i class="fas fa-chevron-left"></i></a></li>
+                        <li class="page-item active"><a class="page-link border-0 rounded-circle mx-1" style="background: #9c0277;" href="#">1</a></li>
+                        <li class="page-item"><a class="page-link border-0 rounded-circle mx-1 text-dark" href="#">2</a></li>
+                        <li class="page-item"><a class="page-link border-0 rounded-circle mx-1 text-dark" href="#"><i class="fas fa-chevron-right"></i></a></li>
+                      </ul>
+                    </nav>
+                </div>
+
             </div>
         </div>
     </div>
 </div>
+
+<script>
+    document.getElementById('busquedaFactura').addEventListener('keyup', function() {
+        let filtro = this.value.toLowerCase();
+        let filas = document.querySelectorAll('#tablaFacturas tbody .factura-row');
+
+        filas.forEach(fila => {
+            let numero = fila.querySelector('.numero-factura').textContent.toLowerCase();
+            let proveedor = fila.querySelector('.nombre-proveedor').textContent.toLowerCase();
+            
+            if (numero.includes(filtro) || proveedor.includes(filtro)) {
+                fila.style.display = "";
+            } else {
+                fila.style.display = "none";
+                // Si la fila está oculta, también ocultamos su colapso de abonos si estuviera abierto
+                let collapseId = fila.querySelector('button[data-bs-toggle="collapse"]').getAttribute('data-bs-target');
+                document.querySelector(collapseId).classList.remove('show');
+            }
+        });
+    });
+</script>
+
+<style>
+    .btn-action:hover {
+        transform: translateY(-3px);
+        transition: all 0.2s;
+        box-shadow: 0 5px 10px rgba(0,0,0,0.1) !important;
+    }
+    .page-link:hover {
+        background-color: #f3e5f5 !important;
+    }
+    .form-control:focus {
+        box-shadow: none;
+        border-color: #ff69b4 !important;
+    }
+</style>
 {% endblock %}
